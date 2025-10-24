@@ -41,13 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // == ROUTE KHUSUS UNTUK ROLE 'PENULIS' ==
     Route::middleware(['role:penulis'])->group(function () {
+        Route::get('/pengajuan/saya', [PengajuanController::class, 'index'])->name('pengajuan.index');
         Route::get('/pengajuan/buat', [PengajuanController::class, 'create'])->name('pengajuan.create');
         Route::post('/pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
     });
 
-    // == GRUP ROUTE KHUSUS UNTUK ADMIN & SUPERADMIN ==
-    // Semua route di sini akan memiliki URL berawalan /admin/... (cth: /admin/users)
-    // dan nama route berawalan admin. (cth: admin.users.index)
     Route::middleware(['role:admin|superadmin'])->prefix('admin')->name('admin.')->group(function () {
         
         // User Management
@@ -57,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index');
         Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
         Route::patch('/pengajuan/{pengajuan}/status', [AdminPengajuanController::class, 'updateStatus'])->name('pengajuan.updateStatus');
+        Route::delete('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'destroy'])->name('pengajuan.destroy');
     });
 
     Route::get('/redirect', [RedirectController::class, 'handle'])->name('redirect.after.login');
