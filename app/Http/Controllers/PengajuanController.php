@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate; // Pastikan ini ada
 
 class PengajuanController extends Controller
 {
@@ -13,9 +14,12 @@ class PengajuanController extends Controller
      */
     public function index()
     {
+        // Ambil data pengajuan HANYA milik user yang sedang login
         $pengajuans = Pengajuan::where('user_id', Auth::id())
-                              ->latest()
-                              ->paginate(10);
+                              ->latest() // Urutkan dari yang terbaru
+                              ->paginate(10); // Batasi 10 per halaman
+
+        // Tampilkan view 'riwayat'
         return view('pengajuan.index', compact('pengajuans'));
     }
 
@@ -32,9 +36,8 @@ class PengajuanController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. UBAH ATURAN VALIDASI UNTUK MENERIMA ARRAY
         $validated = $request->validate([
-            // Validasi data identitas (tetap sama)
+            // Validasi data identitas
             'nama_pemilik' => 'required|string|max:255',
             'nik_pemilik' => 'required|string|max:100',
             'alamat_pemilik' => 'required|string',
@@ -52,31 +55,24 @@ class PengajuanController extends Controller
             'nomor_mesin' => 'required|string|max:255',
             'warna_tnkb' => 'required|string|max:50',
             'nomor_bpkb' => 'required|string|max:255',
-            
-            // Validasi file (diubah untuk array)
+
+            // Validasi file (array, max 10MB)
             'surat_permohonan'   => 'required|array|min:1',
-            'surat_permohonan.*' => 'required|mimes:pdf,docx|max:2048',
-            
+            'surat_permohonan.*' => 'required|mimes:pdf,docx|max:10240',
             'surat_pernyataan'   => 'required|array|min:1',
-            'surat_pernyataan.*' => 'required|mimes:pdf,docx|max:2048',
-            
+            'surat_pernyataan.*' => 'required|mimes:pdf,docx|max:10240',
             'ktp'   => 'required|array|min:1',
-            'ktp.*' => 'required|mimes:pdf,docx,jpg,png|max:2048',
-            
+            'ktp.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
             'bpkb'   => 'required|array|min:1',
-            'bpkb.*' => 'required|mimes:pdf,docx|max:2048',
-            
+            'bpkb.*' => 'required|mimes:pdf,docx|max:10240',
             'tbpkp'   => 'required|array|min:1',
-            'tbpkp.*' => 'required|mimes:pdf,docx|max:2048',
-            
+            'tbpkp.*' => 'required|mimes:pdf,docx|max:10240',
             'cek_fisik'   => 'required|array|min:1',
-            'cek_fisik.*' => 'required|mimes:pdf,docx|max:2048',
-            
+            'cek_fisik.*' => 'required|mimes:pdf,docx|max:10240',
             'foto_ranmor'   => 'required|array|min:1',
-            'foto_ranmor.*' => 'required|image|max:2048',
-            
+            'foto_ranmor.*' => 'required|image|max:10240',
             'stnk'   => 'required|array|min:1',
-            'stnk.*' => 'required|mimes:pdf,docx|max:2048',
+            'stnk.*' => 'required|mimes:pdf,docx|max:10240',
         ]);
 
         // Gabungkan data user_id dan status
@@ -88,9 +84,7 @@ class PengajuanController extends Controller
         // Buat pengajuan baru
         $pengajuan = Pengajuan::create($dataToCreate);
 
-        // 2. UBAH LOGIKA SIMPAN MENGGUNAKAN LOOPING (FOREACH)
-        // dan simpan ke koleksi terpisah agar rapi
-
+        // Upload semua file ke koleksi terpisah
         if ($request->hasFile('surat_permohonan')) {
             foreach ($request->file('surat_permohonan') as $file) {
                 $pengajuan->addMedia($file)->toMediaCollection('surat_permohonan');
@@ -132,7 +126,35 @@ class PengajuanController extends Controller
             }
         }
 
-        // Arahkan ke halaman riwayat (tetap sama)
+        // Arahkan ke halaman riwayat
         return redirect()->route('pengajuan.index')->with('success', 'Berkas berhasil diajukan!');
+    }
+
+    /**
+     * METHOD BARU: Menampilkan detail pengajuan milik penulis.
+     */
+    public function show(Pengajuan $pengajuan)
+    {
+        // Pastikan hanya pemilik pengajuan yang bisa melihat
+        if (Auth::id() !== $pengajuan->user_id) {
+            abort(403, 'Anda tidak diizinkan melihat pengajuan ini.'); // Atau redirect ke halaman lain
+        }
+
+        $pengajuan->load(['logs.user', 'logs.media']);
+
+        // Ambil dokumen berdasarkan koleksi
+        $dokumen = [
+            'surat_permohonan' => $pengajuan->getMedia('surat_permohonan'),
+            'surat_pernyataan' => $pengajuan->getMedia('surat_pernyataan'),
+            'ktp'               => $pengajuan->getMedia('ktp'),
+            'bpkb'              => $pengajuan->getMedia('bpkb'),
+            'tbpkp'             => $pengajuan->getMedia('tbpkp'),
+            'cek_fisik'         => $pengajuan->getMedia('cek_fisik'),
+            'foto_ranmor'       => $pengajuan->getMedia('foto_ranmor'),
+            'stnk'              => $pengajuan->getMedia('stnk'),
+        ];
+
+        // Tampilkan view detail
+        return view('pengajuan.show', compact('pengajuan', 'dokumen'));
     }
 }

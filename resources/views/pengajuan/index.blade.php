@@ -3,12 +3,11 @@
         Riwayat Pengajuan Saya
     </x-slot>
 
-    {{-- Pesan Sukses setelah submit form --}}
+    {{-- Pesan Sukses --}}
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <!-- Tombol untuk membuat pengajuan baru -->
     <div class="d-flex justify-content-end mb-3">
         <a href="{{ route('pengajuan.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i> Buat Pengajuan Baru
@@ -28,6 +27,7 @@
                             <th>Tanggal Pengajuan</th>
                             <th>Status</th>
                             <th>Catatan dari Admin</th>
+                            <th>Aksi</th> {{-- <-- KOLOM BARU --}}
                         </tr>
                     </thead>
                     <tbody>
@@ -36,6 +36,7 @@
                                 <td><strong>{{ $item->nomor_pengajuan }}</strong></td>
                                 <td>{{ $item->created_at->format('d M Y, H:i') }} WIB</td>
                                 <td>
+                                    {{-- Badge Status --}}
                                     @if($item->status == 'pengajuan')
                                         <span class="badge bg-warning text-dark">Baru</span>
                                     @elseif($item->status == 'diproses')
@@ -47,17 +48,22 @@
                                     @endif
                                 </td>
                                 <td>{{ $item->catatan_admin ?? '-' }}</td>
+                                <td>
+                                    {{-- TOMBOL LIHAT DETAIL BARU --}}
+                                    <a href="{{ route('pengajuan.show', $item) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye me-1"></i> Lihat Detail
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center">Anda belum memiliki riwayat pengajuan.</td>
+                                <td colspan="5" class="text-center">Anda belum memiliki riwayat pengajuan.</td> {{-- <-- Colspan jadi 5 --}}
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Paginasi -->
+
             <div class="mt-3">
                 {{ $pengajuans->links() }}
             </div>

@@ -3,36 +3,13 @@
         Detail Pengajuan: {{ $pengajuan->nomor_pengajuan }}
     </x-slot>
 
-    {{-- Pesan Sukses/Error --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
-            <strong>Gagal Menyimpan Aksi!</strong>
-            <ul class="mb-0 ps-3">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="row">
         {{-- Kolom Kiri: History Log --}}
         <div class="col-lg-8 mb-4">
             {{-- Card History Pengajuan --}}
             <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header">
                     <h5 class="mb-0">History Pengajuan</h5>
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#aksiModal">
-                        <i class="fas fa-plus me-1"></i> Tambah Aksi
-                    </button>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -244,96 +221,4 @@
             </div>
         </div>
     </div>
-
-    {{-- Modal Tambah Aksi --}}
-    <div class="modal fade" id="aksiModal" tabindex="-1" aria-labelledby="aksiModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <form action="{{ route('admin.pengajuan.storeLog', $pengajuan) }}" method="POST" enctype="multipart/form-data" id="formAksi">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="aksiModalLabel">
-                            Tambah Aksi - {{ $pengajuan->nomor_pengajuan }}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-info">
-                            <strong>Status Saat Ini:</strong> 
-                            @if($pengajuan->status == 'pengajuan')
-                                <span class="badge bg-warning text-dark">Baru</span>
-                            @elseif($pengajuan->status == 'diproses')
-                                <span class="badge bg-info text-dark">Diproses</span>
-                            @elseif($pengajuan->status == 'selesai')
-                                <span class="badge bg-success">Selesai</span>
-                            @elseif($pengajuan->status == 'ditolak')
-                                <span class="badge bg-danger">Ditolak</span>
-                            @endif
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="status_baru" class="form-label fw-bold">
-                                    Ubah Status <span class="text-danger">*</span>
-                                </label>
-                                <select name="status_baru" id="status_baru" class="form-select" required>
-                                    <option value="" disabled selected>-- Pilih Status Baru --</option>
-                                    <option value="pengajuan" {{ $pengajuan->status == 'pengajuan' ? 'disabled' : '' }}>Baru</option>
-                                    <option value="diproses" {{ $pengajuan->status == 'diproses' ? 'disabled' : '' }}>Diproses</option>
-                                    <option value="selesai" {{ $pengajuan->status == 'selesai' ? 'disabled' : '' }}>Selesai</option>
-                                    <option value="ditolak" {{ $pengajuan->status == 'ditolak' ? 'disabled' : '' }}>Ditolak</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="lampiran" class="form-label fw-bold">
-                                    Lampiran (Opsional)
-                                </label>
-                                <input type="file" class="form-control" id="lampiran" name="lampiran" accept=".pdf,.jpg,.jpeg,.png,.docx">
-                                <small class="text-muted">Max 10MB</small>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="catatan" class="form-label fw-bold">
-                                Catatan (Opsional)
-                            </label>
-                            <textarea name="catatan" id="catatan" class="form-control" rows="4" placeholder="Jelaskan tindakan atau alasan perubahan status..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan Aksi</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    {{-- JavaScript --}}
-    <script>
-        document.getElementById('lampiran').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const maxSize = 10 * 1024 * 1024;
-            
-            if (file && file.size > maxSize) {
-                alert('Ukuran file terlalu besar! Maksimal 10MB');
-                this.value = '';
-            }
-        });
-        
-        document.getElementById('formAksi').addEventListener('submit', function(e) {
-            const status = document.getElementById('status_baru').value;
-            const statusText = {
-                'pengajuan': 'Baru',
-                'diproses': 'Diproses',
-                'selesai': 'Selesai',
-                'ditolak': 'Ditolak'
-            };
-            
-            if (!confirm(`Apakah Anda yakin ingin mengubah status menjadi "${statusText[status]}"?`)) {
-                e.preventDefault();
-            }
-        });
-    </script>
 </x-app-layout>

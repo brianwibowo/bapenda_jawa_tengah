@@ -8,6 +8,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pengajuan extends Model implements HasMedia
 {
@@ -54,5 +55,10 @@ class Pengajuan extends Model implements HasMedia
                 $pengajuan->nomor_pengajuan = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
             }
         });
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(PengajuanLog::class)->latest(); // Urutkan log terbaru di atas
     }
 }

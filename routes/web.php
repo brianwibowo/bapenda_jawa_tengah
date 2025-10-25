@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pengajuan/saya', [PengajuanController::class, 'index'])->name('pengajuan.index');
         Route::get('/pengajuan/buat', [PengajuanController::class, 'create'])->name('pengajuan.create');
         Route::post('/pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+        Route::get('/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])->name('pengajuan.show'); 
     });
 
     Route::middleware(['role:admin|superadmin'])->prefix('admin')->name('admin.')->group(function () {
@@ -56,6 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
         Route::patch('/pengajuan/{pengajuan}/status', [AdminPengajuanController::class, 'updateStatus'])->name('pengajuan.updateStatus');
         Route::delete('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'destroy'])->name('pengajuan.destroy');
+        Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLogAndUpdateStatus'])->name('pengajuan.storeLog');
     });
 
     Route::get('/redirect', [RedirectController::class, 'handle'])->name('redirect.after.login');
