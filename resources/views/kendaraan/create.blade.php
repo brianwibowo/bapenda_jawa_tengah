@@ -88,8 +88,7 @@
                          <div class="row">
                               <div class="col-md-6 mb-3">
                                  <label for="tahun_pembuatan" class="form-label">Tahun Pembuatan</label>
-                                 <input type="number" class="form-control" id="tahun_pembuatan" name="tahun_pembuatan" value="{{ old('tahun_pembuatan') }}" required min="1900">
-                             </div>
+                                 <input type="number" class="form-control" id="tahun_pembuatan" name="tahun_pembuatan" value="{{ old('tahun_pembuatan') }}" required min="1901" max="{{ date('Y') }}">                             </div>
                              <div class="col-md-6 mb-3">
                                  <label for="isi_silinder" class="form-label">Isi Silinder / Daya Listrik</label>
                                  <input type="text" class="form-control" id="isi_silinder" name="isi_silinder" value="{{ old('isi_silinder') }}" required>

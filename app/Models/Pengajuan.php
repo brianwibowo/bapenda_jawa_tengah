@@ -4,44 +4,46 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Pengajuan extends Model implements HasMedia
+class Pengajuan extends Model
 {
-    use HasFactory, InteractsWithMedia,  SoftDeletes;
-
-    protected $fillable = [
-        'user_id',
-        'status',
-        'catatan_admin',
-        'nomor_pengajuan',
-        'nama_pemilik', 'nik_pemilik', 'alamat_pemilik', 'telp_pemilik', 'email_pemilik',
-        'nrkb', 'jenis_kendaraan', 'model_kendaraan', 'merk_kendaraan', 'tipe_kendaraan',
-        'tahun_pembuatan', 'isi_silinder', 'jenis_bahan_bakar', 'nomor_rangka', 'nomor_mesin',
-        'warna_tnkb', 'nomor_bpkb'
-    ];
+    use HasFactory, SoftDeletes; 
 
     /**
-     * Relasi ke user (penulis)
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
      */
+    protected $fillable = [
+        'user_id',
+        'nomor_pengajuan',
+        'status',
+        'catatan_admin',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    public function kendaraans(): HasMany
+    {
+        return $this->hasMany(Kendaraan::class);
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(PengajuanLog::class)->latest();
+    }
+
     protected static function booted(): void
     {
         static::creating(function ($pengajuan) {
-            // Cek jika nomor pengajuan belum diisi
             if (empty($pengajuan->nomor_pengajuan)) {
-                // Buat format: PJN-TAHUNBULAN-4ANGKAUNIK (Contoh: PJN-2510-1234)
                 $prefix = 'PJN-' . now()->format('ym') . '-';
-                
-                // Cari nomor terakhir untuk bulan ini
                 $lastPengajuan = self::where('nomor_pengajuan', 'LIKE', $prefix . '%')
                                      ->orderBy('nomor_pengajuan', 'desc')
                                      ->first();
@@ -54,11 +56,10 @@ class Pengajuan extends Model implements HasMedia
                 
                 $pengajuan->nomor_pengajuan = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
             }
-        });
-    }
 
-    public function logs(): HasMany
-    {
-        return $this->hasMany(PengajuanLog::class)->latest(); // Urutkan log terbaru di atas
+            if (empty($pengajuan->status)) {
+                $pengajuan->status = 'draft'; 
+            }
+        });
     }
 }

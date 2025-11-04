@@ -5,13 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; // <-- 1. Tambahkan baris ini
+use Spatie\Permission\Traits\HasRoles; // <-- 1. WAJIB ADA (Import Trait)
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
-    // 2. Tambahkan 'HasRoles' di sini
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles; // <-- 2. WAJIB ADA (Gunakan Trait)
 
     /**
      * The attributes that are mass assignable.
@@ -22,7 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'unit_kerja',
+        'unit_kerja', // Pastikan ini ada
     ];
 
     /**
@@ -40,13 +39,22 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Relasi: Bundel pengajuan yang dibuat oleh user ini.
+     */
+    public function pengajuans(): HasMany
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Pengajuan::class);
     }
+
+    /**
+     * Relasi: Log aksi yang dilakukan oleh user ini.
+     */
     public function pengajuanLogs(): HasMany
     {
         return $this->hasMany(PengajuanLog::class);

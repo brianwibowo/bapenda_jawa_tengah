@@ -40,24 +40,20 @@
                     <h4 class="text-section">Manajemen</h4>
                 </li>
 
-                {{-- == MENU UNTUK ROLE "PENULIS" == --}}
+                {{-- == MENU UNTUK ROLE "PENULIS" (DIPERBARUI) == --}}
                 @role('penulis')
-                    <li class="nav-item {{ request()->routeIs('pengajuan.index') ? 'active' : '' }}">
+                    {{-- Hanya satu menu untuk 'pengajuan.index' (Riwayat/Daftar Bundel) --}}
+                    <li class="nav-item {{ request()->routeIs('pengajuan.*') || request()->routeIs('kendaraan.*') ? 'active' : '' }}">
                         <a href="{{ route('pengajuan.index') }}">
                             <i class="fas fa-folder-open"></i>
-                            <p>Lihat Berkas Pengajuan</p>
+                            <p>Berkas Pengajuan Saya</p>
                         </a>
                     </li>
-
-                    <li class="nav-item {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
-                        <a href="{{ route('pengajuan.create') }}">
-                            <i class="fas fa-file-upload"></i>
-                            <p>Buat Pengajuan Berkas</p>
-                        </a>
-                    </li>
+                    
+                    {{-- Link "Buat Pengajuan Berkas" (route 'pengajuan.create') DIHAPUS --}}
                 @endrole
 
-                {{-- == MENU UNTUK ROLE "ADMIN" & "SUPERADMIN" == --}}
+                {{-- == MENU UNTUK ROLE "ADMIN" & "SUPERADMIN" (Tetap sama) == --}}
                 @role('admin|superadmin')
                     <li class="nav-item {{ request()->routeIs('admin.pengajuan.*') ? 'active' : '' }}">
                         <a href="{{ route('admin.pengajuan.index') }}">
