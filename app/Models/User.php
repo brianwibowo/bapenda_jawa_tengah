@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; // <-- 1. WAJIB ADA (Import Trait)
+use Spatie\Permission\Traits\HasRoles; // <-- Ini sudah benar
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\KendaraanLog; // <-- Tambahkan ini untuk jaga-jaga
 
 /**
  * @property int $id
@@ -18,10 +19,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, KendaraanLog> $kendaraanLogs
+ * @property-read int|null $kendaraan_logs_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PengajuanLog> $pengajuanLogs
- * @property-read int|null $pengajuan_logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Pengajuan> $pengajuans
  * @property-read int|null $pengajuans_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Permission\Models\Permission> $permissions
@@ -49,7 +50,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles; // <-- 2. WAJIB ADA (Gunakan Trait)
+    use HasFactory, Notifiable, HasRoles; // <-- Ini sudah benar
 
     /**
      * The attributes that are mass assignable.
@@ -60,7 +61,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'unit_kerja', // Pastikan ini ada
+        'unit_kerja', // Ini sudah benar
     ];
 
     /**
@@ -93,9 +94,10 @@ class User extends Authenticatable
 
     /**
      * Relasi: Log aksi yang dilakukan oleh user ini.
+     * (Relasi ini sudah benar menunjuk ke KendaraanLog)
      */
-    public function pengajuanLogs(): HasMany
+    public function kendaraanLogs(): HasMany
     {
-        return $this->hasMany(PengajuanLog::class);
+        return $this->hasMany(KendaraanLog::class);
     }
 }

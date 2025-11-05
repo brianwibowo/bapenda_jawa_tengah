@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengajuan;
-use App\Models\PengajuanLog; // Import model Log
+use App\Models\KendaraanLog; // <-- Ganti, sekarang kita pakai KendaraanLog
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class PengajuanController extends Controller
 {
@@ -16,7 +17,8 @@ class PengajuanController extends Controller
     public function index()
     {
         $pengajuans = Pengajuan::where('user_id', Auth::id())
-                              ->withCount('kendaraans') // Hitung jumlah kendaraan
+                              // Ambil relasi 'kendaraans' agar accessor status bisa bekerja
+                              ->with('kendaraans:id,pengajuan_id,status') 
                               ->latest()
                               ->paginate(10);
                               
@@ -26,27 +28,18 @@ class PengajuanController extends Controller
     /**
      * [Langkah 1 UX]
      * Aksi dari tombol "Buat Nomor Pengajuan Baru".
-     * Tidak ada form 'create', langsung 'store' untuk buat bundel kosong.
+     * HANYA membuat bundel kosong.
      */
     public function store(Request $request)
     {
         // 1. Buat record Pengajuan (bundel) baru yang kosong
-        // Model Pengajuan akan otomatis mengisi 'nomor_pengajuan' dan 'status' = 'draft'
+        // Model Pengajuan akan otomatis mengisi 'nomor_pengajuan'
         $pengajuan = Pengajuan::create([
             'user_id' => Auth::id(),
+            // 'status' tidak ada lagi di sini, karena status dihitung dari kendaraan
         ]);
 
-        // 2. Buat Log Pertama (Histori)
-        $user = Auth::user();
-        PengajuanLog::create([
-            'pengajuan_id' => $pengajuan->id,
-            'user_id'      => $user->id,
-            'aksi'         => 'Nomor Pengajuan Dibuat',
-            'status_baru'  => 'draft',
-            'catatan'      => 'Nomor pengajuan dibuat oleh ' . ($user->unit_kerja ?? $user->name),
-        ]);
-
-        // 3. Redirect kembali ke halaman index
+        // 2. Redirect kembali ke halaman index
         return redirect()->route('pengajuan.index')
                          ->with('success', 'Nomor Pengajuan baru (' . $pengajuan->nomor_pengajuan . ') berhasil dibuat. Silakan tambahkan kendaraan.');
     }
@@ -65,7 +58,6 @@ class PengajuanController extends Controller
         // 2. Ambil semua relasi yang diperlukan
         $pengajuan->load([
             'kendaraans', // Daftar kendaraan di dalam bundel ini
-            'logs.user'   // Histori log dari bundel ini
         ]);
         
         // 3. Tampilkan view
@@ -82,10 +74,10 @@ class PengajuanController extends Controller
             abort(403);
         }
 
-        // Validasi: Hanya boleh hapus jika status masih 'draft'
+        // Cek status dinamis
         if ($pengajuan->status !== 'draft') {
              return redirect()->route('pengajuan.index')
-                             ->with('error', 'Pengajuan yang sudah dikirim tidak dapat dihapus.');
+                             ->with('error', 'Pengajuan yang sudah diproses tidak dapat dihapus.');
         }
 
         // Hapus (Soft Delete)
@@ -94,9 +86,4 @@ class PengajuanController extends Controller
         return redirect()->route('pengajuan.index')
                          ->with('success', 'Pengajuan ' . $pengajuan->nomor_pengajuan . ' berhasil dihapus.');
     }
-
-    /**
-     * Method create() (GET /pengajuan/buat) sudah tidak diperlukan lagi
-     * karena kita pakai alur UX baru.
-     */
 }

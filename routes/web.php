@@ -27,88 +27,64 @@ require __DIR__.'/auth.php';
 // == GRUP UNTUK SEMUA ROUTE YANG MEMBUTUHKAN LOGIN ==
 Route::middleware(['auth', 'verified'])->group(function () {
     
-    // Dashboard (Bisa diakses semua role yang sudah login)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Profile Management (Bawaan Breeze/Jetstream)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Route untuk "pos pengecekan" setelah login
     Route::get('/redirect', [RedirectController::class, 'handle'])->name('redirect.after.login');
 
     
     // =======================================================
-    // == ROUTE KHUSUS UNTUK ROLE 'PENULIS' (DIROMBAK TOTAL) ==
+    // == ROUTE KHUSUS UNTUK ROLE 'PENULIS' ==
     // =======================================================
     Route::middleware(['role:penulis'])->group(function () {
         
         // --- Grup untuk mengelola "Bundel" Pengajuan ---
-        // 'prefix' dan 'name' agar rapi (cth: route('pengajuan.index'))
         Route::prefix('pengajuan-saya')->name('pengajuan.')->group(function () {
-            
-            // [Langkah 2 UX] Menampilkan halaman daftar bundel pengajuan
-            // GET pengajuan-saya/
             Route::get('/', [PengajuanController::class, 'index'])->name('index'); 
-
-            // [Langkah 1 UX] Aksi dari tombol "Buat Nomor Pengajuan Baru"
-            // POST pengajuan-saya/
             Route::post('/', [PengajuanController::class, 'store'])->name('store'); 
-
-            // [Langkah 3 UX] Menampilkan halaman detail bundel (tabel kendaraan)
-            // GET pengajuan-saya/{pengajuan}
             Route::get('/{pengajuan}', [PengajuanController::class, 'show'])->name('show');
-            
-            // (Opsional) Hapus bundel jika masih draft
             Route::delete('/{pengajuan}', [PengajuanController::class, 'destroy'])->name('destroy');
-            
-            // [Langkah 6 UX] Halaman form untuk "+ Tambah Kendaraan"
-            // GET pengajuan-saya/{pengajuan}/tambah-kendaraan
             Route::get('/{pengajuan}/tambah-kendaraan', [KendaraanController::class, 'create'])->name('kendaraan.create');
-            
-            // [Langkah 8 UX] Aksi submit form tambah kendaraan
-            // POST pengajuan-saya/{pengajuan}/simpan-kendaraan
             Route::post('/{pengajuan}/simpan-kendaraan', [KendaraanController::class, 'store'])->name('kendaraan.store');
         });
-
-        // --- Grup untuk mengelola "Kendaraan" individual ---
-        // (Untuk Edit/Hapus kendaraan dari tabel di halaman 'show')
-        Route::prefix('kendaraan')->name('kendaraan.')->group(function () {
-            
-            // Halaman form Edit Kendaraan
-            // GET kendaraan/{kendaraan}/edit
-            Route::get('/{kendaraan}/edit', [KendaraanController::class, 'edit'])->name('edit');
-            
-            // Aksi submit form Edit Kendaraan
-            // PATCH kendaraan/{kendaraan}
-            Route::patch('/{kendaraan}', [KendaraanController::class, 'update'])->name('update');
-            
-            // Aksi tombol Hapus Kendaraan
-            // DELETE kendaraan/{kendaraan}
-            Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
-            Route::get('/{kendaraan}', [KendaraanController::class, 'show'])->name('show');
-        });
+        
+        // --- Grup 'kendaraan' DIPINDAHKAN KELUAR dari role:penulis ---
     });
 
-
     // ===========================================================
-    // == ROUTE KHUSUS UNTUK ROLE 'ADMIN' & 'SUPERADMIN' (Update) ==
+    // == ROUTE KHUSUS UNTUK ROLE 'ADMIN' & 'SUPERADMIN' ==
     // ===========================================================
     Route::middleware(['role:admin|superadmin'])->prefix('admin')->name('admin.')->group(function () {
         
-        // User Management (Tetap sama)
         Route::resource('users', UserController::class);
 
-        // Pengajuan Management (Dibersihkan)
-        Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index'); // Daftar bundel
-        Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show'); // Detail bundel (tab kendaraan)
-        Route::delete('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'destroy'])->name('pengajuan.destroy'); // Hapus bundel
+        Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index');
+        Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
+        Route::delete('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'destroy'])->name('pengajuan.destroy');
+        Route::patch('/pengajuan/{pengajuan}/batch-update', [AdminPengajuanController::class, 'batchUpdateKendaraanStatus'])->name('pengajuan.batchUpdate');
         
-        // Route untuk Pop-up Aksi (store log & update status)
-        Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLogAndUpdateStatus'])->name('pengajuan.storeLog');
+        // Hapus 'storeLog' yang lama, kita pakai 'batchUpdate'
+    });
+    
+
+    // =================================================================
+    // == ROUTE SHARED (PENULIS & ADMIN) UNTUK KENDARAAN INDIVIDUAL ==
+    // =================================================================
+    // Keamanan ditangani di dalam Controller
+    Route::prefix('kendaraan')->name('kendaraan.')->group(function () {
         
-        // HAPUS Route::patch(...'updateStatus') karena digantikan 'storeLog'
+        // (Penulis & Admin) Menampilkan detail read-only 1 kendaraan
+        Route::get('/{kendaraan}', [KendaraanController::class, 'show'])->name('show');
+        
+        // (Penulis) Menampilkan form edit
+        Route::get('/{kendaraan}/edit', [KendaraanController::class, 'edit'])->name('edit');
+        
+        // (Penulis) Menyimpan data editan
+        Route::patch('/{kendaraan}', [KendaraanController::class, 'update'])->name('update');
+        
+        // (Penulis & Admin) Menghapus 1 kendaraan
+        Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
     });
     
 });

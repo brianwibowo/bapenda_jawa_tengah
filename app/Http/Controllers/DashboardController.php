@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pengajuan;
+use App\Models\Kendaraan; // <-- GANTI: Gunakan model Kendaraan
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB; // <-- TAMBAHKAN: Kita butuh DB facade
+use Carbon\Carbon; // <-- TAMBAHKAN: Kita butuh Carbon untuk tanggal
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // GANTI SEMUA QUERY UNTUK MENGAMBIL DARI 'kendaraans' BUKAN 'pengajuans'
+
         // Statistik Terkini (Hari ini)
-        $statsTerkini = Pengajuan::query()
+        $statsTerkini = Kendaraan::query() // <-- PERBAIKAN DI SINI
             ->select('status', DB::raw('count(*) as total'))
             ->whereDate('created_at', Carbon::today())
             ->groupBy('status')
@@ -20,7 +22,7 @@ class DashboardController extends Controller
             ->keyBy('status');
 
         // Statistik Bulan Ini
-        $statsBulanIni = Pengajuan::query()
+        $statsBulanIni = Kendaraan::query() // <-- PERBAIKAN DI SINI
             ->select('status', DB::raw('count(*) as total'))
             ->whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
@@ -29,13 +31,13 @@ class DashboardController extends Controller
             ->keyBy('status');
 
         // Statistik Tahun Ini
-        $statsTahunIni = Pengajuan::query()
+        $statsTahunIni = Kendaraan::query() // <-- PERBAIKAN DI SINI
             ->select('status', DB::raw('count(*) as total'))
             ->whereYear('created_at', Carbon::now()->year)
             ->groupBy('status')
             ->get()
             ->keyBy('status');
-
+            
         return view('dashboard', compact('statsTerkini', 'statsBulanIni', 'statsTahunIni'));
     }
 }

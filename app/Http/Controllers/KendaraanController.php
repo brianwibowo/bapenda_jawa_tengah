@@ -4,19 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Kendaraan;
 use App\Models\Pengajuan;
-use App\Models\PengajuanLog;
+use App\Models\KendaraanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class KendaraanController extends Controller
 {
     /**
-     * [Langkah 6 UX]
      * Menampilkan form untuk menambah kendaraan baru ke sebuah bundel pengajuan.
      */
     public function create(Pengajuan $pengajuan)
     {
-        // Keamanan: Pastikan hanya pemilik bundel yang bisa menambah
         if (Auth::id() !== $pengajuan->user_id) {
             abort(403, 'Akses ditolak.');
         }
@@ -25,17 +23,15 @@ class KendaraanController extends Controller
     }
 
     /**
-     * [Langkah 8 UX]
      * Menyimpan kendaraan baru ke database dan menempelkannya ke bundel pengajuan.
      */
     public function store(Request $request, Pengajuan $pengajuan)
     {
-        // Keamanan: Pastikan hanya pemilik bundel yang bisa menambah
         if (Auth::id() !== $pengajuan->user_id) {
             abort(403, 'Akses ditolak.');
         }
 
-        // 1. Validasi semua input (Pemilik + Kendaraan + Dokumen)
+        // 1. Validasi
         $validated = $request->validate([
             'nama_pemilik' => 'required|string|max:255',
             'nik_pemilik' => 'required|string|max:100',
@@ -54,8 +50,6 @@ class KendaraanController extends Controller
             'nomor_mesin' => 'required|string|max:255',
             'warna_tnkb' => 'required|string|max:50',
             'nomor_bpkb' => 'required|string|max:255',
-
-            // Validasi file (array, max 10MB)
             'surat_permohonan'   => 'required|array|min:1',
             'surat_permohonan.*' => 'required|mimes:pdf,docx|max:10240',
             'surat_pernyataan'   => 'required|array|min:1',
@@ -75,61 +69,58 @@ class KendaraanController extends Controller
         ]);
 
         // 2. Buat record Kendaraan baru
-        $kendaraan = $pengajuan->kendaraans()->create($validated);
+        $dataToCreate = array_merge($validated, ['status' => 'pengajuan']);
+        $kendaraan = $pengajuan->kendaraans()->create($dataToCreate);
 
-        // 3. Upload dan tempelkan semua dokumen ke record KENDARAAN
+        // 3. Upload dokumen
         $this->uploadDokumen($request, $kendaraan);
-
-        // 4. Update status bundel Pengajuan (jika masih 'draft')
-        if ($pengajuan->status == 'draft') {
-            $pengajuan->update(['status' => 'pengajuan']);
-        }
         
-        // 5. Catat ke Log Histori
+        // 4. Catat ke Log Histori (per KENDARAAN)
         $user = Auth::user();
-        PengajuanLog::create([
-            'pengajuan_id' => $pengajuan->id,
+        KendaraanLog::create([
+            'kendaraan_id' => $kendaraan->id,
             'user_id'      => $user->id,
-            'aksi'         => 'Kendaraan ditambahkan: ' . $kendaraan->nrkb,
-            'status_baru'  => $pengajuan->status,
-            'catatan'      => 'Kendaraan (' . $kendaraan->merk_kendaraan . ' ' . $kendaraan->tipe_kendaraan . ') ditambahkan oleh ' . ($user->unit_kerja ?? $user->name),
+            'aksi'         => 'Kendaraan Diajukan',
+            'status_baru'  => 'pengajuan',
+            'catatan'      => 'Kendaraan (' . $kendaraan->merk_kendaraan . ') diajukan oleh ' . ($user->unit_kerja ?? $user->name),
         ]);
 
-        // 6. Redirect kembali ke halaman detail bundel
+        // 5. Redirect kembali ke halaman detail bundel
         return redirect()->route('pengajuan.show', $pengajuan)->with('success', 'Kendaraan ' . $kendaraan->nrkb . ' berhasil ditambahkan.');
     }
 
     /**
-     * Menampilkan form untuk mengedit detail kendaraan.
+     * Menampilkan form untuk mengedit detail kendaraan. (Hanya Penulis)
      */
     public function edit(Kendaraan $kendaraan)
     {
         if (Auth::id() !== $kendaraan->pengajuan->user_id) {
             abort(403, 'Akses ditolak.');
         }
-        if (!in_array($kendaraan->pengajuan->status, ['draft', 'pengajuan'])) {
+        if (!in_array($kendaraan->status, ['pengajuan'])) {
             return redirect()->route('pengajuan.show', $kendaraan->pengajuan)
-                             ->with('error', 'Kendaraan tidak dapat diedit karena pengajuan sudah diproses.');
+                             ->with('error', 'Kendaraan tidak dapat diedit karena sudah diproses.');
         }
         $kendaraan->load('media');
         return view('kendaraan.edit', compact('kendaraan'));
     }
 
     /**
-     * Menyimpan perubahan pada kendaraan yang diedit.
+     * Menyimpan perubahan pada kendaraan yang diedit. (Hanya Penulis)
      */
     public function update(Request $request, Kendaraan $kendaraan)
     {
         if (Auth::id() !== $kendaraan->pengajuan->user_id) {
             abort(403, 'Akses ditolak.');
         }
-        if (!in_array($kendaraan->pengajuan->status, ['draft', 'pengajuan'])) {
+        if (!in_array($kendaraan->status, ['pengajuan'])) {
             return redirect()->route('pengajuan.show', $kendaraan->pengajuan)
-                             ->with('error', 'Kendaraan tidak dapat diedit karena pengajuan sudah diproses.');
+                             ->with('error', 'Kendaraan tidak dapat diedit karena sudah diproses.');
         }
 
         // 1. Validasi
          $validated = $request->validate([
+            //... (semua validasi data & file) ...
             'nama_pemilik' => 'required|string|max:255',
             'nik_pemilik' => 'required|string|max:100',
             'alamat_pemilik' => 'required|string',
@@ -147,8 +138,6 @@ class KendaraanController extends Controller
             'nomor_mesin' => 'required|string|max:255',
             'warna_tnkb' => 'required|string|max:50',
             'nomor_bpkb' => 'required|string|max:255',
-
-            // File bersifat opsional saat update
             'surat_permohonan'   => 'nullable|array',
             'surat_permohonan.*' => 'required_with:surat_permohonan|mimes:pdf,docx|max:10240',
             'surat_pernyataan'   => 'nullable|array',
@@ -173,13 +162,13 @@ class KendaraanController extends Controller
         // 3. Update dokumen
         $this->uploadDokumen($request, $kendaraan, true);
         
-        // 4. Catat ke Log Histori
+        // 4. Catat ke Log Histori (per KENDARAAN)
         $user = Auth::user();
-        PengajuanLog::create([
-            'pengajuan_id' => $kendaraan->pengajuan_id,
+        KendaraanLog::create([
+            'kendaraan_id' => $kendaraan->id,
             'user_id'      => $user->id,
-            'aksi'         => 'Kendaraan diupdate: ' . $kendaraan->nrkb,
-            'status_baru'  => $kendaraan->pengajuan->status,
+            'aksi'         => 'Kendaraan diupdate',
+            'status_baru'  => $kendaraan->status,
             'catatan'      => 'Data kendaraan (' . $kendaraan->merk_kendaraan . ') diperbarui oleh ' . ($user->unit_kerja ?? $user->name),
         ]);
 
@@ -188,40 +177,44 @@ class KendaraanController extends Controller
     }
 
     /**
-     * Menghapus satu kendaraan dari bundel pengajuan.
+     * Menghapus satu kendaraan dari bundel pengajuan. (Bisa oleh Penulis atau Admin)
      */
     public function destroy(Kendaraan $kendaraan)
     {
-        if (Auth::id() !== $kendaraan->pengajuan->user_id) {
+        // PERBAIKAN: Izinkan Admin atau Pemilik untuk menghapus
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['admin', 'superadmin']);
+        $isPemilik = ($user->id === $kendaraan->pengajuan->user_id);
+
+        if (!$isAdmin && !$isPemilik) {
             abort(403, 'Akses ditolak.');
         }
-        if (!in_array($kendaraan->pengajuan->status, ['draft', 'pengajuan'])) {
-            return redirect()->route('pengajuan.show', $kendaraan->pengajuan)
-                             ->with('error', 'Kendaraan tidak dapat dihapus karena pengajuan sudah diproses.');
+        
+        // Hanya bisa hapus jika status masih 'pengajuan'
+        if ($kendaraan->status !== 'pengajuan') {
+            $redirectRoute = $isAdmin ? 'admin.pengajuan.show' : 'pengajuan.show';
+            return redirect()->route($redirectRoute, $kendaraan->pengajuan)
+                             ->with('error', 'Kendaraan tidak dapat dihapus karena sudah diproses.');
         }
 
         $pengajuan = $kendaraan->pengajuan;
         $nrkb = $kendaraan->nrkb;
-
-        $kendaraan->delete();
-
-        if ($pengajuan->kendaraans()->count() == 0) {
-            $pengajuan->update(['status' => 'draft']);
-            $statusLog = 'draft';
-        } else {
-            $statusLog = $pengajuan->status;
-        }
         
-        $user = Auth::user();
-        PengajuanLog::create([
-            'pengajuan_id' => $pengajuan->id,
+        // Buat log DULU, baru hapus
+        KendaraanLog::create([
+            'kendaraan_id' => $kendaraan->id,
             'user_id'      => $user->id,
             'aksi'         => 'Kendaraan dihapus: ' . $nrkb,
-            'status_baru'  => $statusLog,
-            'catatan'      => 'Kendaraan (' . $nrkb . ') dihapus dari pengajuan oleh ' . ($user->unit_kerja ?? $user->name),
+            'status_baru'  => $kendaraan->status,
+            'catatan'      => 'Kendaraan (' . $nrkb . ') dihapus oleh ' . ($user->unit_kerja ?? $user->name),
         ]);
-
-        return redirect()->route('pengajuan.show', $pengajuan)->with('success', 'Kendaraan ' . $nrkb . ' berhasil dihapus.');
+        
+        // Hapus kendaraan
+        $kendaraan->delete();
+        
+        // Redirect kembali ke halaman yang sesuai
+        $redirectRoute = $isAdmin ? 'admin.pengajuan.show' : 'pengajuan.show';
+        return redirect()->route($redirectRoute, $pengajuan)->with('success', 'Kendaraan ' . $nrkb . ' berhasil dihapus.');
     }
 
 
@@ -248,21 +241,20 @@ class KendaraanController extends Controller
     }
 
     /**
-     * [Level 3 UX - METHOD YANG HILANG]
-     * Menampilkan detail read-only dari satu kendaraan.
+     * [Level 3 UX] Menampilkan detail read-only dari satu kendaraan.
      */
     public function show(Kendaraan $kendaraan)
     {
         // Keamanan: Pastikan hanya pemilik ATAU admin yang bisa melihat
         $isAdmin = Auth::user()->hasRole(['admin', 'superadmin']);
-        $isPemilik = Auth::id() === $kendaraan->pengajuan->user_id;
+        $isPemilik = (Auth::id() === $kendaraan->pengajuan->user_id);
 
         if (!$isAdmin && !$isPemilik) {
             abort(403, 'Akses ditolak.');
         }
         
-        // Load semua koleksi media
-        $kendaraan->load('media');
+        // Load media dan log milik kendaraan ini
+        $kendaraan->load(['media', 'logs.user']); 
         
         return view('kendaraan.show', compact('kendaraan'));
     }

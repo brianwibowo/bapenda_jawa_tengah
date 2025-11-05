@@ -1,71 +1,59 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center" style="gap: 19.3rem;">
-            <span>Detail Kendaraan: {{ $kendaraan->nrkb }} (dari Pengajuan: {{ $kendaraan->pengajuan->nomor_pengajuan }})</span>
-            <a href="{{ route('pengajuan.show', $kendaraan->pengajuan) }}" class="btn btn-secondary flex-shrink-0">
-                <i class="fas fa-arrow-left me-2"></i> Kembali
-            </a>
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            {{-- Header --}}
+            <span class_ ="fs-4">
+                Detail Kendaraan: <span class="fw-bold">{{ $kendaraan->nrkb }}</span> 
+                <span class="fs-6 text-muted">(dari Bundel: {{ $kendaraan->pengajuan->nomor_pengajuan }})</span>
+            </span>
+            
+            {{-- Tombol Kembali (Dinamis) --}}
+            @auth
+                @if(Auth::user()->hasRole('admin|superadmin'))
+                    {{-- Admin kembali ke Dasbor Bundel Admin --}}
+                    <a href="{{ route('admin.pengajuan.show', $kendaraan->pengajuan) }}" class="btn btn-secondary flex-shrink-0">
+                        <i class="fas fa-arrow-left me-2"></i> Kembali ke Dasbor Bundel
+                    </a>
+                @else
+                    {{-- Penulis kembali ke Halaman Bundel Penulis --}}
+                    <a href="{{ route('pengajuan.show', $kendaraan->pengajuan) }}" class="btn btn-secondary flex-shrink-0">
+                        <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar Kendaraan
+                    </a>
+                @endif
+            @endauth
         </div>
     </x-slot>
 
-    {{-- Pesan Sukses --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="row">
-        {{-- Kolom Kiri: History Log & Data Identitas --}}
+        <!-- === KOLOM KIRI: HISTORY LOG KENDARAAN === -->
         <div class="col-lg-8 mb-4">
-            {{-- Card History Pengajuan (READ-ONLY) --}}
+            
+            <!-- Card History Pengajuan (PER KENDARAAN INI) -->
             <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">History Pengajuan</h5>
+                <div class="card-header" style="background-color: #E9F0E6;">
+                    <h5 class="mb-0 fw-bold">History Kendaraan Ini ({{ $kendaraan->nrkb }})</h5>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-hover mb-0">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
-                                    <th width="29%">Log</th>
+                                    <th width="20%">Aksi</th>
                                     <th width="10%">Status</th>
                                     <th width="18%">Oleh</th>
-                                    <th width="15%">Tanggal</th>
+                                    <th width="15%">Waktu</th>
                                     <th width="8%" class="text-center">File</th>
-                                    <th width="20%">Catatan</th>
+                                    <th width="29%">Catatan</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($kendaraan->pengajuan->logs()->orderBy('created_at', 'desc')->get() as $log)
+                                {{-- PERBAIKAN: Loop menggunakan $kendaraan->logs (BUKAN $kendaraan->pengajuan->logs) --}}
+                                @forelse ($kendaraan->logs as $log)
                                     <tr>
-                                        <td>
-                                            {{ $log->catatan ?? '-' }}
-                                            @if($log->catatan && strlen($log->catatan) > 60)
-                                                <button type="button" class="btn btn-sm btn-link p-0" data-bs-toggle="modal" data-bs-target="#logModal{{ $log->id }}">
-                                                    Lihat Selengkapnya
-                                                </button>
-                                                
-                                                {{-- Modal Log Lengkap --}}
-                                                <div class="modal fade" id="logModal{{ $log->id }}" tabindex="-1" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">Log Lengkap</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>{{ $log->catatan }}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        </td>
+                                        <td>{{ $log->aksi }}</td>
                                         <td>
                                             @if($log->status_baru == 'pengajuan')
-                                                <span class="badge bg-warning text-dark">Baru</span>
+                                                <span class="badge bg-warning text-dark">Diajukan</span>
                                             @elseif($log->status_baru == 'diproses')
                                                 <span class="badge bg-info text-dark">Diproses</span>
                                             @elseif($log->status_baru == 'selesai')
@@ -94,13 +82,13 @@
                                             @endif
                                         </td>
                                         <td>
-                                            {{ $log->aksi ?? '-' }}
+                                            {{ $log->catatan ?? '-' }}
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center text-muted py-3">
-                                            Belum ada histori tindakan
+                                            Belum ada histori tindakan untuk kendaraan ini.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -110,94 +98,47 @@
                 </div>
             </div>
 
-            {{-- Card Data Identitas --}}
+            <!-- Card Data Identitas -->
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Data Identitas</h5>
                 </div>
                 <div class="card-body">
-                    {{-- Identitas Pemilik --}}
                     <h6 class="fw-bold mb-3">Identitas Pemilik</h6>
                     <div class="table-responsive mb-4">
                         <table class="table table-sm table-bordered">
-                            <tr>
-                                <th width="30%">Atas Nama</th>
-                                <td>{{ $kendaraan->nama_pemilik }}</td>
-                            </tr>
-                            <tr>
-                                <th>NIK/TDP/NIB</th>
-                                <td>{{ $kendaraan->nik_pemilik }}</td>
-                            </tr>
-                            <tr>
-                                <th>Alamat</th>
-                                <td>{{ $kendaraan->alamat_pemilik }}</td>
-                            </tr>
-                            <tr>
-                                <th>No. Telepon/HP</th>
-                                <td>{{ $kendaraan->telp_pemilik }}</td>
-                            </tr>
-                            <tr>
-                                <th>Email</th>
-                                <td>{{ $kendaraan->email_pemilik }}</td>
-                            </tr>
+                            <tr><th width="30%">Atas Nama</th><td>{{ $kendaraan->nama_pemilik }}</td></tr>
+                            <tr><th>NIK/TDP/NIB</th><td>{{ $kendaraan->nik_pemilik }}</td></tr>
+                            <tr><th>Alamat</th><td>{{ $kendaraan->alamat_pemilik }}</td></tr>
+                            <tr><th>No. Telepon/HP</th><td>{{ $kendaraan->telp_pemilik }}</td></tr>
+                            <tr><th>Email</th><td>{{ $kendaraan->email_pemilik }}</td></tr>
                         </table>
                     </div>
 
-                    {{-- Identitas Kendaraan --}}
                     <h6 class="fw-bold mb-3">Identitas Kendaraan Bermotor</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered">
-                            <tr>
-                                <th width="30%">NRKB</th>
-                                <td>{{ $kendaraan->nrkb }}</td>
-                            </tr>
-                            <tr>
-                                <th>Merk / Tipe</th>
-                                <td>{{ $kendaraan->merk_kendaraan }} / {{ $kendaraan->tipe_kendaraan }}</td>
-                            </tr>
-                            <tr>
-                                <th>Jenis / Model</th>
-                                <td>{{ $kendaraan->jenis_kendaraan }} / {{ $kendaraan->model_kendaraan }}</td>
-                            </tr>
-                            <tr>
-                                <th>Tahun Pembuatan</th>
-                                <td>{{ $kendaraan->tahun_pembuatan }}</td>
-                            </tr>
-                            <tr>
-                                <th>Isi Silinder</th>
-                                <td>{{ $kendaraan->isi_silinder }}</td>
-                            </tr>
-                            <tr>
-                                <th>Bahan Bakar</th>
-                                <td>{{ $kendaraan->jenis_bahan_bakar }}</td>
-                            </tr>
-                            <tr>
-                                <th>Nomor Rangka</th>
-                                <td>{{ $kendaraan->nomor_rangka }}</td>
-                            </tr>
-                            <tr>
-                                <th>Nomor Mesin</th>
-                                <td>{{ $kendaraan->nomor_mesin }}</td>
-                            </tr>
-                            <tr>
-                                <th>Warna TNKB</th>
-                                <td>{{ $kendaraan->warna_tnkb }}</td>
-                            </tr>
-                            <tr>
-                                <th>Nomor BPKB</th>
-                                <td>{{ $kendaraan->nomor_bpkb }}</td>
-                            </tr>
+                            <tr><th width="30%">NRKB</th><td>{{ $kendaraan->nrkb }}</td></tr>
+                            <tr><th>Merk / Tipe</th><td>{{ $kendaraan->merk_kendaraan }} / {{ $kendaraan->tipe_kendaraan }}</td></tr>
+                            <tr><th>Jenis / Model</th><td>{{ $kendaraan->jenis_kendaraan }} / {{ $kendaraan->model_kendaraan }}</td></tr>
+                            <tr><th>Tahun Pembuatan</th><td>{{ $kendaraan->tahun_pembuatan }}</td></tr>
+                            <tr><th>Isi Silinder</th><td>{{ $kendaraan->isi_silinder }}</td></tr>
+                            <tr><th>Bahan Bakar</th><td>{{ $kendaraan->jenis_bahan_bakar }}</td></tr>
+                            <tr><th>Nomor Rangka</th><td>{{ $kendaraan->nomor_rangka }}</td></tr>
+                            <tr><th>Nomor Mesin</th><td>{{ $kendaraan->nomor_mesin }}</td></tr>
+                            <tr><th>Warna TNKB</th><td>{{ $kendaraan->warna_tnkb }}</td></tr>
+                            <tr><th>Nomor BPKB</th><td>{{ $kendaraan->nomor_bpkb }}</td></tr>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Kolom Kanan: Dokumen --}}
+        <!-- === KOLOM KANAN: DOKUMEN KENDARAAN === -->
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Dokumen Terlampir</h5>
+                    <h5 class="mb-0">Dokumen Terlampir (Kendaraan Ini)</h5>
                 </div>
                 <div class="card-body">
                     @php
@@ -231,14 +172,16 @@
                 </div>
             </div>
 
-            {{-- Tombol Edit (Jika diperlukan) --}}
-            <div class="card mt-3">
-                <div class="card-body">
-                    <a href="{{ route('kendaraan.edit', $kendaraan) }}" class="btn btn-warning w-100">
-                        <i class="fas fa-edit me-2"></i>Edit Kendaraan
-                    </a>
+            {{-- Tombol Edit (Hanya tampil untuk Penulis dan jika status masih 'pengajuan') --}}
+            @if(Auth::id() === $kendaraan->pengajuan->user_id && $kendaraan->status == 'pengajuan')
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <a href="{{ route('kendaraan.edit', $kendaraan) }}" class="btn btn-warning w-100">
+                            <i class="fas fa-edit me-2"></i>Edit Kendaraan Ini
+                        </a>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

@@ -47,7 +47,6 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Nomor Pengajuan</th>
-                                    <th>Pemilik</th>
                                     <th>Tanggal Masuk</th>
                                     <th>Update Terakhir</th>
                                     <th>Status</th>
@@ -58,7 +57,6 @@
                                 @forelse ($pengajuans as $pengajuan)
                                     <tr>
                                         <td><strong>{{ $pengajuan->nomor_pengajuan }}</strong></td>
-                                        <td>{{ $pengajuan->nama_pemilik }}</td>
                                         <td>{{ $pengajuan->created_at->format('d M Y') }}</td>
                                         <td>{{ $pengajuan->updated_at->format('d M Y') }}</td>
                                         <td>
