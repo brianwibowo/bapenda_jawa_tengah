@@ -40,12 +40,12 @@
                                         <td>
                                             {{-- TOMBOL VIEW (Menuju Level 3) --}}
                                             <a href="{{ route('kendaraan.show', $kendaraan) }}" class="btn btn-sm btn-info" title="Lihat Detail Kendaraan">
-                                                <i class="fas fa-eye"></i> View
+                                                <i class="fas fa-eye"></i> Lihat Status/Kendaraan
                                             </a>
                                             
                                             {{-- Tombol Edit --}}
                                             <a href="{{ route('kendaraan.edit', $kendaraan) }}" class="btn btn-sm btn-warning" title="Edit Kendaraan">
-                                                <i class="fas fa-edit"></i> Edit
+                                                <i class="fas fa-edit"></i> Edit Kendaraan
                                             </a>
 
                                             {{-- Tombol Hapus Dihilangkan sesuai permintaanmu --}}

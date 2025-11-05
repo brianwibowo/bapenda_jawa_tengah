@@ -1,6 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        Edit Kendaraan: {{ $kendaraan->nrkb }} (dari Pengajuan: {{ $kendaraan->pengajuan->nomor_pengajuan }})
+        <div class="d-flex justify-content-between align-items-center" style="gap: 19.3rem;">
+            <span>Edit Kendaraan: {{ $kendaraan->nrkb }} (dari Pengajuan: {{ $kendaraan->pengajuan->nomor_pengajuan }})</span>
+            <a href="{{ route('pengajuan.show', $kendaraan->pengajuan) }}" class="btn btn-secondary flex-shrink-0">
+                <i class="fas fa-arrow-left me-2"></i> Kembali
+            </a>
+        </div>
     </x-slot>
 
     {{-- Menampilkan pesan error jika ada --}}
@@ -85,7 +90,8 @@
                         <div class="row">
                              <div class="col-md-6 mb-3">
                                 <label for="tahun_pembuatan" class="form-label">Tahun Pembuatan</label>
-                                <input type="number" class="form-control" id="tahun_pembuatan" name="tahun_pembuatan" value="{{ old('tahun_pembuatan') }}" required min="1901" max="{{ date('Y') }}">                            </div>
+                                <input type="number" class="form-control" id="tahun_pembuatan" name="tahun_pembuatan" value="{{ old('tahun_pembuatan', $kendaraan->tahun_pembuatan) }}" required min="1901" max="{{ date('Y') }}">
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label for="isi_silinder" class="form-label">Isi Silinder / Daya Listrik</label>
                                 <input type="text" class="form-control" id="isi_silinder" name="isi_silinder" value="{{ old('isi_silinder', $kendaraan->isi_silinder) }}" required>

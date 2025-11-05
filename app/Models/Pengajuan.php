@@ -8,6 +8,36 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string|null $nomor_pengajuan
+ * @property int $user_id
+ * @property string $status
+ * @property string|null $catatan_admin
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kendaraan> $kendaraans
+ * @property-read int|null $kendaraans_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PengajuanLog> $logs
+ * @property-read int|null $logs_count
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereCatatanAdmin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereNomorPengajuan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Pengajuan withoutTrashed()
+ * @mixin \Eloquent
+ */
 class Pengajuan extends Model
 {
     use HasFactory, SoftDeletes; 
