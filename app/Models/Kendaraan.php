@@ -75,16 +75,30 @@ class Kendaraan extends Model implements HasMedia
      */
     protected $fillable = [
         'pengajuan_id',
-        
-        // Kolom Pemilik
-        'nama_pemilik', 'nik_pemilik', 'alamat_pemilik', 'telp_pemilik', 'email_pemilik',
-        
-        // Kolom Kendaraan
-        'nrkb', 'jenis_kendaraan', 'model_kendaraan', 'merk_kendaraan', 'tipe_kendaraan',
-        'tahun_pembuatan', 'isi_silinder', 'jenis_bahan_bakar', 'nomor_rangka', 'nomor_mesin',
-        'warna_tnkb', 'nomor_bpkb',
+        'pemilik_id', // <-- PERUBAHAN: Tambahkan 'pemilik_id'
 
-        // Kolom Status (PINDAH KE SINI)
+        // HAPUS SEMUA KOLOM PEMILIK DARI SINI
+        // 'nama_pemilik',
+        // 'nik_pemilik',
+        // 'alamat_pemilik',
+        // 'telp_pemilik',
+        // 'email_pemilik',
+        
+        // Kolom Kendaraan (Tetap sama)
+        'nrkb',
+        'jenis_kendaraan',
+        'model_kendaraan',
+        'merk_kendaraan',
+        'tipe_kendaraan',
+        'tahun_pembuatan',
+        'isi_silinder',
+        'jenis_bahan_bakar',
+        'nomor_rangka',
+        'nomor_mesin',
+        'warna_tnkb',
+        'nomor_bpkb',
+
+        // Kolom Status (Tetap sama)
         'status',
         'catatan_admin',
     ];
@@ -98,10 +112,18 @@ class Kendaraan extends Model implements HasMedia
     }
 
     /**
-     * Relasi BARU: Satu Kendaraan punya BANYAK Log Histori.
+     * Relasi BARU: Satu Kendaraan ini milik satu Pemilik.
+     */
+    public function pemilik(): BelongsTo
+    {
+        return $this->belongsTo(Pemilik::class);
+    }
+
+    /**
+     * Relasi: Satu Kendaraan punya BANYAK Log Histori.
      */
     public function logs(): HasMany
     {
-        return $this->hasMany(KendaraanLog::class)->latest(); // Urutkan log terbaru di atas
+        return $this->hasMany(KendaraanLog::class)->latest();
     }
 }

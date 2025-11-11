@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Kendaraan;
 use App\Models\Pengajuan;
 use App\Models\KendaraanLog;
+use App\Models\Pemilik; // <-- 1. IMPORT MODEL PEMILIK BARU
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr; // <-- 2. Import Array helper
 
 class KendaraanController extends Controller
 {
@@ -23,7 +25,8 @@ class KendaraanController extends Controller
     }
 
     /**
-     * Menyimpan kendaraan baru ke database dan menempelkannya ke bundel pengajuan.
+     * [ROMBAK TOTAL]
+     * Menyimpan data Pemilik & Kendaraan ke tabel terpisah.
      */
     public function store(Request $request, Pengajuan $pengajuan)
     {
@@ -31,13 +34,16 @@ class KendaraanController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        // 1. Validasi
-        $validated = $request->validate([
+        // 1. Validasi semua input (Pemilik + Kendaraan + Dokumen)
+        $validatedData = $request->validate([
+            // Validasi Pemilik
             'nama_pemilik' => 'required|string|max:255',
-            'nik_pemilik' => 'required|string|max:100',
+            'nik_pemilik' => 'required|string|max:100', // NIK akan jadi kunci
             'alamat_pemilik' => 'required|string',
             'telp_pemilik' => 'required|string|max:20',
             'email_pemilik' => 'required|email|max:255',
+            
+            // Validasi Kendaraan
             'nrkb' => 'required|string|max:20',
             'jenis_kendaraan' => 'required|string|max:100',
             'model_kendaraan' => 'required|string|max:100',
@@ -50,6 +56,8 @@ class KendaraanController extends Controller
             'nomor_mesin' => 'required|string|max:255',
             'warna_tnkb' => 'required|string|max:50',
             'nomor_bpkb' => 'required|string|max:255',
+
+            // Validasi file (array, max 10MB)
             'surat_permohonan'   => 'required|array|min:1',
             'surat_permohonan.*' => 'required|mimes:pdf,docx|max:10240',
             'surat_pernyataan'   => 'required|array|min:1',
@@ -68,14 +76,42 @@ class KendaraanController extends Controller
             'stnk.*' => 'required|mimes:pdf,docx|max:10240',
         ]);
 
-        // 2. Buat record Kendaraan baru
-        $dataToCreate = array_merge($validated, ['status' => 'pengajuan']);
-        $kendaraan = $pengajuan->kendaraans()->create($dataToCreate);
+        // 2. Pisahkan data Pemilik
+        $dataPemilik = [
+            'nama_pemilik' => $validatedData['nama_pemilik'],
+            'nik_pemilik' => $validatedData['nik_pemilik'],
+            'alamat_pemilik' => $validatedData['alamat_pemilik'],
+            'telp_pemilik' => $validatedData['telp_pemilik'],
+            'email_pemilik' => $validatedData['email_pemilik'],
+        ];
 
-        // 3. Upload dokumen
+        // 3. Cari atau Buat Pemilik baru (berdasarkan NIK)
+        // updateOrCreate:
+        // - Jika NIK sudah ada, update datanya.
+        // - Jika NIK belum ada, buat record baru.
+        $pemilik = Pemilik::updateOrCreate(
+            ['nik_pemilik' => $validatedData['nik_pemilik']], // Kunci unik untuk mencari
+            $dataPemilik  // Data untuk di-update atau di-create
+        );
+
+        // 4. Pisahkan data Kendaraan (ambil semua KECUALI data pemilik & file)
+        $dataKendaraan = Arr::except($validatedData, [
+            'nama_pemilik', 'nik_pemilik', 'alamat_pemilik', 'telp_pemilik', 'email_pemilik',
+            'surat_permohonan', 'surat_pernyataan', 'ktp', 'bpkb', 'tbpkp',
+            'cek_fisik', 'foto_ranmor', 'stnk'
+        ]);
+
+        // 5. Tambahkan ID pemilik dan status default
+        $dataKendaraan['pemilik_id'] = $pemilik->id;
+        $dataKendaraan['status'] = 'pengajuan';
+
+        // 6. Buat record Kendaraan baru, hubungkan dengan pengajuan
+        $kendaraan = $pengajuan->kendaraans()->create($dataKendaraan);
+
+        // 7. Upload dan tempelkan semua dokumen ke record KENDARAAN
         $this->uploadDokumen($request, $kendaraan);
         
-        // 4. Catat ke Log Histori (per KENDARAAN)
+        // 8. Catat ke Log Histori (per KENDARAAN)
         $user = Auth::user();
         KendaraanLog::create([
             'kendaraan_id' => $kendaraan->id,
@@ -85,7 +121,7 @@ class KendaraanController extends Controller
             'catatan'      => 'Kendaraan (' . $kendaraan->merk_kendaraan . ') diajukan oleh ' . ($user->unit_kerja ?? $user->name),
         ]);
 
-        // 5. Redirect kembali ke halaman detail bundel
+        // 9. Redirect kembali ke halaman detail bundel
         return redirect()->route('pengajuan.show', $pengajuan)->with('success', 'Kendaraan ' . $kendaraan->nrkb . ' berhasil ditambahkan.');
     }
 
@@ -101,12 +137,16 @@ class KendaraanController extends Controller
             return redirect()->route('pengajuan.show', $kendaraan->pengajuan)
                              ->with('error', 'Kendaraan tidak dapat diedit karena sudah diproses.');
         }
-        $kendaraan->load('media');
+        
+        // Load relasi media DAN pemilik (untuk mengisi form)
+        $kendaraan->load(['media', 'pemilik']); 
+        
         return view('kendaraan.edit', compact('kendaraan'));
     }
 
     /**
-     * Menyimpan perubahan pada kendaraan yang diedit. (Hanya Penulis)
+     * [ROMBAK TOTAL]
+     * Menyimpan perubahan pada data Pemilik & Kendaraan.
      */
     public function update(Request $request, Kendaraan $kendaraan)
     {
@@ -119,13 +159,15 @@ class KendaraanController extends Controller
         }
 
         // 1. Validasi
-         $validated = $request->validate([
-            //... (semua validasi data & file) ...
+        $validatedData = $request->validate([
+            // Validasi Pemilik
             'nama_pemilik' => 'required|string|max:255',
             'nik_pemilik' => 'required|string|max:100',
             'alamat_pemilik' => 'required|string',
             'telp_pemilik' => 'required|string|max:20',
             'email_pemilik' => 'required|email|max:255',
+            
+            // Validasi Kendaraan
             'nrkb' => 'required|string|max:20',
             'jenis_kendaraan' => 'required|string|max:100',
             'model_kendaraan' => 'required|string|max:100',
@@ -138,6 +180,8 @@ class KendaraanController extends Controller
             'nomor_mesin' => 'required|string|max:255',
             'warna_tnkb' => 'required|string|max:50',
             'nomor_bpkb' => 'required|string|max:255',
+
+            // Validasi file opsional
             'surat_permohonan'   => 'nullable|array',
             'surat_permohonan.*' => 'required_with:surat_permohonan|mimes:pdf,docx|max:10240',
             'surat_pernyataan'   => 'nullable|array',
@@ -156,32 +200,54 @@ class KendaraanController extends Controller
             'stnk.*' => 'required_with:stnk|mimes:pdf,docx|max:10240',
         ]);
 
-        // 2. Update data kendaraan
-        $kendaraan->update($validated);
-
-        // 3. Update dokumen
-        $this->uploadDokumen($request, $kendaraan, true);
+        // 2. Pisahkan & Update data Pemilik
+        $dataPemilik = [
+            'nama_pemilik' => $validatedData['nama_pemilik'],
+            'nik_pemilik' => $validatedData['nik_pemilik'],
+            'alamat_pemilik' => $validatedData['alamat_pemilik'],
+            'telp_pemilik' => $validatedData['telp_pemilik'],
+            'email_pemilik' => $validatedData['email_pemilik'],
+        ];
         
-        // 4. Catat ke Log Histori (per KENDARAAN)
+        // Asumsi NIK tidak berubah saat edit, update data pemilik yang terhubung
+        $kendaraan->pemilik->update($dataPemilik);
+        
+        // (Alternatif jika NIK bisa berubah: 
+        // $pemilik = Pemilik::updateOrCreate(['nik_pemilik' => $dataPemilik['nik_pemilik']], $dataPemilik);
+        // $kendaraan->pemilik_id = $pemilik->id; 
+        // )
+
+        // 3. Pisahkan & Update data Kendaraan
+        $dataKendaraan = Arr::except($validatedData, [
+            'nama_pemilik', 'nik_pemilik', 'alamat_pemilik', 'telp_pemilik', 'email_pemilik',
+            'surat_permohonan', 'surat_pernyataan', 'ktp', 'bpkb', 'tbpkp',
+            'cek_fisik', 'foto_ranmor', 'stnk'
+        ]);
+        
+        $kendaraan->update($dataKendaraan);
+
+        // 4. Update dokumen
+        $this->uploadDokumen($request, $kendaraan, true); // true = mode update
+        
+        // 5. Catat ke Log Histori (per KENDARAAN)
         $user = Auth::user();
         KendaraanLog::create([
             'kendaraan_id' => $kendaraan->id,
             'user_id'      => $user->id,
             'aksi'         => 'Kendaraan diupdate',
-            'status_baru'  => $kendaraan->status,
+            'status_baru'  => $kendaraan->status, // status tidak berubah saat edit
             'catatan'      => 'Data kendaraan (' . $kendaraan->merk_kendaraan . ') diperbarui oleh ' . ($user->unit_kerja ?? $user->name),
         ]);
 
-        // 5. Redirect kembali ke halaman detail bundel
+        // 6. Redirect kembali ke halaman detail bundel
         return redirect()->route('pengajuan.show', $kendaraan->pengajuan)->with('success', 'Kendaraan ' . $kendaraan->nrkb . ' berhasil diperbarui.');
     }
 
     /**
-     * Menghapus satu kendaraan dari bundel pengajuan. (Bisa oleh Penulis atau Admin)
+     * Menghapus satu kendaraan dari bundel pengajuan.
      */
     public function destroy(Kendaraan $kendaraan)
     {
-        // PERBAIKAN: Izinkan Admin atau Pemilik untuk menghapus
         $user = Auth::user();
         $isAdmin = $user->hasRole(['admin', 'superadmin']);
         $isPemilik = ($user->id === $kendaraan->pengajuan->user_id);
@@ -190,8 +256,7 @@ class KendaraanController extends Controller
             abort(403, 'Akses ditolak.');
         }
         
-        // Hanya bisa hapus jika status masih 'pengajuan'
-        if ($kendaraan->status !== 'pengajuan') {
+        if (!in_array($kendaraan->status, ['pengajuan'])) {
             $redirectRoute = $isAdmin ? 'admin.pengajuan.show' : 'pengajuan.show';
             return redirect()->route($redirectRoute, $kendaraan->pengajuan)
                              ->with('error', 'Kendaraan tidak dapat dihapus karena sudah diproses.');
@@ -209,17 +274,15 @@ class KendaraanController extends Controller
             'catatan'      => 'Kendaraan (' . $nrkb . ') dihapus oleh ' . ($user->unit_kerja ?? $user->name),
         ]);
         
-        // Hapus kendaraan
-        $kendaraan->delete();
+        $kendaraan->delete(); // Hapus kendaraan
         
-        // Redirect kembali ke halaman yang sesuai
         $redirectRoute = $isAdmin ? 'admin.pengajuan.show' : 'pengajuan.show';
         return redirect()->route($redirectRoute, $pengajuan)->with('success', 'Kendaraan ' . $nrkb . ' berhasil dihapus.');
     }
 
 
     /**
-     * Helper Function untuk meng-handle upload dokumen.
+     * Helper Function untuk meng-handle upload dokumen. (Tidak berubah)
      */
     private function uploadDokumen(Request $request, Kendaraan $kendaraan, $isUpdate = false)
     {
@@ -245,16 +308,16 @@ class KendaraanController extends Controller
      */
     public function show(Kendaraan $kendaraan)
     {
-        // Keamanan: Pastikan hanya pemilik ATAU admin yang bisa melihat
-        $isAdmin = Auth::user()->hasRole(['admin', 'superadmin']);
-        $isPemilik = (Auth::id() === $kendaraan->pengajuan->user_id);
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['admin', 'superadmin']);
+        $isPemilik = ($user->id === $kendaraan->pengajuan->user_id);
 
         if (!$isAdmin && !$isPemilik) {
             abort(403, 'Akses ditolak.');
         }
         
-        // Load media dan log milik kendaraan ini
-        $kendaraan->load(['media', 'logs.user']); 
+        // Load relasi media, logs, DAN pemilik
+        $kendaraan->load(['media', 'logs.user', 'pemilik']); 
         
         return view('kendaraan.show', compact('kendaraan'));
     }
