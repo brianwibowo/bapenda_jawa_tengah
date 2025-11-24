@@ -42,11 +42,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // --- Grup untuk mengelola "Bundel" Pengajuan ---
         Route::prefix('pengajuan-saya')->name('pengajuan.')->group(function () {
             Route::get('/', [PengajuanController::class, 'index'])->name('index'); 
-            Route::post('/', [PengajuanController::class, 'store'])->name('store'); 
+            Route::get('/buat', [PengajuanController::class, 'create'])->name('create'); // Halaman Buat Pengajuan baru
+            Route::post('/simpan-pengajuan', [PengajuanController::class, 'store'])->name('store'); // Simpan pengajuan dengan semua kendaraan
+            Route::post('/simpan-kendaraan', [PengajuanController::class, 'storeKendaraan'])->name('kendaraan.store'); // Simpan satu kendaraan
             Route::get('/{pengajuan}', [PengajuanController::class, 'show'])->name('show');
             Route::delete('/{pengajuan}', [PengajuanController::class, 'destroy'])->name('destroy');
             Route::get('/{pengajuan}/tambah-kendaraan', [KendaraanController::class, 'create'])->name('kendaraan.create');
-            Route::post('/{pengajuan}/simpan-kendaraan', [KendaraanController::class, 'store'])->name('kendaraan.store');
+            Route::post('/{pengajuan}/simpan-kendaraan-lama', [KendaraanController::class, 'store'])->name('kendaraan.store.old'); // Route lama untuk backward compatibility
         });
         
         // --- Grup 'kendaraan' DIPINDAHKAN KELUAR dari role:penulis ---

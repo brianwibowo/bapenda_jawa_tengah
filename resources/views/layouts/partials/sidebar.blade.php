@@ -42,15 +42,21 @@
 
                 {{-- == MENU UNTUK ROLE "PENULIS" (DIPERBARUI) == --}}
                 @role('penulis')
-                    {{-- Hanya satu menu untuk 'pengajuan.index' (Riwayat/Daftar Bundel) --}}
-                    <li class="nav-item {{ request()->routeIs('pengajuan.*') || request()->routeIs('kendaraan.*') ? 'active' : '' }}">
-                        <a href="{{ route('pengajuan.index') }}">
-                            <i class="fas fa-folder-open"></i>
-                            <p>Berkas Pengajuan Saya</p>
+                    {{-- Menu "Buat Pengajuan" (Baru) --}}
+                    <li class="nav-item {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
+                        <a href="{{ route('pengajuan.create') }}">
+                            <i class="fas fa-plus-circle"></i>
+                            <p>Buat Pengajuan</p>
                         </a>
                     </li>
                     
-                    {{-- Link "Buat Pengajuan Berkas" (route 'pengajuan.create') DIHAPUS --}}
+                    {{-- Menu "Daftar Bundel Pengajuan" --}}
+                    <li class="nav-item {{ request()->routeIs('pengajuan.index') || request()->routeIs('pengajuan.show') || request()->routeIs('kendaraan.*') ? 'active' : '' }}">
+                        <a href="{{ route('pengajuan.index') }}">
+                            <i class="fas fa-folder-open"></i>
+                            <p>Daftar Bundel Pengajuan</p>
+                        </a>
+                    </li>
                 @endrole
 
                 {{-- == MENU UNTUK ROLE "ADMIN" & "SUPERADMIN" (Tetap sama) == --}}
