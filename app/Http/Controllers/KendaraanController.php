@@ -246,7 +246,7 @@ class KendaraanController extends Controller
     /**
      * Menghapus satu kendaraan dari bundel pengajuan.
      */
-    public function destroy(Kendaraan $kendaraan)
+    public function destroy(Request $request, Kendaraan $kendaraan)
     {
         $user = Auth::user();
         $isAdmin = $user->hasRole(['admin', 'superadmin']);
@@ -257,6 +257,12 @@ class KendaraanController extends Controller
         }
         
         if (!in_array($kendaraan->status, ['pengajuan'])) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Kendaraan tidak dapat dihapus karena sudah diproses.'
+                ], 422);
+            }
             $redirectRoute = $isAdmin ? 'admin.pengajuan.show' : 'pengajuan.show';
             return redirect()->route($redirectRoute, $kendaraan->pengajuan)
                              ->with('error', 'Kendaraan tidak dapat dihapus karena sudah diproses.');
@@ -276,6 +282,13 @@ class KendaraanController extends Controller
         
         $kendaraan->delete(); // Hapus kendaraan
         
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kendaraan ' . $nrkb . ' berhasil dihapus.'
+            ]);
+        }
+
         $redirectRoute = $isAdmin ? 'admin.pengajuan.show' : 'pengajuan.show';
         return redirect()->route($redirectRoute, $pengajuan)->with('success', 'Kendaraan ' . $nrkb . ' berhasil dihapus.');
     }

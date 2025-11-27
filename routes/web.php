@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/simpan-pengajuan', [PengajuanController::class, 'store'])->name('store'); // Simpan pengajuan dengan semua kendaraan
             Route::post('/simpan-kendaraan', [PengajuanController::class, 'storeKendaraan'])->name('kendaraan.store'); // Simpan satu kendaraan
             Route::get('/{pengajuan}', [PengajuanController::class, 'show'])->name('show');
+            Route::post('/{pengajuan}/log', [PengajuanController::class, 'storeLog'])->name('log.store');
             Route::delete('/{pengajuan}', [PengajuanController::class, 'destroy'])->name('destroy');
             Route::get('/{pengajuan}/tambah-kendaraan', [KendaraanController::class, 'create'])->name('kendaraan.create');
             Route::post('/{pengajuan}/simpan-kendaraan-lama', [KendaraanController::class, 'store'])->name('kendaraan.store.old'); // Route lama untuk backward compatibility

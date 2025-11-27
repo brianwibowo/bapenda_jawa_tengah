@@ -54,7 +54,7 @@
                     <li class="nav-item {{ request()->routeIs('pengajuan.index') || request()->routeIs('pengajuan.show') || request()->routeIs('kendaraan.*') ? 'active' : '' }}">
                         <a href="{{ route('pengajuan.index') }}">
                             <i class="fas fa-folder-open"></i>
-                            <p>Daftar Bundel Pengajuan</p>
+                            <p>Daftar Pengajuan</p>
                         </a>
                     </li>
                 @endrole

@@ -25,15 +25,77 @@ class PengajuanController extends Controller
      * [Langkah 2 UX]
      * Menampilkan halaman daftar "bundel" pengajuan milik penulis.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $pengajuans = Pengajuan::where('user_id', Auth::id())
-                              // Ambil relasi 'kendaraans' agar accessor status bisa bekerja
-                              ->with('kendaraans:id,pengajuan_id,status')
-                              ->withCount('kendaraans')
-                              ->latest()
-                              ->paginate(10);
-                              
+        $query = Pengajuan::where('user_id', Auth::id())
+                          ->with('kendaraans:id,pengajuan_id,status')
+                          ->withCount('kendaraans')
+                          ->latest();
+
+        // Filter: search by nomor_pengajuan
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where('nomor_pengajuan', 'like', "%{$q}%");
+        }
+
+        // Filter: by status (draft, pengajuan, diproses, selesai, ditolak)
+        if ($request->filled('status')) {
+            $status = $request->status;
+
+            if (! in_array($status, ['draft','pengajuan','diproses','selesai','ditolak'])) {
+                // ignore unknown statuses
+            } else {
+                switch ($status) {
+                    case 'draft':
+                        // no kendaraans
+                        $query->whereDoesntHave('kendaraans');
+                        break;
+
+                    case 'ditolak':
+                        // any kendaraan ditolak
+                        $query->whereHas('kendaraans', function ($q) {
+                            $q->where('status', 'ditolak');
+                        });
+                        break;
+
+                    case 'diproses':
+                        // any kendaraan diproses, but exclude those with any ditolak (ditolak takes precedence)
+                        $query->whereHas('kendaraans', function ($q) {
+                            $q->where('status', 'diproses');
+                        })->whereDoesntHave('kendaraans', function ($q) {
+                            $q->where('status', 'ditolak');
+                        });
+                        break;
+
+                    case 'selesai':
+                        // all kendaraans selesai (and at least one exists)
+                        $query->whereHas('kendaraans')
+                              ->whereDoesntHave('kendaraans', function ($q) {
+                                  $q->where('status', '<>', 'selesai');
+                              });
+                        break;
+
+                    case 'pengajuan':
+                        // has kendaraans, none ditolak, none diproses, and not all selesai
+                        $query->whereHas('kendaraans')
+                              ->whereDoesntHave('kendaraans', function ($q) {
+                                  $q->where('status', 'ditolak');
+                              })
+                              ->whereDoesntHave('kendaraans', function ($q) {
+                                  $q->where('status', 'diproses');
+                              })
+                              // ensure at least one kendaraan is not 'selesai' (so not all finished)
+                              ->whereHas('kendaraans', function ($q) {
+                                  $q->where('status', '<>', 'selesai');
+                              });
+                        break;
+                }
+            }
+        }
+
+        $perPage = (int) $request->input('per_page', 10);
+        $pengajuans = $query->paginate($perPage)->appends($request->except('page'));
+
         return view('pengajuan.index', compact('pengajuans'));
     }
 
@@ -199,9 +261,9 @@ class PengajuanController extends Controller
                            ->with('incomplete_kendaraans', $incompleteKendaraans);
         }
 
-        // Pengajuan sudah lengkap, redirect ke show (detail pengajuan)
-        return redirect()->route('pengajuan.show', $pengajuan)
-                         ->with('success', 'Pengajuan ' . $pengajuan->nomor_pengajuan . ' berhasil dibuat dengan ' . $kendaraans->count() . ' kendaraan.');
+        // Pengajuan sudah lengkap, redirect ke index (daftar bundel)
+        return redirect()->route('pengajuan.index')
+                         ->with('success', 'Pengajuan berhasil dibuat! Nomor Pengajuan: ' . $pengajuan->nomor_pengajuan . ' (' . $kendaraans->count() . ' kendaraan)');
     }
 
     /**
@@ -241,6 +303,8 @@ class PengajuanController extends Controller
         $pengajuan->load([
             'kendaraans.pemilik', // Daftar kendaraan dengan data pemilik
             'kendaraans.media', // Media files untuk setiap kendaraan
+            'kendaraans.logs.user', // log per kendaraan
+            'kendaraans.logs.media' // lampiran log per kendaraan
         ]);
         
         // Urutkan kendaraan berdasarkan created_at (yang pertama dibuat = nomor 1)
@@ -248,6 +312,56 @@ class PengajuanController extends Controller
         
         // 3. Tampilkan view
         return view('pengajuan.show', compact('pengajuan'));
+    }
+
+    /**
+     * Store a log entry (comment + optional file) for a kendaraan within a pengajuan (penulis side).
+     */
+    public function storeLog(Request $request, Pengajuan $pengajuan)
+    {
+        if (Auth::id() !== $pengajuan->user_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+            'tipe' => 'required|in:komentar,revisi',
+            'aksi' => 'nullable|string|max:255',
+            'status_baru' => 'nullable|in:pengajuan,diproses,selesai,ditolak',
+            'catatan' => 'nullable|string',
+            'lampiran' => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240',
+        ]);
+
+        $kendaraan = $pengajuan->kendaraans->firstWhere('id', $validated['kendaraan_id']);
+        if (! $kendaraan) {
+            return redirect()->route('pengajuan.show', $pengajuan)->with('error', 'Kendaraan tidak ditemukan dalam bundel ini.');
+        }
+
+        $user = Auth::user();
+
+        $log = KendaraanLog::create([
+            'kendaraan_id' => $kendaraan->id,
+            'user_id' => $user->id,
+            'tipe' => $validated['tipe'],
+            'aksi' => $validated['aksi'] ?? ($validated['tipe'] === 'revisi' ? 'Permintaan Revisi' : 'Komentar'),
+            'status_baru' => $validated['status_baru'] ?? $kendaraan->status,
+            'catatan' => $validated['catatan'] ?? null,
+        ]);
+
+        if ($request->hasFile('lampiran')) {
+            $files = $request->file('lampiran');
+            if (is_array($files)) {
+                foreach ($files as $f) {
+                    if ($f && $f->isValid()) {
+                        $log->addMedia($f)->toMediaCollection('lampiran_log');
+                    }
+                }
+            } else {
+                $log->addMedia($files)->toMediaCollection('lampiran_log');
+            }
+        }
+
+        return redirect()->route('pengajuan.show', $pengajuan)->with('success', 'Log berhasil ditambahkan.');
     }
 
     /**
