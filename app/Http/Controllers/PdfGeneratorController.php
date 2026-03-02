@@ -23,6 +23,9 @@ class PdfGeneratorController extends Controller
             'pemilik' => $pemilik
         ]);
 
+        // 2.1 Set ukuran kertas dan orientasi
+        $pdf->setPaper('A4', 'portrait');
+
         // 3. Tampilkan PDF
         return $pdf->stream('Preview-' . $pengajuan->nomor_pengajuan . '.pdf');
     }
