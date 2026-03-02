@@ -19,7 +19,7 @@
             @if (session('incomplete_kendaraans'))
                 <p>Kendaraan yang belum lengkap: 
                     @foreach (session('incomplete_kendaraans') as $kendaraanId)
-                        <span class="badge bg-warning">Kendaraan ID: {{ $kendaraand }}</span>
+                        <span class="badge bg-warning">Kendaraan ID: {{ $kendaraanId }}</span>
                     @endforeach
                 </p>
             @endif
