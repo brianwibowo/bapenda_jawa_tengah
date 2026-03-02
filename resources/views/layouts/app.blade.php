@@ -34,8 +34,8 @@
             <div class="container">
                 <div class="page-inner">
                     @if (isset($header))
-                    <div class="page-header">
-                        <h3 class="fw-bold mb-3">{{ $header }}</h3>
+                    <div class="page-header" style="display:block!important;">
+                        {{ $header }}
                     </div>
                     @endif
                     
@@ -48,6 +48,7 @@
     </div>
     
     <script src="{{ asset('kaiadmin/js/core/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('kaiadmin/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/kaiadmin.min.js') }}"></script>

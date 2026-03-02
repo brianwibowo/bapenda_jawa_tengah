@@ -19,7 +19,7 @@
             @if (session('incomplete_kendaraans'))
                 <p>Kendaraan yang belum lengkap: 
                     @foreach (session('incomplete_kendaraans') as $kendaraanId)
-                        <span class="badge bg-warning">Kendaraan ID: {{ $kendaraanId }}</span>
+                        <span class="badge bg-warning">Kendaraan ID: {{ $kendaraand }}</span>
                     @endforeach
                 </p>
             @endif
@@ -278,9 +278,15 @@
                             </div>
                         </div>
 
-                        <button type="button" class="btn btn-primary w-100 btn-lg mb-4 btn-save-kendaraan">
-                            <i class="fas fa-save me-2"></i> Simpan Kendaraan
-                        </button>
+                        <div class="d-grid" style="grid-template-columns: 40% 40% 20%; gap: 0; align-items: center;">
+                            <button type="button" class="btn btn-primary btn-lg btn-save-kendaraan">
+                                <i class="fas fa-save me-2"></i> Simpan Kendaraan
+                            </button>
+                            <div></div>
+                            <button type="button" class="btn btn-primary btn-lg btn-pdf-preview" data-pdf-preview="true" target="_blank" style="display: none; justify-self: end;">
+                                <i class="fas fa-file-pdf me-2"></i> Preview PDF
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -420,6 +426,34 @@
 
             document.addEventListener('input', debounce(saveToStorage, 1000));
             document.addEventListener('change', debounce(saveToStorage, 1000));
+            document.addEventListener('input', debounce(updatePdfPreviewButtonVisibility, 500));
+            document.addEventListener('change', debounce(updatePdfPreviewButtonVisibility, 500));
+        }
+
+        function updatePdfPreviewButtonVisibility() {
+            const activeForm = document.querySelector('.kendaraan-form[style="display: block;"]') || document.querySelector('.kendaraan-form:first-of-type');
+            if (!activeForm) return;
+            
+            const index = activeForm.getAttribute('data-kendaraan-index');
+            const btnPdfPreview = activeForm.querySelector('.btn-pdf-preview');
+            
+            if (btnPdfPreview) {
+                const pengajuanId = savedKendaraans[index]?.pengajuan_id;
+                if (pengajuanId && !hasUnsavedChanges()) {
+                    btnPdfPreview.style.display = 'block';
+                    btnPdfPreview.href = `{{ url('pdf/view') }}/${pengajuanId}`;
+                    btnPdfPreview.addEventListener('click', function(e) {
+                        if (!this.href || this.href === `{{ url('cetak/spopd') }}/undefined`) {
+                            e.preventDefault();
+                            alert('Kendaraan belum memiliki ID yang valid.');
+                        } else {
+                            window.open(this.href, '_blank');
+                        }
+                    });
+                } else {
+                    btnPdfPreview.style.display = 'none';
+                }
+            }
         }
 
         function setupNavigationGuards() {
@@ -915,6 +949,7 @@
                     
                     updateTabStyles();
                     updateFinalizeButton();
+                    updatePdfPreviewButtonVisibility();
                     saveToStorage();
                     
                     if (!isAuto && showSuccess) {

@@ -8,6 +8,7 @@ use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\Admin\PengajuanController as AdminPengajuanController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\KendaraanController; // <-- CONTROLLER BARU
+use App\Http\Controllers\PdfGeneratorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,4 +91,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
     });
     
+    Route::get('/pdf/view/{id}', [PdfGeneratorController::class, 'finalPJN'])->name('pdf.view');
+
 });
