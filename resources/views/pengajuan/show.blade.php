@@ -197,8 +197,24 @@
                                             @endphp
                                             @if($media->count() > 0)
                                                 @foreach($media as $file)
+                                                    @php
+                                                        // Build a safe URL: if host is localhost or 127.0.0.1, force port 8000
+                                                        $originalUrl = $file->getUrl();
+                                                        $fileUrl = $originalUrl;
+                                                        $parts = @parse_url($originalUrl);
+                                                        if ($parts && isset($parts['host']) && in_array($parts['host'], ['localhost', '127.0.0.1'])) {
+                                                            $scheme = isset($parts['scheme']) ? $parts['scheme'] : 'http';
+                                                            $host = $parts['host'];
+                                                            $port = 8000;
+                                                            $path = isset($parts['path']) ? $parts['path'] : '';
+                                                            $query = isset($parts['query']) ? ('?'.$parts['query']) : '';
+                                                            $fragment = isset($parts['fragment']) ? ('#'.$parts['fragment']) : '';
+                                                            $fileUrl = $scheme.'://'.$host.':'.$port.$path.$query.$fragment;
+                                                        }
+                                                    @endphp
                                                     <div class="mb-2">
-                                                        <a href="{{ $file->getUrl() }}" 
+                                                        <!-- <a href="{{ $file->getUrl() }}"  -->
+                                                        <a href="{{ $fileUrl }}"  
                                                            target="_blank" 
                                                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center">
                                                             <i class="fas fa-file-pdf me-2"></i>
