@@ -1,13 +1,20 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-grid" style="grid-template-columns: 40% 20% 40%; gap: 0; align-items: center;">
             <div>
                 <h2 class="fw-bold mb-1">Detail Pengajuan</h2>
                 <p class="text-muted mb-0">{{ $pengajuan->nomor_pengajuan }}</p>
             </div>
-            <a href="{{ route('pengajuan.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Kembali
-            </a>
+            <div></div>
+            <div class="d-grid" style="grid-template-columns: 50% 15% 35%; gap: 0; align-items: center;">
+                <a href="{{ route('pengajuan.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Kembali
+                </a>
+                <div></div>
+                <a href="{{ route('pdf.view', $pengajuan->id) }}" class="btn btn-danger" target="_blank">
+                    <i class="fas fa-file-pdf"></i> Cetak PDF
+                </a>
+            </div>
         </div>
     </x-slot>
 
