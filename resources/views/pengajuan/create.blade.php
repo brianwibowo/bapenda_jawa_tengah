@@ -181,10 +181,10 @@
                                 <div class="row">
                                     <!-- Surat Permohonan -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Surat permohonan penghapusan (PDF/DOCX)</label>
-                                        <div class="file-container" data-field="surat_permohonan" data-accept=".pdf,.docx" data-max-size="10240">
+                                        <label class="form-label fw-bold">Surat permohonan penghapusan (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="surat_permohonan" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="surat_permohonan[]" accept=".pdf,.docx" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="surat_permohonan[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
@@ -193,10 +193,10 @@
 
                                     <!-- Surat Pernyataan -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Surat pernyataan kepemilikan (PDF/DOCX)</label>
-                                        <div class="file-container" data-field="surat_pernyataan" data-accept=".pdf,.docx" data-max-size="10240">
+                                        <label class="form-label fw-bold">Surat pernyataan kepemilikan (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="surat_pernyataan" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="surat_pernyataan[]" accept=".pdf,.docx" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="surat_pernyataan[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
@@ -217,10 +217,10 @@
 
                                     <!-- BPKB -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">BPKB (PDF/DOCX)</label>
-                                        <div class="file-container" data-field="bpkb" data-accept=".pdf,.docx" data-max-size="10240">
+                                        <label class="form-label fw-bold">BPKB (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="bpkb" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="bpkb[]" accept=".pdf,.docx" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="bpkb[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
@@ -229,10 +229,10 @@
 
                                     <!-- TBPKP -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">TBPKP (PDF/DOCX)</label>
-                                        <div class="file-container" data-field="tbpkp" data-accept=".pdf,.docx" data-max-size="10240">
+                                        <label class="form-label fw-bold">TBPKP (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="tbpkp" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="tbpkp[]" accept=".pdf,.docx" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="tbpkp[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
@@ -241,10 +241,10 @@
 
                                     <!-- Cek Fisik -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Hasil pemeriksaan cek fisik (PDF/DOCX)</label>
-                                        <div class="file-container" data-field="cek_fisik" data-accept=".pdf,.docx" data-max-size="10240">
+                                        <label class="form-label fw-bold">Hasil pemeriksaan cek fisik (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="cek_fisik" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="cek_fisik[]" accept=".pdf,.docx" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="cek_fisik[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
@@ -253,10 +253,10 @@
 
                                     <!-- Foto Ranmor -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Foto Kendaraan (JPG/PNG)</label>
-                                        <div class="file-container" data-field="foto_ranmor" data-accept=".jpg,.jpeg,.png" data-max-size="10240">
+                                        <label class="form-label fw-bold">Foto Kendaraan (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="foto_ranmor" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="foto_ranmor[]" accept=".jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="foto_ranmor[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
@@ -265,10 +265,10 @@
 
                                     <!-- STNK -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">STNK (PDF/DOCX)</label>
-                                        <div class="file-container" data-field="stnk" data-accept=".pdf,.docx" data-max-size="10240">
+                                        <label class="form-label fw-bold">STNK (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="stnk" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="stnk[]" accept=".pdf,.docx" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="stnk[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
@@ -924,15 +924,45 @@
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            // tell Laravel that we expect JSON back so validation errors
+                            // and auth redirects come as JSON instead of HTML
+                            'Accept': 'application/json',
                         },
                         body: formData
                     });
                     
-                    const data = await response.json();
+                    // handle common HTTP errors before parsing
+                    if (response.status === 419) {
+                        // CSRF/token/session issue
+                        if (!isAuto || force) {
+                            showToast('✗ Sesi Anda kadaluwarsa atau token tidak valid. Silakan refresh dan login ulang.', 'error');
+                        }
+                        return false;
+                    }
+
+                    // try to parse JSON response, but fall back gracefully if it's not JSON
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (err) {
+                        // server returned HTML (probably a 419 or login page)
+                        if (!isAuto || force) {
+                            const text = await response.text();
+                            console.error('Non-JSON response received:', text);
+                            showToast('✗ Server returned unexpected response. Silakan refresh dan coba lagi.', 'error');
+                        }
+                        return false;
+                    }
                     
                     if (!response.ok || !data.success) {
                         if (!isAuto || force) {
-                            alert(data.error || 'Gagal menyimpan kendaraan');
+                            // handle validation errors array
+                            if (data.errors) {
+                                const first = Object.values(data.errors)[0][0];
+                                alert(first);
+                            } else {
+                                alert(data.error || 'Gagal menyimpan kendaraan');
+                            }
                         }
                         return false;
                     }
