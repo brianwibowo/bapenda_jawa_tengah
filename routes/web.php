@@ -77,14 +77,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
 
         // --- Grup Pengelola RBAC & USER (Hanya Admin / Superadmin) ---
-        Route::middleware(['role:admin|Superadmin'])->group(function () {
+        Route::middleware(['role:admin|superadmin'])->group(function () {
             Route::resource('users', UserController::class);
             Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class)->except(['show', 'edit', 'update']);
             Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
         });
 
         // --- Grup Pengelola PENGAJUAN (Admin / Superadmin / Akses Pengajuan) ---
-        Route::middleware(['role:admin|Superadmin|Pengajuan'])->group(function () {
+        Route::middleware(['role:admin|superadmin|Pengajuan'])->group(function () {
             Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index');
             Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
             Route::get('/pengajuan/{pengajuan}/log/{logId}', [AdminPengajuanController::class, 'showLog'])->name('pengajuan.log.show');

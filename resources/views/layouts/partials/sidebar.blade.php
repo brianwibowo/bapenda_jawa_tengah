@@ -64,7 +64,7 @@
                 @endcan
 
                 {{-- == MENU UNTUK ADMIN PENGELOLA PENGAJUAN (Admin / Superadmin / Grup Pengajuan) == --}}
-                @hasanyrole('admin|Superadmin|Pengajuan')
+                @hasanyrole('admin|superadmin|Pengajuan')
                 <li class="nav-item {{ request()->routeIs('admin.pengajuan.*') ? 'active' : '' }}">
                     <a href="{{ route('admin.pengajuan.index') }}">
                         <i class="fas fa-tasks"></i>
@@ -74,7 +74,7 @@
                 @endhasanyrole
 
                 {{-- == MENU UNTUK SUPERADMIN / ADMIN UTAMA (RBAC) == --}}
-                @hasanyrole('admin|Superadmin')
+                @hasanyrole('admin|superadmin')
                 <li class="nav-section">
                     <span class="sidebar-mini-icon">
                         <i class="fa fa-ellipsis-h"></i>
