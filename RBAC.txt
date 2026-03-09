@@ -1,0 +1,33 @@
+1. Modul Manajemen Pengajuan (Untuk Petugas Samsat/Admin)
+Diperuntukkan untuk role petugas yang memverifikasi dokumen warga.
+
+view_all_pengajuan : Bisa melihat seluruh daftar pengajuan yang masuk ke Bapenda. (Route: admin.pengajuan.index)
+view_all_pengajuan_detail : Bisa membuka dan mengecek berkas detail suatu pengajuan/kendaraan di dalamnya. (Route: admin.pengajuan.show)
+update_status_kendaraan : Bisa melakukan verifikasi/mengubah status kendaraan menjadi (Diproses, Selesai, Ditolak). (Route: admin.pengajuan.batchUpdate)
+delete_all_pengajuan : Bisa menghapus paksa pengajuan milik orang lain (biasanya untuk superadmin jika datanya error/kotor/spam). (Route: admin.pengajuan.destroy)
+create_admin_log : Bisa memberikan "Catatan Internal" atau "Meminta Revisi" kepada warga (Penulis). (Route: admin.pengajuan.log.store)
+
+2. Modul Pengajuan & Kendaraan (Untuk Warga / Penulis)
+Diperuntukkan untuk role warga/dealer yang mengajukan berkas STNK baru/balik nama.
+
+view_own_pengajuan : Bisa melihat daftar pengajuan buatannya sendiri.
+create_pengajuan : Membuka form membuat bundel pengajuan baru.
+store_pengajuan : Mensubmit bundel pengajuan agar dikirim ke verifikator.
+edit_own_kendaraan : Mengubah data/berkas kendaraan yang masih Draft/Revisi. (Catatan: Jika sudah Selesai, tombol edit akan hilang dari UI).
+delete_own_kendaraan : Menghapus kendaraannya sendiri dari layar keranjangnya.
+create_own_log : Mengirim komentar balasan atau setor ulang kelengkapan berkas revisi ke admin.
+
+3. Modul PDF Generator (Dari PR generatepdf)
+export_pdf_pengajuan : Diizinkan untuk mengunduh bukti/rekapan pengajuan dalam bentuk PDF.
+
+4. Modul Manajemen Sistem (USER & RBAC)
+Biasanya ini ditugaskan hanya ke satu Role tertinggi (misal: Superadmin / IT Support). Manajemen Pengguna:
+
+view_users : Melihat daftar akun di sistem.
+create_users : Mendaftarkan akun baru via dashboard.
+edit_users : Mengganti data akun dan mengubah Role (Grup Akses) milik seseorang.
+delete_users : Menonaktifkan akun pengguna lain.
+
+5. Manajemen RBAC (Hak Akses & Grup):
+
+manage_rbac : Bisa mengatur Role & Permission (Membuat, mengedit, menghapus). Lebih baik digabung jadi 1 hak akses saja untuk keamanan ketat, khusus untuk konfigurasi inti sistem.

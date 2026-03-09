@@ -1,71 +1,83 @@
 <x-app-layout>
-    <x-slot name="title">
-        Edit Pengguna
+    <x-slot name="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="fw-bold mb-0">Ubah Data Pengguna</h2>
+            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+        </div>
     </x-slot>
 
-    <div class="container">
-        <div class="page-inner">
-            <div class="page-header">
-                <h3 class="fw-bold mb-3">Formulir Edit Pengguna</h3>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Ubah Data Pengguna</div>
-                        </div>
-                        <div class="card-body">
-                             @if ($errors->any())
-                                <div class="alert alert-danger">
-                                    <ul>
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+            <form action="{{ route('admin.users.update', $user) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label fw-bold">Nama Lengkap</label>
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
+                            name="name" value="{{ old('name', $user->name) }}" required>
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                            <form action="{{ route('admin.users.update', $user->id) }}" method="POST">
-                                @csrf
-                                @method('PUT')
-                                <div class="form-group">
-                                    <label for="name">Nama Lengkap</label>
-                                    <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $user->name) }}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="email">Alamat Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" value="{{ old('email', $user->email) }}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="password">Password Baru</label>
-                                    <input type="password" class="form-control" id="password" name="password">
-                                    <small class="form-text text-muted">Kosongkan jika tidak ingin mengubah password.</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="password_confirmation">Konfirmasi Password Baru</label>
-                                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
-                                </div>
-                                <div class="form-group">
-                                    <label>Peran (Roles)</label><br>
-                                    @foreach($roles as $role)
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="roles[]" value="{{ $role->name }}" id="role-{{ $role->id }}" 
-                                                {{ in_array($role->name, $userRoles) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="role-{{ $role->id }}">
-                                                {{ $role->name }}
-                                            </label>
-                                        </div>
-                                    @endforeach
-                                </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
+                            name="email" value="{{ old('email', $user->email) }}" required>
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Pilih Akses Group (Role)</label>
+                        <select class="form-select @error('roles') is-invalid @enderror" name="roles[]" multiple
+                            size="4" required>
+                            @foreach($roles as $role)
+                                <option value="{{ $role->name }}" {{ in_array($role->name, $userRoles) ? 'selected' : '' }}>
+                                    {{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text mt-1">Gunakan CTRL/CMD + Klik untuk memilih lebih dari satu grup akses.
                         </div>
-                        <div class="card-action">
-                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-danger">Batal</a>
-                        </div>
-                        </form>
+                        @error('roles')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
-            </div>
+
+                <hr class="my-4">
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Kosongkan form password di bawah ini jika Anda tidak ingin
+                    mengubah password pengguna.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label fw-bold">Password Baru (Opsional)</label>
+                        <input type="password" class="form-control @error('password') is-invalid @enderror"
+                            id="password" name="password">
+                        @error('password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="password_confirmation" class="form-label fw-bold">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="password_confirmation"
+                            name="password_confirmation">
+                    </div>
+                </div>
+
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Perbarui Profil
+                        Pengguna</button>
+                </div>
+            </form>
         </div>
     </div>
 </x-app-layout>

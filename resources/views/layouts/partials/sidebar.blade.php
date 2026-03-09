@@ -5,7 +5,8 @@
     <div class="sidebar-logo">
         <div class="logo-header" data-background-color="dark">
             <a href="{{ route('dashboard') }}" class="logo">
-                <img src="{{ asset('kaiadmin/img/kaiadmin/logo_light.svg') }}" alt="navbar brand" class="navbar-brand" height="20" />
+                <img src="{{ asset('kaiadmin/img/kaiadmin/logo_light.svg') }}" alt="navbar brand" class="navbar-brand"
+                    height="20" />
             </a>
             <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar">
@@ -37,11 +38,11 @@
                     <span class="sidebar-mini-icon">
                         <i class="fa fa-ellipsis-h"></i>
                     </span>
-                    <h4 class="text-section">Manajemen</h4>
+                    <h4 class="text-section">Pengajuan</h4>
                 </li>
 
-                {{-- == MENU UNTUK ROLE "PENULIS" (DIPERBARUI) == --}}
-                @role('penulis')
+                {{-- == MENU BERBASIS PERMISSION == --}}
+                @can('create_pengajuan')
                     {{-- Menu "Buat Pengajuan" (Baru) --}}
                     <li class="nav-item {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
                         <a href="{{ route('pengajuan.create') }}">
@@ -49,32 +50,59 @@
                             <p>Buat Pengajuan</p>
                         </a>
                     </li>
-                    
+                @endcan
+
+                @can('view_own_pengajuan')
                     {{-- Menu "Daftar Bundel Pengajuan" --}}
-                    <li class="nav-item {{ request()->routeIs('pengajuan.index') || request()->routeIs('pengajuan.show') || request()->routeIs('kendaraan.*') ? 'active' : '' }}">
+                    <li
+                        class="nav-item {{ request()->routeIs('pengajuan.index') || request()->routeIs('pengajuan.show') || request()->routeIs('kendaraan.*') ? 'active' : '' }}">
                         <a href="{{ route('pengajuan.index') }}">
                             <i class="fas fa-folder-open"></i>
                             <p>Daftar Pengajuan</p>
                         </a>
                     </li>
-                @endrole
+                @endcan
 
-                {{-- == MENU UNTUK ROLE "ADMIN" & "SUPERADMIN" (Tetap sama) == --}}
-                @role('admin|superadmin')
-                    <li class="nav-item {{ request()->routeIs('admin.pengajuan.*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.pengajuan.index') }}">
-                            <i class="fas fa-tasks"></i>
-                            <p>Manajemen Pengajuan</p>
-                        </a>
-                    </li>
+                {{-- == MENU UNTUK ADMIN PENGELOLA PENGAJUAN (Admin / Superadmin / Grup Pengajuan) == --}}
+                @hasanyrole('admin|Superadmin|Pengajuan')
+                <li class="nav-item {{ request()->routeIs('admin.pengajuan.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.pengajuan.index') }}">
+                        <i class="fas fa-tasks"></i>
+                        <p>Manajemen Pengajuan</p>
+                    </a>
+                </li>
+                @endhasanyrole
 
-                    <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.users.index') }}">
-                            <i class="fas fa-users-cog"></i>
-                            <p>Manajemen Pengguna</p>
-                        </a>
-                    </li>
-                @endrole
+                {{-- == MENU UNTUK SUPERADMIN / ADMIN UTAMA (RBAC) == --}}
+                @hasanyrole('admin|Superadmin')
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fa fa-ellipsis-h"></i>
+                    </span>
+                    <h4 class="text-section">USER MANAGEMENT</h4>
+                </li>
+
+                <li class="nav-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.permissions.index') }}">
+                        <i class="fas fa-user-lock"></i>
+                        <p>Hak Akses</p>
+                    </a>
+                </li>
+
+                <li class="nav-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.roles.index') }}">
+                        <i class="fas fa-user-shield"></i>
+                        <p>Akses Group</p>
+                    </a>
+                </li>
+
+                <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.users.index') }}">
+                        <i class="fas fa-users-cog"></i>
+                        <p>Pengguna</p>
+                    </a>
+                </li>
+                @endhasanyrole
 
             </ul>
         </div>

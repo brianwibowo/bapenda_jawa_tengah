@@ -17,7 +17,7 @@
             <h4 class="alert-title">Gagal!</h4>
             <p>{{ session('error') }}</p>
             @if (session('incomplete_kendaraans'))
-                <p>Kendaraan yang belum lengkap: 
+                <p>Kendaraan yang belum lengkap:
                     @foreach (session('incomplete_kendaraans') as $kendaraanId)
                         <span class="badge bg-warning">Kendaraan ID: {{ $kendaraanId }}</span>
                     @endforeach
@@ -61,7 +61,8 @@
     <template id="kendaraanFormTemplate">
         <div class="kendaraan-form" data-kendaraan-index="">
             <div class="card mb-4 position-relative">
-                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="hapusKendaraan(this)" title="Hapus Kendaraan">
+                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
+                    style="z-index: 10;" onclick="hapusKendaraan(this)" title="Hapus Kendaraan">
                     <i class="fas fa-times"></i>
                 </button>
                 <div class="card-header text-white" style="background-color: #0d6efd;">
@@ -71,7 +72,7 @@
                     <form class="kendaraan-form-data" enctype="multipart/form-data">
                         <input type="hidden" name="kendaraan_id" class="kendaraan-id-input">
                         <input type="hidden" name="pengajuan_id" class="pengajuan-id-input">
-                        
+
                         <div class="row">
                             <!-- Kolom Identitas Pemilik -->
                             <div class="col-md-6 mb-4">
@@ -90,7 +91,8 @@
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Alamat</label>
-                                            <textarea class="form-control" name="alamat_pemilik" rows="3" required></textarea>
+                                            <textarea class="form-control" name="alamat_pemilik" rows="3"
+                                                required></textarea>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">No. TLP/HP</label>
@@ -138,7 +140,8 @@
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Tahun Pembuatan</label>
-                                                <input type="number" class="form-control" name="tahun_pembuatan" required min="1901" max="{{ date('Y') }}">
+                                                <input type="number" class="form-control" name="tahun_pembuatan"
+                                                    required min="1901" max="{{ date('Y') }}">
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Isi Silinder / Daya Listrik</label>
@@ -181,98 +184,128 @@
                                 <div class="row">
                                     <!-- Surat Permohonan -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Surat permohonan penghapusan (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="surat_permohonan" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <label class="form-label fw-bold">Surat permohonan penghapusan
+                                            (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="surat_permohonan"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="surat_permohonan[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input"
+                                                    name="surat_permohonan[]" accept=".pdf,.docx,.jpg,.jpeg,.png"
+                                                    data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
 
                                     <!-- Surat Pernyataan -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Surat pernyataan kepemilikan (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="surat_pernyataan" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <label class="form-label fw-bold">Surat pernyataan kepemilikan
+                                            (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="surat_pernyataan"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="surat_pernyataan[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input"
+                                                    name="surat_pernyataan[]" accept=".pdf,.docx,.jpg,.jpeg,.png"
+                                                    data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
 
                                     <!-- KTP -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Tanda bukti identitas pemilik (KTP) (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="ktp" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <label class="form-label fw-bold">Tanda bukti identitas pemilik (KTP)
+                                            (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="ktp"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="ktp[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="ktp[]"
+                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
 
                                     <!-- BPKB -->
                                     <div class="col-md-6 mb-4">
                                         <label class="form-label fw-bold">BPKB (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="bpkb" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <div class="file-container" data-field="bpkb"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="bpkb[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="bpkb[]"
+                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
 
                                     <!-- TBPKP -->
                                     <div class="col-md-6 mb-4">
                                         <label class="form-label fw-bold">TBPKP (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="tbpkp" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <div class="file-container" data-field="tbpkp"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="tbpkp[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="tbpkp[]"
+                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
 
                                     <!-- Cek Fisik -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Hasil pemeriksaan cek fisik (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="cek_fisik" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <label class="form-label fw-bold">Hasil pemeriksaan cek fisik
+                                            (PDF/DOCX/JPG/PNG)</label>
+                                        <div class="file-container" data-field="cek_fisik"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="cek_fisik[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="cek_fisik[]"
+                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
 
                                     <!-- Foto Ranmor -->
                                     <div class="col-md-6 mb-4">
                                         <label class="form-label fw-bold">Foto Kendaraan (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="foto_ranmor" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <div class="file-container" data-field="foto_ranmor"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="foto_ranmor[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="foto_ranmor[]"
+                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
 
                                     <!-- STNK -->
                                     <div class="col-md-6 mb-4">
                                         <label class="form-label fw-bold">STNK (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="stnk" data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                        <div class="file-container" data-field="stnk"
+                                            data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
                                             <div class="file-input-group mb-2">
-                                                <input type="file" class="form-control file-input" name="stnk[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
+                                                <input type="file" class="form-control file-input" name="stnk[]"
+                                                    accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFileInput(this)">+ Tambah File</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
                                 </div>
                             </div>
@@ -283,7 +316,8 @@
                                 <i class="fas fa-save me-2"></i> Simpan Kendaraan
                             </button>
                             <div></div>
-                            <button type="button" class="btn btn-primary btn-lg btn-pdf-preview" data-pdf-preview="true" target="_blank" style="display: none; justify-self: end;">
+                            <button type="button" class="btn btn-primary btn-lg btn-pdf-preview" data-pdf-preview="true"
+                                target="_blank" style="display: none; justify-self: end;">
                                 <i class="fas fa-file-pdf me-2"></i> Preview PDF
                             </button>
                         </div>
@@ -296,7 +330,7 @@
     <script>
         let kendaraanCount = 0;
         let currentPengajuanId = null;
-        let savedKendaraans = {}; 
+        let savedKendaraans = {};
         const STORAGE_KEY = 'pengajuan_draft';
         const DRAFT_ACTIVE_KEY = 'pengajuan_draft_active';
         const AUTO_SAVE_DELAY = 2500;
@@ -320,10 +354,10 @@
             Object.keys(autoSaveTimers).forEach(key => clearTimeout(autoSaveTimers[key]));
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const navigationEntry = performance.getEntriesByType('navigation')[0];
             const isReload = navigationEntry && navigationEntry.type === 'reload';
-            
+
             if (!isReload) {
                 clearDraftStorage();
             } else {
@@ -349,7 +383,7 @@
                 toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
                 document.body.appendChild(toastContainer);
             }
-            
+
             // Tentukan warna berdasarkan type
             const bgColor = {
                 'success': '#28a745',
@@ -357,9 +391,9 @@
                 'warning': '#ffc107',
                 'info': '#17a2b8'
             }[type] || '#17a2b8';
-            
+
             const textColor = type === 'warning' ? '#000' : '#fff';
-            
+
             // Buat toast element
             const toast = document.createElement('div');
             toast.style.cssText = `
@@ -372,9 +406,9 @@
                 animation: slideIn 0.3s ease-in;
             `;
             toast.textContent = message;
-            
+
             toastContainer.appendChild(toast);
-            
+
             // Auto remove after 3 seconds
             setTimeout(() => {
                 toast.style.animation = 'slideOut 0.3s ease-out';
@@ -414,8 +448,8 @@
         function setupGlobalListeners() {
             document.getElementById('btnTambahKendaraan').addEventListener('click', tambahKendaraan);
             document.getElementById('btnFinalize').addEventListener('click', finalizePengajuan);
-            
-            beforeUnloadHandler = function(event) {
+
+            beforeUnloadHandler = function (event) {
                 if (hasUnsavedChanges()) {
                     event.preventDefault();
                     event.returnValue = '';
@@ -433,16 +467,16 @@
         function updatePdfPreviewButtonVisibility() {
             const activeForm = document.querySelector('.kendaraan-form[style="display: block;"]') || document.querySelector('.kendaraan-form:first-of-type');
             if (!activeForm) return;
-            
+
             const index = activeForm.getAttribute('data-kendaraan-index');
             const btnPdfPreview = activeForm.querySelector('.btn-pdf-preview');
-            
+
             if (btnPdfPreview) {
                 const pengajuanId = savedKendaraans[index]?.pengajuan_id;
                 if (pengajuanId && !hasUnsavedChanges()) {
                     btnPdfPreview.style.display = 'block';
                     btnPdfPreview.href = `{{ url('pdf/view') }}/${pengajuanId}`;
-                    btnPdfPreview.addEventListener('click', function(e) {
+                    btnPdfPreview.addEventListener('click', function (e) {
                         if (!this.href || this.href === `{{ url('cetak/spopd') }}/undefined`) {
                             e.preventDefault();
                             alert('Kendaraan belum memiliki ID yang valid.');
@@ -459,7 +493,7 @@
         function setupNavigationGuards() {
             const guardedLinks = document.querySelectorAll('.sidebar-content a');
             guardedLinks.forEach(link => {
-                link.addEventListener('click', function(event) {
+                link.addEventListener('click', function (event) {
                     if (!hasUnsavedChanges()) {
                         return;
                     }
@@ -501,18 +535,18 @@
                 const idx = parseInt(form.getAttribute('data-kendaraan-index'));
                 if (idx > maxIndex) maxIndex = idx;
             });
-            
+
             // Index baru adalah maxIndex + 1
             const index = maxIndex + 1;
             kendaraanCount = index;
-            
+
             // Clone template
             const template = document.getElementById('kendaraanFormTemplate');
             const clone = template.content.cloneNode(true);
             const formDiv = clone.querySelector('.kendaraan-form');
             formDiv.setAttribute('data-kendaraan-index', index);
             formDiv.querySelector('.kendaraan-number').textContent = index;
-            
+
             // Update semua input names dengan index (kecuali file inputs yang sudah punya [])
             formDiv.querySelectorAll('input, textarea, select').forEach(input => {
                 if (input.name) {
@@ -525,33 +559,33 @@
                     }
                 }
             });
-            
+
             // Setup file inputs
             formDiv.querySelectorAll('.file-input').forEach(input => {
                 attachFileValidation(input);
             });
             attachAutoSaveHandlers(formDiv, index);
             formDirtyState[index] = false;
-            
+
             // Setup save button
-            formDiv.querySelector('.btn-save-kendaraan').addEventListener('click', function() {
+            formDiv.querySelector('.btn-save-kendaraan').addEventListener('click', function () {
                 simpanKendaraan(index, { showSuccess: true, force: true });
             });
-            
+
             // Tambahkan ke DOM
             document.getElementById('formContainer').appendChild(clone);
-            
+
             // Buat tab
             buatTab(index);
-            
+
             // Aktifkan tab baru
             aktifkanTab(index);
-            
+
             // Update finalize button visibility
             updateFinalizeButton();
-            
+
             saveToStorage();
-            
+
             // Tampilkan notifikasi
             showToast(`✓ Kendaraan ${index} ditambahkan`, 'info');
         }
@@ -560,7 +594,7 @@
             const inputs = formDiv.querySelectorAll('input, textarea, select');
             inputs.forEach(input => {
                 const eventType = input.type === 'file' ? 'change' : 'input';
-                input.addEventListener(eventType, function() {
+                input.addEventListener(eventType, function () {
                     formDirtyState[index] = true;
                     scheduleAutoSave(index);
                 });
@@ -583,7 +617,7 @@
             tab.textContent = `Kendaraan ${index}`;
             tab.setAttribute('data-index', index);
             tab.addEventListener('click', () => aktifkanTab(index));
-            
+
             document.getElementById('kendaraanTabs').appendChild(tab);
             updateTabStyles();
         }
@@ -593,13 +627,13 @@
             document.querySelectorAll('.kendaraan-form').forEach(form => {
                 form.style.display = 'none';
             });
-            
+
             // Show form yang dipilih
             const selectedForm = document.querySelector(`[data-kendaraan-index="${index}"]`);
             if (selectedForm) {
                 selectedForm.style.display = 'block';
             }
-            
+
             // Update tab styles
             document.querySelectorAll('.btn-kendaraan-tab').forEach(btn => {
                 btn.classList.remove('active');
@@ -607,7 +641,7 @@
                     btn.classList.add('active');
                 }
             });
-            
+
             updateTabStyles();
         }
 
@@ -616,7 +650,7 @@
                 const index = btn.getAttribute('data-index');
                 const isActive = btn.classList.contains('active');
                 const isSaved = savedKendaraans[index] && savedKendaraans[index].kendaraan_id;
-                
+
                 if (isActive) {
                     btn.style.backgroundColor = '#ffc107';
                     btn.style.color = '#000';
@@ -635,9 +669,9 @@
             const formDiv = button.closest('.kendaraan-form');
             const index = parseInt(formDiv.getAttribute('data-kendaraan-index'));
             const savedInfo = savedKendaraans[index];
-            
+
             console.log(`[hapusKendaraan] Hapus kendaraan index=${index}, savedInfo:`, savedInfo);
-            
+
             if (savingState[index]) {
                 alert('Sedang menyimpan kendaraan ini. Mohon tunggu beberapa saat.');
                 return;
@@ -662,33 +696,33 @@
             } else {
                 console.log(`[hapusKendaraan] Kendaraan belum ter-save ke DB (savedInfo=${savedInfo}), hanya hapus dari draft`);
             }
-            
+
             // Get current active tab untuk reference
             const currentActiveTab = document.querySelector('.btn-kendaraan-tab.active');
             const isCurrentTabBeingDeleted = currentActiveTab && parseInt(currentActiveTab.getAttribute('data-index')) === index;
-            
+
             // Hapus dari DOM
             formDiv.remove();
-            
+
             // Hapus tab
             const tab = document.querySelector(`.btn-kendaraan-tab[data-index="${index}"]`);
             if (tab) tab.remove();
-            
+
             clearTimeout(autoSaveTimers[index]);
             delete autoSaveTimers[index];
             delete formDirtyState[index];
             delete savingState[index];
-            
+
             console.log(`[hapusKendaraan] Cleanup state untuk index=${index}`);
-            
+
             // Renumber semua kendaraan yang tersisa
             renumberKendaraans();
-            
+
             // Tentukan kendaraan mana yang harus di-fokus setelah delete
             let nextTabToFocus = null;
             const remainingTabs = document.querySelectorAll('.btn-kendaraan-tab');
             const remainingForms = document.querySelectorAll('.kendaraan-form');
-            
+
             if (remainingForms.length === 0) {
                 // Tidak ada kendaraan tersisa, buat baru
                 tambahKendaraan();
@@ -713,17 +747,17 @@
                     }
                 }
             }
-            
+
             // Fokus ke tab yang ditentukan
             if (nextTabToFocus !== null) {
                 console.log(`[hapusKendaraan] Fokus ke kendaraan index=${nextTabToFocus}`);
                 aktifkanTab(nextTabToFocus);
             }
-            
+
             updateFinalizeButton();
             saveToStorage();
             console.log(`[hapusKendaraan] Selesai. savedKendaraans sekarang:`, savedKendaraans);
-            
+
             // Tampilkan info bahwa kendaraan sudah dihapus
             showToast(`Kendaraan ${index} berhasil dihapus`, 'info');
         }
@@ -758,23 +792,23 @@
             const forms = Array.from(document.querySelectorAll('.kendaraan-form')).sort((a, b) => {
                 return parseInt(a.getAttribute('data-kendaraan-index')) - parseInt(b.getAttribute('data-kendaraan-index'));
             });
-            
+
             // Create mapping dari old index ke new index
             const indexMapping = {};
-            
+
             // Renumber dari 1
             forms.forEach((form, newIndex) => {
                 const newNumber = newIndex + 1;
                 const oldIndex = parseInt(form.getAttribute('data-kendaraan-index'));
-                
+
                 // Jika oldIndex != newNumber, perlu di-update
                 if (oldIndex !== newNumber) {
                     indexMapping[oldIndex] = newNumber;
-                    
+
                     // Update form index
                     form.setAttribute('data-kendaraan-index', newNumber);
                     form.querySelector('.kendaraan-number').textContent = newNumber;
-                    
+
                     // Update semua input names
                     form.querySelectorAll('input, textarea, select').forEach(input => {
                         if (input.name) {
@@ -787,14 +821,14 @@
                             }
                         }
                     });
-                    
+
                     // Update save button event listener
                     const saveBtn = form.querySelector('.btn-save-kendaraan');
                     saveBtn.replaceWith(saveBtn.cloneNode(true)); // Remove old listener
-                    form.querySelector('.btn-save-kendaraan').addEventListener('click', function() {
+                    form.querySelector('.btn-save-kendaraan').addEventListener('click', function () {
                         simpanKendaraan(newNumber, { showSuccess: true, force: true });
                     });
-                    
+
                     // Update saved data jika ada
                     if (savedKendaraans[oldIndex]) {
                         savedKendaraans[newNumber] = savedKendaraans[oldIndex];
@@ -807,12 +841,12 @@
                     } else {
                         formDirtyState[newNumber] = false;
                     }
-                    
+
                     // Hapus saving state yang lama
                     if (Object.prototype.hasOwnProperty.call(savingState, oldIndex)) {
                         delete savingState[oldIndex];
                     }
-                    
+
                     // Hapus auto save timer yang lama
                     if (Object.prototype.hasOwnProperty.call(autoSaveTimers, oldIndex)) {
                         clearTimeout(autoSaveTimers[oldIndex]);
@@ -820,27 +854,27 @@
                     }
                 }
             });
-            
+
             // Renumber tabs
             const tabs = Array.from(document.querySelectorAll('.btn-kendaraan-tab')).sort((a, b) => {
                 return parseInt(a.getAttribute('data-index')) - parseInt(b.getAttribute('data-index'));
             });
-            
+
             tabs.forEach((tab, newIndex) => {
                 const newNumber = newIndex + 1;
                 const oldIndex = parseInt(tab.getAttribute('data-index'));
-                
+
                 if (oldIndex !== newNumber) {
                     tab.setAttribute('data-index', newNumber);
                     tab.textContent = `Kendaraan ${newNumber}`;
-                    
+
                     // Remove old listener and add new one
                     const newTab = tab.cloneNode(true);
                     tab.parentNode.replaceChild(newTab, tab);
                     newTab.addEventListener('click', () => aktifkanTab(newNumber));
                 }
             });
-            
+
             // Aktifkan tab pertama jika ada
             if (forms.length > 0) {
                 aktifkanTab(1);
@@ -859,14 +893,14 @@
             if (!form) {
                 return false;
             }
-            
+
             if (!form.checkValidity()) {
                 if (!isAuto || force) {
                     form.reportValidity();
                 }
                 return false;
             }
-            
+
             const missingFileField = getMissingRequiredFile(formDiv);
             if (missingFileField) {
                 if (!isAuto || force) {
@@ -878,10 +912,10 @@
             if (savingState[index]) {
                 return savingState[index];
             }
-            
+
             // Prepare FormData
             const formData = new FormData();
-            
+
             // Ambil semua input dari form
             form.querySelectorAll('input, textarea, select').forEach(input => {
                 if (input.type === 'file' && input.files) {
@@ -901,15 +935,15 @@
                     }
                 }
             });
-            
+
             if (currentPengajuanId) {
                 formData.append('pengajuan_id', currentPengajuanId);
             }
-            
+
             if (savedKendaraans[index] && savedKendaraans[index].kendaraan_id) {
                 formData.append('kendaraan_id', savedKendaraans[index].kendaraan_id);
             }
-            
+
             const saveBtn = formDiv.querySelector('.btn-save-kendaraan');
             let originalText = null;
             if (!isAuto && saveBtn) {
@@ -920,7 +954,7 @@
 
             const savePromise = (async () => {
                 try {
-                    const response = await fetch('{{ route("pengajuan.kendaraan.store") }}', {
+                    const response = await fetch('{{ route("kendaraan.store") }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -930,7 +964,7 @@
                         },
                         body: formData
                     });
-                    
+
                     // handle common HTTP errors before parsing
                     if (response.status === 419) {
                         // CSRF/token/session issue
@@ -953,7 +987,7 @@
                         }
                         return false;
                     }
-                    
+
                     if (!response.ok || !data.success) {
                         if (!isAuto || force) {
                             // handle validation errors array
@@ -972,16 +1006,16 @@
                         pengajuan_id: data.pengajuan_id
                     };
                     currentPengajuanId = data.pengajuan_id;
-                    
+
                     formDiv.querySelector('.kendaraan-id-input').value = data.kendaraan_id;
                     formDiv.querySelector('.pengajuan-id-input').value = data.pengajuan_id;
                     formDirtyState[index] = false;
-                    
+
                     updateTabStyles();
                     updateFinalizeButton();
                     updatePdfPreviewButtonVisibility();
                     saveToStorage();
-                    
+
                     if (!isAuto && showSuccess) {
                         showToast('✓ Kendaraan berhasil disimpan!', 'success');
                     } else if (isAuto) {
@@ -1017,7 +1051,7 @@
             if (!allSaved || !currentPengajuanId) {
                 return;
             }
-            
+
             window.removeEventListener('beforeunload', beforeUnloadHandler);
             clearDraftStorage();
             const form = document.createElement('form');
@@ -1072,7 +1106,7 @@
                 savedKendaraans: savedKendaraans,
                 forms: {}
             };
-            
+
             // Save form values
             document.querySelectorAll('.kendaraan-form').forEach(form => {
                 const index = form.getAttribute('data-kendaraan-index');
@@ -1084,19 +1118,19 @@
                 });
                 data.forms[index] = formData;
             });
-            
+
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
 
         function loadFromStorage() {
             const stored = sessionStorage.getItem(STORAGE_KEY);
             if (!stored) return;
-            
+
             try {
                 const data = JSON.parse(stored);
                 currentPengajuanId = data.currentPengajuanId;
                 savedKendaraans = data.savedKendaraans || {};
-                
+
                 // Restore forms - urutkan berdasarkan index
                 if (data.forms) {
                     const sortedIndices = Object.keys(data.forms).map(Number).sort((a, b) => a - b);
@@ -1112,7 +1146,7 @@
                             });
                         }
                     });
-                    
+
                     // Renumber setelah load untuk memastikan urutan benar
                     renumberKendaraans();
                 }
@@ -1126,12 +1160,12 @@
             const fieldName = container.dataset.field;
             const accept = container.dataset.accept;
             const maxSize = container.dataset.maxSize;
-            
+
             // Find the parent form to get the kendaraan index
             const formDiv = button.closest('.kendaraan-form');
             const index = formDiv ? formDiv.getAttribute('data-kendaraan-index') : '';
             const fullFieldName = index ? `kendaraan_${index}_${fieldName}[]` : `${fieldName}[]`;
-            
+
             const fileInputGroup = document.createElement('div');
             fileInputGroup.className = 'file-input-group mb-2';
             fileInputGroup.innerHTML = `
@@ -1145,7 +1179,7 @@
                     </button>
                 </div>
             `;
-            
+
             container.appendChild(fileInputGroup);
             attachFileValidation(fileInputGroup.querySelector('.file-input'));
         }
@@ -1161,13 +1195,13 @@
         }
 
         function attachFileValidation(input) {
-            input.addEventListener('change', function(e) {
+            input.addEventListener('change', function (e) {
                 const file = e.target.files[0];
                 const maxSizeKB = parseInt(this.dataset.maxSize);
                 const maxSize = maxSizeKB * 1024;
                 const maxSizeMB = maxSizeKB / 1024;
                 const previewElement = this.nextElementSibling;
-                
+
                 if (file) {
                     if (file.size > maxSize) {
                         alert(`File ${file.name} terlalu besar! Maksimal ${maxSizeMB}MB`);
@@ -1175,17 +1209,17 @@
                         previewElement.textContent = '';
                         return;
                     }
-                    
+
                     const allowedTypes = this.accept.split(',').map(type => type.trim());
                     const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-                    
+
                     if (!allowedTypes.includes(fileExt)) {
                         alert(`Format file tidak valid! Gunakan: ${this.accept}`);
                         this.value = '';
                         previewElement.textContent = '';
                         return;
                     }
-                    
+
                     const fileSizeKB = (file.size / 1024).toFixed(2);
                     previewElement.textContent = `✓ ${file.name} (${fileSizeKB} KB)`;
                     previewElement.className = 'text-success file-preview d-block mt-1';
@@ -1228,28 +1262,29 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
+
         .btn-kendaraan-tab.active {
             transform: scale(1.05);
         }
-        
+
         .kendaraan-form {
             display: none;
         }
-        
+
         .kendaraan-form:first-of-type {
             display: block;
         }
-        
+
         .file-input-group {
             animation: slideIn 0.3s ease-out;
         }
-        
+
         @keyframes slideIn {
             from {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
