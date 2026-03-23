@@ -32,6 +32,10 @@ class RbacSeeder extends Seeder
             ['name' => 'delete_pengajuan_publik', 'group_name' => 'Manajemen Pengajuan'],
             ['name' => 'view_log_histori', 'group_name' => 'Manajemen Pengajuan'],
 
+            // Surat Keputusan Khusus PDF
+            ['name' => 'view_own_sk', 'group_name' => 'Surat Keputusan PDF'],
+            ['name' => 'create_sk', 'group_name' => 'Surat Keputusan PDF'],
+
             // Hak Akses (Admin)
             ['name' => 'view_menu_hak_akses', 'group_name' => 'Hak Akses'],
             ['name' => 'create_hak_akses', 'group_name' => 'Hak Akses'],

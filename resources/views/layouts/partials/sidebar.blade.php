@@ -52,6 +52,24 @@
                 </li>
                 @endcan
 
+                @can('view_own_sk')
+                <li class="nav-item {{ request()->routeIs('sk.index') || request()->routeIs('sk.show') ? 'active' : '' }}">
+                    <a href="{{ route('sk.index') }}">
+                        <i class="fas fa-file-alt"></i>
+                        <p>Daftar SKP</p>
+                    </a>
+                </li>
+                @endcan
+
+                @can('create_sk')
+                <li class="nav-item {{ request()->routeIs('sk.create') ? 'active' : '' }}">
+                    <a href="{{ route('sk.create') }}">
+                        <i class="fas fa-file-signature"></i>
+                        <p>Buat SKP</p>
+                    </a>
+                </li>
+                @endcan
+
                 @can('view_menu_daftar_pengajuan')
                 <li class="nav-item {{ request()->routeIs('pengajuan.index') ? 'active' : '' }}">
                     <a href="{{ route('pengajuan.index') }}">
