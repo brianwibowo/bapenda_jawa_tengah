@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             UserSeeder::class, // <-- TAMBAHKAN BARIS INI
+            RbacSeeder::class, // <-- TAMBAHKAN BARIS INI
         ]);
     }
 }

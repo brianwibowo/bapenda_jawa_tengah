@@ -24,8 +24,8 @@
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/kaiadmin.min.css') }}" />
 </head>
 <body>
+    @include('layouts.partials.frame')
     <div class="wrapper">
-        
         @include('layouts.partials.sidebar')
 
         <div class="main-panel">
