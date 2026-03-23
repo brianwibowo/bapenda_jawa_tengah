@@ -18,6 +18,8 @@ class RbacSeeder extends Seeder
         // 1. Definisikan 3 Hak Akses Dasar (Sesuai Request)
         $basicPermissions = [
             'view_own_pengajuan',
+            'view_own_sk',
+            'create_sk',
             'create_pengajuan',
             'store_pengajuan',
         ];

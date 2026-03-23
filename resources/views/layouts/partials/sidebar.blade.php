@@ -63,6 +63,27 @@
                     </li>
                 @endcan
 
+                @can('view_own_sk')
+                    {{-- Menu "Daftar SKP" --}}
+                    <li
+                        class="nav-item {{ request()->routeIs('sk.index') || request()->routeIs('sk.show') ? 'active' : '' }}">
+                        <a href="{{ route('sk.index') }}">
+                            <i class="fas fa-file-alt"></i>
+                            <p>Daftar SKP</p>
+                        </a>
+                    </li>
+                @endcan
+
+                @can('create_sk')
+                    {{-- Menu "Buat SKP" --}}
+                    <li class="nav-item {{ request()->routeIs('sk.create') ? 'active' : '' }}">
+                        <a href="{{ route('sk.create') }}">
+                            <i class="fas fa-file-signature"></i>
+                            <p>Buat SKP</p>
+                        </a>
+                    </li>
+                @endcan
+
                 {{-- == MENU UNTUK ADMIN PENGELOLA PENGAJUAN (Admin / Superadmin / Grup Pengajuan) == --}}
                 @hasanyrole('admin|superadmin|Pengajuan')
                 <li class="nav-item {{ request()->routeIs('admin.pengajuan.*') ? 'active' : '' }}">
