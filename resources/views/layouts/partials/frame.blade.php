@@ -69,18 +69,9 @@
                 iframe.onload = () => {
                     $('#pdfLoading').hide();
                     $('.modal-footer').html(`
-                        <button type="button" class="btn btn-danger" id="rejectBtn">${footer.rejectButton.label}</button>
-                        <button type="button" class="btn btn-success" id="acceptBtn">${footer.acceptButton.label}</button>
+                        ${footer.acceptButton ? `<button class="btn btn-success" onclick="${footer.acceptButton.action}">${footer.acceptButton.label}</button>` : ''}
+                        ${footer.rejectButton ? `<button class="btn btn-danger" onclick="${footer.rejectButton.action}">${footer.rejectButton.label}</button>` : ''}
                     `);
-                    $('#acceptBtn').on('click', function(e) {
-                        footer.acceptButton.action(e);
-                    });
-                    $('#rejectBtn').on('click', function(e) {
-                        footer.rejectButton.action(e);
-                    });
-                    $(iframe).show();
-
-                    
                 };
             }
         })
