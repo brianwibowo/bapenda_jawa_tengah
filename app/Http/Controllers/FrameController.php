@@ -29,11 +29,10 @@ class FrameController extends Controller
 
         // 3. Generate Temporary Signed URL (Valid 10 Menit)
         $temporaryUrl = URL::temporarySignedRoute(
-            'pdf.secure.render', 
+            'frame.secure.render', 
             now()->addMinutes(10), 
-            ['category' => $category, 'id' => $id]
+            ['type' => $type, 'category' => $category, 'id' => $id]
         );
-
         return response()->json(['access_url' => $temporaryUrl]);
     }
 

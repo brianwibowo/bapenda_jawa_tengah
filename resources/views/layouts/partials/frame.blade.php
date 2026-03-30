@@ -18,16 +18,45 @@
 </div>
 
 <script>
+<<<<<<< HEAD
     function openSecureFrame(type, category, id, footer={}) {
         // Footer = {acceptButton, rejectButton}
         //
         // Tampilkan Loading/Spinner di modal
+=======
+    function openSecurePdf(category, id, footer={}) {
+        // Footer = {acceptButton, rejectButton} that contains {label, action}
+        
+        const defAcction = function (event) {
+            event.preventDefault();
+            target = event.target; // Tombol yang diklik
+            $('#pdfViewerModal').modal('hide');
+        };
+
+        if (!footer.acceptButton){
+            footer.acceptButton = {
+                label: 'Terima',
+                action: defAcction
+            };
+        }
+        if (!footer.rejectButton){
+            footer.rejectButton = {
+                label: 'Tolak',
+                action: defAcction
+            };
+        }
+
+>>>>>>> 9e0d9fe (Add: Polda role)
         $('#pdfViewerModal').modal('show');
         $('#pdfIframe').hide();
         $('#pdfLoading').show();
 
         // Ambil signed URL dari backend
+<<<<<<< HEAD
         fetch(`/api/frame-access/${type}/${category}/${id}`, {
+=======
+        fetch(`/api/request-access/pdf/${category}/${id}`, {
+>>>>>>> 9e0d9fe (Add: Polda role)
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         })
@@ -39,11 +68,19 @@
                 iframe.src = data.access_url;
                 iframe.onload = () => {
                     $('#pdfLoading').hide();
-                    $(iframe).show();
                     $('.modal-footer').html(`
-                        ${footer.acceptButton ? `<button class="btn btn-success" onclick="${footer.acceptButton.action}">${footer.acceptButton.label}</button>` : ''}
-                        ${footer.rejectButton ? `<button class="btn btn-danger" onclick="${footer.rejectButton.action}">${footer.rejectButton.label}</button>` : ''}
+                        <button type="button" class="btn btn-danger" id="rejectBtn">${footer.rejectButton.label}</button>
+                        <button type="button" class="btn btn-success" id="acceptBtn">${footer.acceptButton.label}</button>
                     `);
+                    $('#acceptBtn').on('click', function(e) {
+                        footer.acceptButton.action(e);
+                    });
+                    $('#rejectBtn').on('click', function(e) {
+                        footer.rejectButton.action(e);
+                    });
+                    $(iframe).show();
+
+                    
                 };
             }
         })

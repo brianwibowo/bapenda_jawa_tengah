@@ -25,3 +25,5 @@ Thumbs.db
 package-lock.json
 .devcontainer/
 vite.config.dev.js
+.devcontainer.json
+vite.config.dev.js

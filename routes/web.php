@@ -111,7 +111,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Centralized Render Route
     // Middleware 'signed' memastikan URL tidak bisa dimodifikasi/ditebak
-    Route::get('/secure-pdf/{type}/{category}/{id}', [FrameController::class, 'render'])
+    Route::get('/secure-frame/{type}/{category}/{id}', [FrameController::class, 'render'])
         ->middleware(['signed']) 
         ->name('frame.secure.render');
 });
