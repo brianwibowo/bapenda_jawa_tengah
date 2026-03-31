@@ -36,9 +36,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // ===========================================================
-    // == ROUTE Berbasis Permission ===
+    // == ROUTE KHUSUS UNTUK ROLE 'Wajib Pajak' ===
     // ===========================================================
-    Route::middleware(['auth'])->group(function () {
+    Route::middleware(['role:wp'])->group(function () {
 
         // Melihat daftar miliknya
         Route::get('/pengajuan-saya', [PengajuanController::class, 'index'])
@@ -115,5 +115,70 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/pdf/view/{id}', [PdfGeneratorController::class, 'finalPJN'])->name('pdf.view');
+
+    //ROUTE KHUSUS UNTUK ROLE 'POLDA'
+   
+    Route::prefix('polda')->name('polda.')->middleware(['role:polda'])->group(function () {
+        // Lihat semua pengajuan (seluruh wilayah)
+        Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index');
+        Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
+
+        // Flow: buat & lihat surat PDF pengajuan ke Bapenda / JR (preview menggunakan same pdf generator)
+        Route::get('/pengajuan/{pengajuan}/surat/pengajuan/bapenda', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.bapenda');
+        Route::get('/pengajuan/{pengajuan}/surat/pengajuan/jr', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.jr');
+
+        // Buat & lihat surat keputusan/SK (via log builder)
+        Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
+        Route::get('/pengajuan/{pengajuan}/log/{logId}', [AdminPengajuanController::class, 'showLog'])->name('pengajuan.log.show');
+
+        // Lihat surat balasan / SK dari Bapenda & JR (di log)
+        // (Ambil dari detail log yang sudah diattach file di storeLog)
+        Route::get('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'show'])->name('pengajuan.logs');
+    });
+
+    //ROUTE KHUSUS UNTUK ROLE 'BAPENDA'
+    Route::prefix('bapenda')->name('bapenda.')->middleware(['role:bapenda'])->group(function () {
+        Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index');
+        Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
+
+        Route::get('/pengajuan/{pengajuan}/surat/pengajuan/polda', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.polda');
+        Route::get('/pengajuan/{pengajuan}/surat/sk', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.sk');
+
+        Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
+        Route::get('/pengajuan/{pengajuan}/log/{logId}', [AdminPengajuanController::class, 'showLog'])->name('pengajuan.log.show');
+        Route::get('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'show'])->name('pengajuan.logs');
+    });
+
+    //ROUTE KHUSUS UNTUK ROLE 'JR'
+    Route::prefix('jr')->name('jr.')->middleware(['role:jr'])->group(function () {
+        Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index');
+        Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
+
+        Route::get('/pengajuan/{pengajuan}/surat/pengajuan/polda', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.polda');
+        Route::get('/pengajuan/{pengajuan}/surat/sk', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.sk');
+
+        Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
+        Route::get('/pengajuan/{pengajuan}/log/{logId}', [AdminPengajuanController::class, 'showLog'])->name('pengajuan.log.show');
+        Route::get('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'show'])->name('pengajuan.logs');
+    });
+
+    //ROUTE KHUSUS UNTUK ROLE 'SAMSAT'
+
+    Route::prefix('samsat')->name('samsat.')->middleware(['role:samsat'])->group(function () {
+        // Lihat semua pengajuan (seluruh wilayah)
+        Route::get('/pengajuan', [AdminPengajuanController::class, 'index'])->name('pengajuan.index');
+        Route::get('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'show'])->name('pengajuan.show');
+
+        // Aksi revisi / diterima
+        Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
+        Route::get('/pengajuan/{pengajuan}/log/{logId}', [AdminPengajuanController::class, 'showLog'])->name('pengajuan.log.show');
+        Route::get('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'show'])->name('pengajuan.logs');
+
+        // Surat pengajuan ke Polda + dokumen surat / balasan dari Polda, Bapenda & JR
+        Route::get('/pengajuan/{pengajuan}/surat/pengajuan/polda', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.polda');
+        Route::get('/pengajuan/{pengajuan}/surat/pengajuan/bapenda', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.bapenda');
+        Route::get('/pengajuan/{pengajuan}/surat/pengajuan/jr', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.jr');
+        Route::get('/pengajuan/{pengajuan}/surat/sk', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.sk');
+    });
 
 });

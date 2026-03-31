@@ -1,7 +1,19 @@
 <x-app-layout>
     @php
         // Menyesuaikan back route berdasarkan hak akses (Role)
-        if (isset($admin) && $admin) {
+        if (auth()->user()->hasRole('polda')) {
+            $backUrl = route('polda.pengajuan.show', $pengajuan);
+            $titlePrefix = 'Polda - ';
+        } elseif (auth()->user()->hasRole('samsat')) {
+            $backUrl = route('samsat.pengajuan.show', $pengajuan);
+            $titlePrefix = 'Samsat - ';
+        } elseif (auth()->user()->hasRole('bapenda')) {
+            $backUrl = route('bapenda.pengajuan.show', $pengajuan);
+            $titlePrefix = 'Bapenda - ';
+        } elseif (auth()->user()->hasRole('jr')) {
+            $backUrl = route('jr.pengajuan.show', $pengajuan);
+            $titlePrefix = 'JR - ';
+        } elseif (isset($admin) && $admin) {
             $backUrl = route('admin.pengajuan.show', $pengajuan);
             $titlePrefix = 'Admin - ';
         } else {
