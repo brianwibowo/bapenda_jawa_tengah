@@ -29,4 +29,10 @@ php artisan view:cache
 # npm run build
 
 echo "-----------------------------------"
+echo "🔐 Merapihkan hak akses file (Permissions)..."
+chown -R sirupi:sirupi /home/sirupi/public_html/audira.site
+chmod -R 775 /home/sirupi/public_html/audira.site/storage
+chmod -R 775 /home/sirupi/public_html/audira.site/bootstrap/cache
+
+echo "-----------------------------------"
 echo "✅ DEPLOYMENT SUKSES!"
