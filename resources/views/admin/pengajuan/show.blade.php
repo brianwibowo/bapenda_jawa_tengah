@@ -1,4 +1,18 @@
 <x-app-layout>
+    @php
+        if (auth()->user()->hasRole('polda')) {
+            $pengajuanRoutePrefix = 'polda';
+        } elseif (auth()->user()->hasRole('samsat')) {
+            $pengajuanRoutePrefix = 'samsat';
+        } elseif (auth()->user()->hasRole('bapenda')) {
+            $pengajuanRoutePrefix = 'bapenda';
+        } elseif (auth()->user()->hasRole('jr')) {
+            $pengajuanRoutePrefix = 'jr';
+        } else {
+            $pengajuanRoutePrefix = 'admin';
+        }
+        $canUpdateBatch = auth()->user()->hasAnyRole(['admin', 'superadmin', 'Pengajuan']);
+    @endphp
     <x-slot name="header">
         Dasbor Bundel Pengajuan: {{ $pengajuan->nomor_pengajuan }}
     </x-slot>
@@ -26,6 +40,7 @@
         <div class="col-12">
             
             <div class="card">
+                @if($canUpdateBatch)
                 {{-- Form 'batchUpdate' SEKARANG DIMULAI DI SINI --}}
                 <form action="{{ route('admin.pengajuan.batchUpdate', $pengajuan) }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -103,6 +118,7 @@
                     </div>
                 {{-- Form 'batchUpdate' SEKARANG BERAKHIR DI SINI --}}
                 </form>
+                @endif
             </div>
         </div>
 

@@ -1,3 +1,19 @@
+@php
+    if (auth()->user()->hasRole('polda')) {
+        $pengajuanLogPrefix = 'polda';
+    } elseif (auth()->user()->hasRole('samsat')) {
+        $pengajuanLogPrefix = 'samsat';
+    } elseif (auth()->user()->hasRole('bapenda')) {
+        $pengajuanLogPrefix = 'bapenda';
+    } elseif (auth()->user()->hasRole('jr')) {
+        $pengajuanLogPrefix = 'jr';
+    } elseif (!empty($admin)) {
+        $pengajuanLogPrefix = 'admin';
+    } else {
+        $pengajuanLogPrefix = 'pengajuan';
+    }
+@endphp
+
 <div class="card mt-4">
     <div class="card-header">
         <h4 class="card-title mb-0">Log & Diskusi</h4>
@@ -70,7 +86,7 @@
                             <td>{{ $log->user->name ?? 'N/A' }} @if($log->user && $log->user->unit_kerja) <br><small class="text-muted">{{ $log->user->unit_kerja }}</small>@endif</td>
                             <td class="text-center">
                                 @if(!empty($admin) && $admin)
-                                    <a href="{{ route('admin.pengajuan.log.show', [$pengajuan, $log->id]) }}" class="btn btn-sm btn-outline-info" title="Lihat Detail Log">
+                                    <a href="{{ route($pengajuanLogPrefix . '.pengajuan.log.show', [$pengajuan, $log->id]) }}" class="btn btn-sm btn-outline-info" title="Lihat Detail Log">
                                         <i class="fas fa-eye me-1"></i> Detail
                                     </a>
                                 @else
@@ -96,11 +112,7 @@
 <div class="modal fade" id="createLogModal" tabindex="-1" aria-labelledby="createLogModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            @if(!empty($admin) && $admin)
-                <form action="{{ route('admin.pengajuan.log.store', $pengajuan) }}" method="POST" enctype="multipart/form-data">
-            @else
-                <form action="{{ route('pengajuan.log.store', $pengajuan) }}" method="POST" enctype="multipart/form-data">
-            @endif
+           <form action="{{ route($pengajuanLogPrefix . '.pengajuan.log.store', $pengajuan) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="createLogModalLabel">Buat Aksi / Komentar</h5>

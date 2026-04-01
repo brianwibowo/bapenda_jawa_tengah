@@ -1,4 +1,18 @@
 <x-app-layout>
+    @php
+        $pengajuanRoutePrefix = 'admin';
+        if (auth()->user()->hasRole('polda')) {
+            $pengajuanRoutePrefix = 'polda';
+        } elseif (auth()->user()->hasRole('samsat')) {
+            $pengajuanRoutePrefix = 'samsat';
+        } elseif (auth()->user()->hasRole('bapenda')) {
+            $pengajuanRoutePrefix = 'bapenda';
+        } elseif (auth()->user()->hasRole('jr')) {
+            $pengajuanRoutePrefix = 'jr';
+        }
+        $isAdminRole = auth()->user()->hasAnyRole(['admin', 'superadmin', 'Pengajuan']);
+    @endphp
+
     <x-slot name="header">
         <h2 class="fw-bold mb-0">Kelola Pengajuan</h2>
     </x-slot>
@@ -23,31 +37,31 @@
                     <ul class="nav nav-pills nav-fill flex-wrap gap-2" role="tablist">
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ !request('status') ? 'active' : '' }}" 
-                               href="{{ route('admin.pengajuan.index', ['search' => request('search')]) }}">
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['search' => request('search')]) }}">
                                 <i class="fas fa-list me-1"></i> Semua
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'pengajuan' ? 'active' : '' }}" 
-                               href="{{ route('admin.pengajuan.index', ['status' => 'pengajuan', 'search' => request('search')]) }}">
+                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'pengajuan', 'search' => request('search')]) }}">
                                 <i class="fas fa-file-alt me-1"></i> Baru
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'diproses' ? 'active' : '' }}" 
-                               href="{{ route('admin.pengajuan.index', ['status' => 'diproses', 'search' => request('search')]) }}">
+                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'diproses', 'search' => request('search')]) }}">
                                 <i class="fas fa-spinner me-1"></i> Diproses
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'selesai' ? 'active' : '' }}" 
-                               href="{{ route('admin.pengajuan.index', ['status' => 'selesai', 'search' => request('search')]) }}">
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'selesai', 'search' => request('search')]) }}">
                                 <i class="fas fa-check-circle me-1"></i> Selesai
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'ditolak' ? 'active' : '' }}" 
-                               href="{{ route('admin.pengajuan.index', ['status' => 'ditolak', 'search' => request('search')]) }}">
+                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'ditolak', 'search' => request('search')]) }}">
                                 <i class="fas fa-times-circle me-1"></i> Ditolak
                             </a>
                         </li>
@@ -56,7 +70,7 @@
 
                 <!-- Search -->
                 <div class="col-12">
-                    <form method="GET" action="{{ route('admin.pengajuan.index') }}">
+                    <form method="GET" action="{{ route($pengajuanRoutePrefix . '.pengajuan.index') }}">
                         <input type="hidden" name="status" value="{{ request('status') }}">
                         <div class="input-group">
                             <span class="input-group-text">
@@ -71,7 +85,7 @@
                                 <i class="fas fa-search me-1"></i> Cari
                             </button>
                             @if(request('search'))
-                                <a href="{{ route('admin.pengajuan.index', ['status' => request('status')]) }}" 
+                                <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}" 
                                    class="btn btn-outline-secondary">
                                     <i class="fas fa-times"></i> Reset
                                 </a>
@@ -218,21 +232,24 @@
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.pengajuan.show', $pengajuan) }}" 
+                                        <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.show', $pengajuan) }}" 
                                            class="btn btn-primary btn-sm"
                                            data-bs-toggle="tooltip"
                                            title="Lihat Detail">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button type="button" 
-                                                class="btn btn-danger btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal{{ $pengajuan->id }}"
-                                                title="Hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        @if($isAdminRole)
+                                            <button type="button" 
+                                                    class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal{{ $pengajuan->id }}"
+                                                    title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        @endif
                                     </div>
 
+                                     @if($isAdminRole)
                                     <!-- Delete Modal -->
                                     <div class="modal fade" id="deleteModal{{ $pengajuan->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
@@ -260,7 +277,7 @@
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                                         <i class="fas fa-times me-1"></i> Batal
                                                     </button>
-                                                    <form action="{{ route('admin.pengajuan.destroy', $pengajuan) }}" method="POST" class="d-inline">
+                                                    <form action="{{ route($pengajuanRoutePrefix . '.pengajuan.destroy', $pengajuan) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-danger">
@@ -271,6 +288,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
