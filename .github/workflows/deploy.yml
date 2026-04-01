@@ -21,6 +21,9 @@ jobs:
             # Pindah ke direktori project di VPS
             cd ${{ secrets.VPS_PROJECT_PATH }}
             
+            # Tarik deploy.sh (dan semua file terbaru) terlebih dahulu ke VPS
+            git pull origin main
+            
             # Beri hak akses agar file bisa dijalankan, kemudian jalankan script-nya
             chmod +x deploy.sh
             bash deploy.sh
