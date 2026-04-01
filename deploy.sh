@@ -8,8 +8,8 @@ echo "🔄 Mengambil kode terbaru ke branch main..."
 git pull origin main
 
 echo "-----------------------------------"
-echo "📦 Menginstal/update dependencies PHP via Composer..."
-composer install --no-interaction --prefer-dist --optimize-autoloader
+echo "📦 Menginstal/update dependencies PHP via Composer (Mengabaikan Cek Versi PHP)..."
+composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs
 
 echo "-----------------------------------"
 echo "🗄️ Menjalankan database migration..."
