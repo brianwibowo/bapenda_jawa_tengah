@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-bold mb-0">Kelola Hak Akses (Permissions)</h2>
+        <h2 class="fw-bold mb-0">Kelola Hak Akses (Permissionss)</h2>
     </x-slot>
 
     @if (session('success'))

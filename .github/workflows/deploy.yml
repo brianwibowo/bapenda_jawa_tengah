@@ -21,6 +21,11 @@ jobs:
             # Pindah ke direktori project di VPS
             cd ${{ secrets.VPS_PROJECT_PATH }}
             
+            # (PENTING) Reset semua perubahan lokal di VPS yang mungkin tidak sengaja terjadi (seperti saat error sebelumnya), agar git pull dari github jadi prioritas/bersih
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -df
+            
             # Tarik deploy.sh (dan semua file terbaru) terlebih dahulu ke VPS
             git pull origin main
             

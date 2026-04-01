@@ -5,7 +5,9 @@ echo "⬇️ Mulai proses deployment..."
 
 echo "-----------------------------------"
 echo "🔄 Mengambil kode terbaru ke branch main..."
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
+git clean -df
 
 echo "-----------------------------------"
 echo "📦 Menginstal/update dependencies PHP via Composer (Mengabaikan Cek Versi PHP)..."
