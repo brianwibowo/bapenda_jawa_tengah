@@ -11,15 +11,24 @@
             
             {{-- Tombol Kembali (Dinamis) --}}
             @auth
-                @if(Auth::user()->hasRole('admin|superadmin'))
-                    <a href="{{ route('admin.pengajuan.show', $kendaraan->pengajuan) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali
-                    </a>
-                @else
-                    <a href="{{ route('pengajuan.show', $kendaraan->pengajuan) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali
-                    </a>
-                @endif
+                @php
+                    if (Auth::user()->hasRole('polda')) {
+                        $backRoute = 'polda.pengajuan.show';
+                    } elseif (Auth::user()->hasRole('samsat')) {
+                        $backRoute = 'samsat.pengajuan.show';
+                    } elseif (Auth::user()->hasRole('bapenda')) {
+                        $backRoute = 'bapenda.pengajuan.show';
+                    } elseif (Auth::user()->hasRole('jr')) {
+                        $backRoute = 'jr.pengajuan.show';
+                    } elseif (Auth::user()->hasAnyRole(['admin', 'superadmin', 'Pengajuan'])) {
+                        $backRoute = 'admin.pengajuan.show';
+                    } else {
+                        $backRoute = 'pengajuan.show';
+                    }
+                @endphp
+                <a href="{{ route($backRoute, $kendaraan->pengajuan) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Kembali
+                </a>
             @endauth
         </div>
     </x-slot>

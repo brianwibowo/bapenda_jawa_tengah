@@ -94,6 +94,42 @@
                 </li>
                 @endhasanyrole
 
+                @hasrole('polda')
+                <li class="nav-item {{ request()->routeIs('polda.pengajuan.*') ? 'active' : '' }}">
+                    <a href="{{ route('polda.pengajuan.index') }}">
+                        <i class="fas fa-file-alt"></i>
+                        <p>Pengajuan (Polda)</p>
+                    </a>
+                </li>
+                @endhasrole
+
+                @hasrole('bapenda')
+                <li class="nav-item {{ request()->routeIs('bapenda.pengajuan.*') ? 'active' : '' }}">
+                    <a href="{{ route('bapenda.pengajuan.index') }}">
+                        <i class="fas fa-file-alt"></i>
+                        <p>Pengajuan (Bapenda)</p>
+                    </a>
+                </li>
+                @endhasrole
+
+                @hasrole('jr')
+                <li class="nav-item {{ request()->routeIs('jr.pengajuan.*') ? 'active' : '' }}">
+                    <a href="{{ route('jr.pengajuan.index') }}">
+                        <i class="fas fa-file-alt"></i>
+                        <p>Pengajuan (JR)</p>
+                    </a>
+                </li>
+                @endhasrole
+
+                @hasrole('samsat')
+                <li class="nav-item {{ request()->routeIs('samsat.pengajuan.*') ? 'active' : '' }}">
+                    <a href="{{ route('samsat.pengajuan.index') }}">
+                        <i class="fas fa-file-alt"></i>
+                        <p>Pengajuan (Samsat)</p>
+                    </a>
+                </li>
+                @endhasrole
+
                 {{-- == MENU UNTUK SUPERADMIN / ADMIN UTAMA (RBAC) == --}}
                 @hasanyrole('admin|superadmin')
                 <li class="nav-section">

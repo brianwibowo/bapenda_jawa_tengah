@@ -29,11 +29,17 @@ class RbacSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
         }
 
-        // 3. Buat Akses Group 'Penulis' & 'Superadmin' (Hanya sebagai contoh role)
-        $rolePenulis = Role::firstOrCreate(['name' => 'Penulis', 'guard_name' => 'web']);
-        $roleSuperadmin = Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
+        // 3. Buat Akses Grup 'penulis' & 'superadmin' (Hanya sebagai contoh role)
+        $rolePenulis = Role::firstOrCreate(['name' => 'penulis', 'guard_name' => 'web']);
+        $roleSuperadmin = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'polda', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'samsat', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'bapenda', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'jr', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'Pengajuan', 'guard_name' => 'web']);
 
-        // 4. Berikan Izin ke Role Penulis
+        // 4. Berikan Izin ke Role penulis
         $rolePenulis->syncPermissions($basicPermissions);
 
         // Superadmin otomatis mendapatkan semuanya
