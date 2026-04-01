@@ -10,8 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
-            RbacSeeder::class,
-            UserSeeder::class,
+            UserSeeder::class, // <-- TAMBAHKAN BARIS INI
         ]);
     }
 }
