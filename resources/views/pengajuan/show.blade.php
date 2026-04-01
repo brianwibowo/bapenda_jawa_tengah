@@ -11,11 +11,9 @@
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>
                 <div></div>
-                <button type="button" 
-                    class="btn btn-primary btn-sm" 
-                    onclick="openSecurePdf('pengajuan', '{{ $pengajuan->id }}')">
-                <i class="fas fa-file-pdf"></i> Preview SPOPD
-            </button>
+                <a href="{{ route('pdf.view', $pengajuan->id) }}" class="btn btn-danger" target="_blank">
+                    <i class="fas fa-file-pdf"></i> Cetak PDF
+                </a>
             </div>
         </div>
     </x-slot>
