@@ -249,7 +249,7 @@
                                         @endif
                                     </div>
 
-                                     @if($isAdminRole)
+                                    @if($isAdminRole)
                                     <!-- Delete Modal -->
                                     <div class="modal fade" id="deleteModal{{ $pengajuan->id }}" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">

@@ -112,7 +112,7 @@
 <div class="modal fade" id="createLogModal" tabindex="-1" aria-labelledby="createLogModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-           <form action="{{ route($pengajuanLogPrefix . '.pengajuan.log.store', $pengajuan) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route($pengajuanLogPrefix . '.pengajuan.log.store', $pengajuan) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="createLogModalLabel">Buat Aksi / Komentar</h5>

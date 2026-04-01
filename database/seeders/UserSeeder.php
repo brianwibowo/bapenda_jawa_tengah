@@ -37,7 +37,6 @@ class UserSeeder extends Seeder
         ]);
         $penulis->assignRole('penulis');
 
-
         $penulis = User::create([
             'name' => 'Polda',
             'email' => 'polda@example.com',

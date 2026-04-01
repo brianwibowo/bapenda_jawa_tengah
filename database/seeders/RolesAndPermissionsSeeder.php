@@ -18,7 +18,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Permission::create(['name' => 'kelola pengguna']);
 
         // Buat Roles sesuai yang ada di web.php
-         Role::firstOrCreate(['name' => 'penulis']);
+        Role::firstOrCreate(['name' => 'penulis']);
         Role::firstOrCreate(['name' => 'admin']);
         Role::firstOrCreate(['name' => 'superadmin']); // Pastikan namanya 'superadmin', bukan 'super-admin'
         Role::firstOrCreate(['name' => 'polda']);

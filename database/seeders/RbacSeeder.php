@@ -36,6 +36,8 @@ class RbacSeeder extends Seeder
         Role::firstOrCreate(['name' => 'bapenda', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'jr', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'Pengajuan', 'guard_name' => 'web']);
+
+        // 4. Berikan Izin ke Role penulis
         $rolePenulis->syncPermissions($basicPermissions);
 
         // Superadmin otomatis mendapatkan semuanya
