@@ -8,7 +8,6 @@ use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\Admin\PengajuanController as AdminPengajuanController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\KendaraanController;
-use App\Http\Controllers\PdfGeneratorController;
 use App\Http\Controllers\FrameController;
 use App\Http\Controllers\SkController;
 
@@ -91,12 +90,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'destroy'])->name('pengajuan.destroy')->middleware('permission:delete_pengajuan_publik');
             Route::patch('/pengajuan/{pengajuan}/batch-update', [AdminPengajuanController::class, 'batchUpdateKendaraanStatus'])->name('pengajuan.batchUpdate')->middleware('permission:approve_status_pengajuan');
             Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
-
-            // Surat-menyurat terintegrasi (semua instansi pakai rute yang sama)
-            Route::get('/pengajuan/{pengajuan}/surat/pengajuan/polda', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.polda');
-            Route::get('/pengajuan/{pengajuan}/surat/pengajuan/bapenda', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.bapenda');
-            Route::get('/pengajuan/{pengajuan}/surat/pengajuan/jr', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.pengajuan.jr');
-            Route::get('/pengajuan/{pengajuan}/surat/sk', [PdfGeneratorController::class, 'finalPJN'])->name('pengajuan.surat.sk');
         });
     });
 
