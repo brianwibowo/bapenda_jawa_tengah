@@ -23,19 +23,29 @@
 
                 <div class="mb-4">
                     <label class="form-label fw-bold">Pilih Hak Akses (Permissions) untuk grup ini:</label>
-                    <div class="row g-3">
-                        @foreach($permissions as $permission)
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="permissions[]"
-                                        value="{{ $permission->name }}" id="perm_{{ $permission->id }}">
-                                    <label class="form-check-label" for="perm_{{ $permission->id }}">
-                                        {{ $permission->name }}
-                                    </label>
+                    @foreach($permissions as $group => $perms)
+                        @php $groupLabel = $group ?: 'Fitur Lainnya (Belum Dikategorikan)'; @endphp
+                        <div class="card mb-3 shadow-none border">
+                            <div class="card-header bg-light py-2">
+                                <h6 class="mb-0 fw-bold border-start border-3 border-primary ps-2">{{ $groupLabel }}</h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="row g-2">
+                                    @foreach($perms as $permission)
+                                        <div class="col-md-3 col-sm-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="permissions[]"
+                                                    value="{{ $permission->name }}" id="perm_{{ $permission->id }}">
+                                                <label class="form-check-label" for="perm_{{ $permission->id }}">
+                                                    {{ $permission->name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
                 </div>
 
                 <div class="text-end">

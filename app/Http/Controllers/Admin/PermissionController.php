@@ -14,12 +14,13 @@ class PermissionController extends Controller
         
         $query = Permission::query();
         if ($search) {
-            $query->where('name', 'like', "%{$search}%");
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('group_name', 'like', "%{$search}%");
         }
         
-        $permissions = $query->paginate(10)->withQueryString();
+        $groupedPermissions = $query->get()->groupBy('group_name');
         
-        return view('admin.permissions.index', compact('permissions', 'search'));
+        return view('admin.permissions.index', compact('groupedPermissions', 'search'));
     }
 
     public function create()

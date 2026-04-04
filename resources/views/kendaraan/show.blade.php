@@ -12,15 +12,7 @@
             {{-- Tombol Kembali (Dinamis) --}}
             @auth
                 @php
-                    if (Auth::user()->hasRole('polda')) {
-                        $backRoute = 'polda.pengajuan.show';
-                    } elseif (Auth::user()->hasRole('samsat')) {
-                        $backRoute = 'samsat.pengajuan.show';
-                    } elseif (Auth::user()->hasRole('bapenda')) {
-                        $backRoute = 'bapenda.pengajuan.show';
-                    } elseif (Auth::user()->hasRole('jr')) {
-                        $backRoute = 'jr.pengajuan.show';
-                    } elseif (Auth::user()->hasAnyRole(['admin', 'superadmin', 'Pengajuan'])) {
+                    if (Auth::user()->can('view_menu_manajemen_pengajuan')) {
                         $backRoute = 'admin.pengajuan.show';
                     } else {
                         $backRoute = 'pengajuan.show';

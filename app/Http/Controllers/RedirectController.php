@@ -11,37 +11,23 @@ class RedirectController extends Controller
     {
         $user = Auth::user();
 
-        // Jika user adalah admin atau superadmin, arahkan ke manajemen pengajuan
-        if ($user->hasRole(['admin', 'superadmin', 'Pengajuan'])) {
+        // 1. Level Superadmin / Master
+        if ($user->can('manage_users')) {
             return redirect()->route('admin.pengajuan.index');
         }
 
-        // Jika user adalah polda, arahkan ke halaman pengajuan polda
-        if ($user->hasRole('polda')) {
-            return redirect()->route('polda.pengajuan.index');
+        // 2. Level Verifikator Instansi & Admin
+        if ($user->can('view_menu_manajemen_pengajuan')) {
+            return redirect()->route('admin.pengajuan.index');
+        }
+        
+        // 3. Level Wajib Pajak / Publik
+        if ($user->can('view_menu_daftar_pengajuan') || $user->can('view_menu_buat_pengajuan')) {
+            // Arahkan ke pangkalan data histori milik mereka
+            return redirect()->route('pengajuan.index');
         }
 
-        // Jika user adalah samsat, arahkan ke halaman pengajuan samsat
-        if ($user->hasRole('samsat')) {
-            return redirect()->route('samsat.pengajuan.index');
-        }
-
-        // Jika user adalah bapenda, arahkan ke halaman pengajuan bapenda
-        if ($user->hasRole('bapenda')) {
-            return redirect()->route('bapenda.pengajuan.index');
-        }
-
-        // Jika user adalah jasa raharja, arahkan ke halaman pengajuan jr
-        if ($user->hasRole('jr')) {
-            return redirect()->route('jr.pengajuan.index');
-        }
-
-        // Jika user adalah penulis, arahkan ke form buat pengajuan
-        if ($user->hasRole('penulis')) {
-            return redirect()->route('pengajuan.create');
-        }
-
-        // Fallback jika user tidak punya role di atas (misal: ke dashboard umum)
+        // Fallback jika aneh
         return redirect('/dashboard');
     }
 }

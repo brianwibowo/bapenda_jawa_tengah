@@ -1,8 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="fw-bold mb-0">Edit Pengguna</h2>
-            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
+            <h2 class="fw-bold mb-0">Tambah Pengguna</h2>
+            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i>
+                Kembali</a>
         </div>
     </x-slot>
 
@@ -18,43 +19,48 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.users.update', $user) }}">
+            <form method="POST" action="{{ route('admin.users.store') }}">
                 @csrf
-                @method('PUT')
                 <div class="mb-3">
                     <label class="form-label">Nama Lengkap</label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
+                    <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+                    <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Password Baru (Kosongkan bila tidak ganti)</label>
-                        <input type="password" name="password" class="form-control">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Konfirmasi Password Baru</label>
-                        <input type="password" name="password_confirmation" class="form-control">
+                        <label class="form-label">Konfirmasi Password</label>
+                        <input type="password" name="password_confirmation" class="form-control" required>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Jabatan Pekerjaan Asli</label>
-                        <input type="text" name="jabatan" class="form-control" placeholder="Misal: Kepala Divisi Keuangan..." value="{{ old('jabatan', $user->jabatan) }}">
+                        <label class="form-label fw-bold">Jabatan</label>
+                        <input type="text" name="jabatan" class="form-control"
+                            placeholder="Misal: Kepala Divisi Keuangan..." value="{{ old('jabatan') }}">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Unit Kerja (Instansi)</label>
-                        <select name="unit_kerja" id="unit_kerja_select" class="form-select" required onchange="toggleNewUnitKerja(this.value)">
+                        <select name="unit_kerja" id="unit_kerja_select" class="form-select" required
+                            onchange="toggleNewUnitKerja(this.value)">
                             <option value="">-- Pilih Unit Kerja --</option>
                             @foreach($unitKerjas as $unit)
-                                <option value="{{ $unit }}" {{ (old('unit_kerja', $user->unit_kerja) == $unit) ? 'selected' : '' }}>{{ $unit }}</option>
+                                <option value="{{ $unit }}" {{ old('unit_kerja') == $unit ? 'selected' : '' }}>{{ $unit }}
+                                </option>
                             @endforeach
-                            <option value="Lainnya" {{ old('unit_kerja') == 'Lainnya' ? 'selected' : '' }}>Lainnya (Buat/Ketik Baru...)</option>
+                            <option value="Lainnya" {{ old('unit_kerja') == 'Lainnya' ? 'selected' : '' }}>Lainnya
+                                (Buat Baru...)</option>
                         </select>
-                        <div id="new_unit_kerja_wrapper" class="mt-2 {{ old('unit_kerja') == 'Lainnya' ? '' : 'd-none' }}">
-                            <input type="text" name="new_unit_kerja" id="new_unit_kerja_input" class="form-control" placeholder="Ketik nama instansi baru..." value="{{ old('new_unit_kerja') }}">
+                        <div id="new_unit_kerja_wrapper"
+                            class="mt-2 {{ old('unit_kerja') == 'Lainnya' ? '' : 'd-none' }}">
+                            <input type="text" name="new_unit_kerja" id="new_unit_kerja_input" class="form-control"
+                                placeholder="Ketik nama instansi baru..." value="{{ old('new_unit_kerja') }}">
                         </div>
                     </div>
                 </div>
@@ -67,8 +73,8 @@
                         @foreach($roles as $role)
                             <div class="col-md-3 mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="roles[]" value="{{ $role->name }}" id="role_{{ $role->id }}"
-                                        {{ in_array($role->name, $userRoles) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="roles[]" value="{{ $role->name }}"
+                                        id="role_{{ $role->id }}">
                                     <label class="form-check-label" for="role_{{ $role->id }}">
                                         {{ ucwords(str_replace('_', ' ', $role->name)) }}
                                     </label>
@@ -78,7 +84,7 @@
                     </div>
                 </div>
                 <div class="text-end">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Perbarui User</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan User</button>
                 </div>
             </form>
         </div>
@@ -98,8 +104,4 @@
             input.value = '';
         }
     }
-    // Initialize upon edit mount if 'Lainnya' was selected natively via old input logic
-    document.addEventListener("DOMContentLoaded", function() {
-        toggleNewUnitKerja(document.getElementById('unit_kerja_select').value);
-    });
 </script>

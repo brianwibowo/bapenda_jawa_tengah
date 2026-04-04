@@ -22,45 +22,70 @@
                 </form>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>No</th>
-                            <th>Nama Hak Akses</th>
-                            <th>Dibuat Pada</th>
-                            <th class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($permissions as $index => $permission)
-                            <tr>
-                                <td>{{ $permissions->firstItem() + $index }}</td>
-                                <td><span class="badge bg-secondary px-3 py-2">{{ $permission->name }}</span></td>
-                                <td>{{ $permission->created_at->format('d M Y H:i') }}</td>
-                                <td class="text-center">
-                                    <form action="{{ route('admin.permissions.destroy', $permission) }}" method="POST"
-                                        class="d-inline"
-                                        onsubmit="return confirm('Yakin ingin menghapus permission ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i
-                                                class="fas fa-trash"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">Tidak ada data Hak Akses.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="accordion" id="permissionsAccordion">
+                @forelse($groupedPermissions as $group => $permissions)
+                    @php 
+                        $groupLabel = $group ?: 'Fitur Lainnya (Belum Dikategorikan)'; 
+                        $groupId = 'group_' . md5($groupLabel);
+                    @endphp
+                    <div class="accordion-item shadow-sm border mb-3 rounded">
+                        <h2 class="accordion-header" id="heading_{{ $groupId }}">
+                            <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapse_{{ $groupId }}" aria-expanded="false" aria-controls="collapse_{{ $groupId }}">
+                                <i class="fas fa-folder text-warning me-2 fs-5"></i> 
+                                {{ $groupLabel }} 
+                                <span class="badge bg-primary ms-3 rounded-pill">{{ $permissions->count() }} Sub-Fitur</span>
+                            </button>
+                        </h2>
+                        <div id="collapse_{{ $groupId }}" class="accordion-collapse collapse" aria-labelledby="heading_{{ $groupId }}">
+                            <div class="accordion-body p-0">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 5%">&nbsp;</th>
+                                            <th style="width: 45%;">Nama Aksi (Readable)</th>
+                                            <th style="width: 35%;">Kode Variabel Sistem</th>
+                                            <th style="width: 15%;" class="text-center">Hapus</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($permissions as $permission)
+                                            @php
+                                                // Human readable transformer: "view_dashboard" -> "View Dashboard"
+                                                $humanReadable = ucwords(str_replace('_', ' ', $permission->name));
+                                            @endphp
+                                            <tr>
+                                                <td class="text-end text-muted"><i class="fas fa-angle-right"></i></td>
+                                                <td>
+                                                    <strong>{{ $humanReadable }}</strong>
+                                                </td>
+                                                <td><span class="badge bg-secondary px-2 py-1">{{ $permission->name }}</span></td>
+                                                <td class="text-center">
+                                                    <form action="{{ route('admin.permissions.destroy', $permission) }}" method="POST"
+                                                        class="d-inline"
+                                                        onsubmit="return confirm('Yakin ingin menghapus permission {{ $permission->name }} ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Hapus"><i
+                                                                class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-box-open fs-3 mb-2"></i><br>
+                        Tidak ada data Hak Akses.
+                    </div>
+                @endforelse
             </div>
 
-            <div class="mt-3">
-                {{ $permissions->appends(request()->except('page'))->links('pagination::bootstrap-5') }}
-            </div>
+
         </div>
     </div>
 </x-app-layout>

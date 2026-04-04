@@ -1,16 +1,7 @@
 <x-app-layout>
     @php
         $pengajuanRoutePrefix = 'admin';
-        if (auth()->user()->hasRole('polda')) {
-            $pengajuanRoutePrefix = 'polda';
-        } elseif (auth()->user()->hasRole('samsat')) {
-            $pengajuanRoutePrefix = 'samsat';
-        } elseif (auth()->user()->hasRole('bapenda')) {
-            $pengajuanRoutePrefix = 'bapenda';
-        } elseif (auth()->user()->hasRole('jr')) {
-            $pengajuanRoutePrefix = 'jr';
-        }
-        $isAdminRole = auth()->user()->hasAnyRole(['admin', 'superadmin', 'Pengajuan']);
+        $isAdminRole = auth()->user()->can('view_menu_pengguna');
     @endphp
 
     <x-slot name="header">

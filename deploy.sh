@@ -24,12 +24,6 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Hapus tanda pagar (#) di bawah ini jika project-mu menggunakan NPM/Vite
-# echo "-----------------------------------"
-# echo "🌐 Build File CSS & JS NPM..."
-# npm install
-# npm run build
-
 echo "-----------------------------------"
 echo "🔐 Merapihkan hak akses file (Permissions)..."
 chown -R sirupi:sirupi /home/sirupi/public_html/audira.site

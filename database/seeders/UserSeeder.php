@@ -8,61 +8,62 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // 1. Buat user dengan role superadmin
-        $superadmin = User::create([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@example.com',
-            'password' => Hash::make('12345678'), // Password: 12345678
-        ]);
-        $superadmin->assignRole('superadmin');
+        // Struktur Baru: unit_kerja membatasi lingkup data Instansi, role membatasi jabatan fitur.
+        // Semua Password Dummy: 12345678
 
-        // 2. Buat user dengan role admin
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('12345678'), // Password: 12345678
+        // === POLDA ===
+        $poldaKepala = User::create([
+            'name' => 'Jenderal Polda',
+            'email' => 'polda_kepala@example.com',
+            'password' => Hash::make('12345678'),
+            'unit_kerja' => 'Polda'
         ]);
-        $admin->assignRole('admin');
+        $poldaKepala->assignRole('kepala_instansi');
 
-        // 3. Buat user dengan role penulis
-        $penulis = User::create([
-            'name' => 'Penulis',
-            'email' => 'penulis@example.com',
-            'password' => Hash::make('12345678'), // Password: 12345678
+        $poldaAdmin = User::create([
+            'name' => 'Admin Polda',
+            'email' => 'polda_admin@example.com',
+            'password' => Hash::make('12345678'),
+            'unit_kerja' => 'Polda'
         ]);
-        $penulis->assignRole('penulis');
+        $poldaAdmin->assignRole('admin_instansi');
 
-        $penulis = User::create([
-            'name' => 'Polda',
-            'email' => 'polda@example.com',
-            'password' => Hash::make('12345678'), // Password: 12345678
+        // === SAMSAT ===
+        $samsatAdmin = User::create([
+            'name' => 'Admin Samsat Raya',
+            'email' => 'samsat_admin@example.com',
+            'password' => Hash::make('12345678'),
+            'unit_kerja' => 'Samsat'
         ]);
-        $penulis->assignRole('polda');
+        $samsatAdmin->assignRole('admin_instansi');
 
-        $penulis = User::create([
-            'name' => 'Samsat',
-            'email' => 'samsat@example.com',
-            'password' => Hash::make('12345678'), // Password: 12345678
+        // === BAPENDA ===
+        $bapendaStaff = User::create([
+            'name' => 'Staff Bapenda',
+            'email' => 'bapenda_staff@example.com',
+            'password' => Hash::make('12345678'),
+            'unit_kerja' => 'Bapenda'
         ]);
-        $penulis->assignRole('samsat');
+        $bapendaStaff->assignRole('staff_instansi');
 
-        $bapenda = User::create([
-            'name' => 'Bapenda',
-            'email' => 'bapenda@example.com',
-            'password' => Hash::make('12345678'), // Password: 12345678
+        // === JASA RAHARJA ===
+        $jrKepala = User::create([
+            'name' => 'Kepala Jasa Raharja',
+            'email' => 'jr_kepala@example.com',
+            'password' => Hash::make('12345678'),
+            'unit_kerja' => 'Jasa Raharja'
         ]);
-        $bapenda->assignRole('bapenda');
+        $jrKepala->assignRole('kepala_instansi');
 
-        $jr = User::create([
-            'name' => 'Jasa Raharja',
-            'email' => 'jr@example.com',
-            'password' => Hash::make('12345678'), // Password: 12345678
+        // === WAJIB PAJAK ===
+        $wp = User::create([
+            'name' => 'Budi Wajib Pajak',
+            'email' => 'wp@example.com',
+            'password' => Hash::make('12345678'),
+            'unit_kerja' => 'Wajib Pajak'
         ]);
-        $jr->assignRole('jr');
+        $wp->assignRole('wajib_pajak');
     }
 }

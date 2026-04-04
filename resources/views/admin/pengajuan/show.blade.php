@@ -1,17 +1,6 @@
 <x-app-layout>
     @php
-        if (auth()->user()->hasRole('polda')) {
-            $pengajuanRoutePrefix = 'polda';
-        } elseif (auth()->user()->hasRole('samsat')) {
-            $pengajuanRoutePrefix = 'samsat';
-        } elseif (auth()->user()->hasRole('bapenda')) {
-            $pengajuanRoutePrefix = 'bapenda';
-        } elseif (auth()->user()->hasRole('jr')) {
-            $pengajuanRoutePrefix = 'jr';
-        } else {
-            $pengajuanRoutePrefix = 'admin';
-        }
-        $canUpdateBatch = auth()->user()->hasAnyRole(['admin', 'superadmin', 'Pengajuan']);
+        $canUpdateBatch = auth()->user()->can('approve_pengajuan') || auth()->user()->can('edit_pengajuan');
     @endphp
     <x-slot name="header">
         Dasbor Bundel Pengajuan: {{ $pengajuan->nomor_pengajuan }}

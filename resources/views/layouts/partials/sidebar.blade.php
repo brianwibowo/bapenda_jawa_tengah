@@ -42,103 +42,71 @@
                 </li>
 
                 {{-- == MENU BERBASIS PERMISSION == --}}
-                @can('create_pengajuan')
-                    {{-- Menu "Buat Pengajuan" (Baru) --}}
-                    <li class="nav-item {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
-                        <a href="{{ route('pengajuan.create') }}">
-                            <i class="fas fa-plus-circle"></i>
-                            <p>Buat Pengajuan</p>
+                {{-- == MENU UNTUK MASYARAKAT (Yang Punya Akses Pengajuan) == --}}
+                @can('view_menu_buat_pengajuan')
+                <li class="nav-item {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
+                    <a href="{{ route('pengajuan.create') }}">
+                        <i class="fas fa-plus-circle"></i>
+                        <p>Buat Pengajuan</p>
+                    </a>
+                </li>
+                @endcan
+
+                @can('view_menu_daftar_pengajuan')
+                <li class="nav-item {{ request()->routeIs('pengajuan.index') ? 'active' : '' }}">
+                    <a href="{{ route('pengajuan.index') }}">
+                        <i class="fas fa-list-alt"></i>
+                        <p>Daftar Pengajuan</p>
+                    </a>
+                </li>
+                @endcan
+
+                {{-- == MENU UNTUK PENGELOLA PENGAJUAN (Semua Instansi) == --}}
+                @can('view_menu_manajemen_pengajuan')
+                    <li class="nav-item {{ request()->routeIs('admin.pengajuan.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.pengajuan.index') }}">
+                            <i class="fas fa-tasks"></i>
+                            <p>Manajemen Pengajuan</p>
                         </a>
                     </li>
                 @endcan
-
-                @can('view_own_pengajuan')
-                    {{-- Menu "Daftar Bundel Pengajuan" --}}
-                    <li
-                        class="nav-item {{ request()->routeIs('pengajuan.index') || request()->routeIs('pengajuan.show') || request()->routeIs('kendaraan.*') ? 'active' : '' }}">
-                        <a href="{{ route('pengajuan.index') }}">
-                            <i class="fas fa-folder-open"></i>
-                            <p>Daftar Pengajuan</p>
-                        </a>
-                    </li>
-                @endcan
-
-                {{-- == MENU UNTUK ADMIN PENGELOLA PENGAJUAN (Admin / Superadmin / Grup Pengajuan) == --}}
-                @hasanyrole('admin|superadmin|Pengajuan')
-                <li class="nav-item {{ request()->routeIs('admin.pengajuan.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.pengajuan.index') }}">
-                        <i class="fas fa-tasks"></i>
-                        <p>Manajemen Pengajuan</p>
-                    </a>
-                </li>
-                @endhasanyrole
-
-                @hasrole('polda')
-                <li class="nav-item {{ request()->routeIs('polda.pengajuan.*') ? 'active' : '' }}">
-                    <a href="{{ route('polda.pengajuan.index') }}">
-                        <i class="fas fa-file-alt"></i>
-                        <p>Pengajuan (Polda)</p>
-                    </a>
-                </li>
-                @endhasrole
-
-                @hasrole('bapenda')
-                <li class="nav-item {{ request()->routeIs('bapenda.pengajuan.*') ? 'active' : '' }}">
-                    <a href="{{ route('bapenda.pengajuan.index') }}">
-                        <i class="fas fa-file-alt"></i>
-                        <p>Pengajuan (Bapenda)</p>
-                    </a>
-                </li>
-                @endhasrole
-
-                @hasrole('jr')
-                <li class="nav-item {{ request()->routeIs('jr.pengajuan.*') ? 'active' : '' }}">
-                    <a href="{{ route('jr.pengajuan.index') }}">
-                        <i class="fas fa-file-alt"></i>
-                        <p>Pengajuan (JR)</p>
-                    </a>
-                </li>
-                @endhasrole
-
-                @hasrole('samsat')
-                <li class="nav-item {{ request()->routeIs('samsat.pengajuan.*') ? 'active' : '' }}">
-                    <a href="{{ route('samsat.pengajuan.index') }}">
-                        <i class="fas fa-file-alt"></i>
-                        <p>Pengajuan (Samsat)</p>
-                    </a>
-                </li>
-                @endhasrole
 
                 {{-- == MENU UNTUK SUPERADMIN / ADMIN UTAMA (RBAC) == --}}
-                @hasanyrole('admin|superadmin')
-                <li class="nav-section">
-                    <span class="sidebar-mini-icon">
-                        <i class="fa fa-ellipsis-h"></i>
-                    </span>
-                    <h4 class="text-section">USER MANAGEMENT</h4>
-                </li>
+                @canany(['view_menu_hak_akses', 'view_menu_akses_group', 'view_menu_pengguna'])
+                    <li class="nav-section">
+                        <span class="sidebar-mini-icon">
+                            <i class="fa fa-ellipsis-h"></i>
+                        </span>
+                        <h4 class="text-section">USER MANAGEMENT</h4>
+                    </li>
 
-                <li class="nav-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.permissions.index') }}">
-                        <i class="fas fa-user-lock"></i>
-                        <p>Hak Akses</p>
-                    </a>
-                </li>
+                    @can('view_menu_hak_akses')
+                    <li class="nav-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.permissions.index') }}">
+                            <i class="fas fa-user-lock"></i>
+                            <p>Hak Akses</p>
+                        </a>
+                    </li>
+                    @endcan
 
-                <li class="nav-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.roles.index') }}">
-                        <i class="fas fa-user-shield"></i>
-                        <p>Akses Group</p>
-                    </a>
-                </li>
+                    @can('view_menu_akses_group')
+                    <li class="nav-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.roles.index') }}">
+                            <i class="fas fa-user-shield"></i>
+                            <p>Akses Group</p>
+                        </a>
+                    </li>
+                    @endcan
 
-                <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.users.index') }}">
-                        <i class="fas fa-users-cog"></i>
-                        <p>Pengguna</p>
-                    </a>
-                </li>
-                @endhasanyrole
+                    @can('view_menu_pengguna')
+                    <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.users.index') }}">
+                            <i class="fas fa-users-cog"></i>
+                            <p>Pengguna</p>
+                        </a>
+                    </li>
+                    @endcan
+                @endcanany
 
             </ul>
         </div>

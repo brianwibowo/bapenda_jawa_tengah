@@ -26,7 +26,7 @@ class RoleController extends Controller
 
     public function create()
     {
-        $permissions = Permission::all();
+        $permissions = Permission::all()->groupBy('group_name');
         return view('admin.roles.create', compact('permissions'));
     }
 
@@ -50,7 +50,7 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
-        $permissions = Permission::all();
+        $permissions = Permission::all()->groupBy('group_name');
         $rolePermissions = DB::table("role_has_permissions")->where("role_has_permissions.role_id", $role->id)
             ->pluck('role_has_permissions.permission_id', 'role_has_permissions.permission_id')
             ->all();
