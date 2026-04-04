@@ -32,9 +32,14 @@ class RbacSeeder extends Seeder
             ['name' => 'delete_pengajuan_publik', 'group_name' => 'Manajemen Pengajuan'],
             ['name' => 'view_log_histori', 'group_name' => 'Manajemen Pengajuan'],
 
-            // Surat Keputusan Khusus PDF
+            // Surat Keputusan & Dokumen Khusus PDF
             ['name' => 'view_own_sk', 'group_name' => 'Surat Keputusan PDF'],
             ['name' => 'create_sk', 'group_name' => 'Surat Keputusan PDF'],
+            ['name' => 'create_pdf_pengajuan', 'group_name' => 'Surat Pengajuan PDF'],
+            ['name' => 'create_pdf_pengajuan_bapenda_jr', 'group_name' => 'Surat Pengajuan PDF'],
+            ['name' => 'create_pdf_balasan_polda', 'group_name' => 'Surat Balasan PDF'],
+            ['name' => 'view_dokumen_surat_pengajuan', 'group_name' => 'Akses Lihat File PDF'],
+            ['name' => 'view_dokumen_surat_balasan', 'group_name' => 'Akses Lihat File PDF'],
 
             // Hak Akses (Admin)
             ['name' => 'view_menu_hak_akses', 'group_name' => 'Hak Akses'],
@@ -65,27 +70,50 @@ class RbacSeeder extends Seeder
             );
         }
 
-        // 2. Ambil Roles yang sudah didaftarkan di RolesAndPermissionsSeeder
+        // 2. Ambil Roles Sesuai Syarat Dosen (Nama Grup = Instansi)
         $roleSuperadmin = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
-        $roleKepala = Role::firstOrCreate(['name' => 'kepala_instansi', 'guard_name' => 'web']);
-        $roleAdmin = Role::firstOrCreate(['name' => 'admin_instansi', 'guard_name' => 'web']);
-        $roleStaff = Role::firstOrCreate(['name' => 'staff_instansi', 'guard_name' => 'web']);
         $roleWp = Role::firstOrCreate(['name' => 'wajib_pajak', 'guard_name' => 'web']);
+        $roleSamsat = Role::firstOrCreate(['name' => 'samsat', 'guard_name' => 'web']);
+        $rolePolda = Role::firstOrCreate(['name' => 'polda', 'guard_name' => 'web']);
+        $roleBapenda = Role::firstOrCreate(['name' => 'bapenda', 'guard_name' => 'web']);
+        $roleJr = Role::firstOrCreate(['name' => 'jasa_raharja', 'guard_name' => 'web']);
 
-        // 3. Distribusi Izin Dasar
+        // 3. Distribusi Izin Dasar (Sesuai Matriks Dosen)
         $roleSuperadmin->syncPermissions(Permission::all());
-        
-        // Kepala Instansi
-        $roleKepala->syncPermissions(['view_dashboard', 'view_menu_manajemen_pengajuan', 'approve_status_pengajuan']);
-        
-        // Admin Instansi
-        $roleAdmin->syncPermissions(['view_dashboard', 'view_menu_manajemen_pengajuan', 'approve_status_pengajuan', 'delete_pengajuan_publik', 'view_log_histori']);
-        
-        // Staff
-        $roleStaff->syncPermissions(['view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori']);
 
-        // Wajib pajak membuat pengajuan miliknya sendiri
-        $roleWp->syncPermissions(['view_dashboard', 'view_menu_buat_pengajuan', 'create_pengajuan_baru', 'view_menu_daftar_pengajuan', 'edit_kendaraan_pengajuan_sendiri', 'delete_kendaraan_pengajuan_sendiri']);
+        // Wajib Pajak (WP)
+        $roleWp->syncPermissions([
+            'view_dashboard', 'view_menu_buat_pengajuan', 'create_pengajuan_baru',
+            'view_menu_daftar_pengajuan', 'edit_kendaraan_pengajuan_sendiri', 
+            'delete_kendaraan_pengajuan_sendiri', 'view_log_histori', 'view_own_sk'
+        ]);
+
+        // Samsat / Polres
+        $roleSamsat->syncPermissions([
+            'view_dashboard', 'view_menu_manajemen_pengajuan', 'approve_status_pengajuan',
+            'create_pdf_pengajuan', 'view_dokumen_surat_balasan', 'view_own_sk'
+        ]);
+
+        // Polda
+        $rolePolda->syncPermissions([
+            'view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori',
+            'create_pdf_pengajuan_bapenda_jr', 'create_sk', 'view_own_sk', 
+            'view_dokumen_surat_balasan'
+        ]);
+
+        // Bapenda
+        $roleBapenda->syncPermissions([
+            'view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori',
+            'create_pdf_balasan_polda', 'create_sk', 'view_dokumen_surat_pengajuan',
+            'view_dokumen_surat_balasan', 'view_own_sk'
+        ]);
+
+        // Jasa Raharja (Sama dengan Bapenda pola kerja logikanya)
+        $roleJr->syncPermissions([
+            'view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori',
+            'create_pdf_balasan_polda', 'create_sk', 'view_dokumen_surat_pengajuan',
+            'view_dokumen_surat_balasan', 'view_own_sk'
+        ]);
 
         // 4. Default Akun Superadmin Inti
         $userSuperadmin = User::firstOrCreate(
