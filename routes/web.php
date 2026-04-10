@@ -9,8 +9,8 @@ use App\Http\Controllers\Admin\PengajuanController as AdminPengajuanController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\KendaraanController;
 use App\Http\Controllers\FrameController;
-use App\Http\Controllers\SkController;
-use App\Http\Controllers\SuratKeputusanController;
+use App\Http\Controllers\SuratKeputusanController as SKController;
+use App\Http\Controllers\SuratPengajuanController as SPController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +92,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::patch('/pengajuan/{pengajuan}/batch-update', [AdminPengajuanController::class, 'batchUpdateKendaraanStatus'])->name('pengajuan.batchUpdate')->middleware('permission:approve_status_pengajuan');
             Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
         });
+
+        Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
+            ->name('pengajuan.ajukan')
+            ->middleware(['signed']);
     });
 
     // =================================================================

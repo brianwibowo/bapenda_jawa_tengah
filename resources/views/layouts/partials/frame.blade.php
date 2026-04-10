@@ -18,15 +18,39 @@
 </div>
 
 <script>
-<<<<<<< HEAD
+
+    function sendPost(url, data = {}) {
+        // 1. Buat elemen form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+
+        // 2. Tambahkan Token CSRF (Ambil dari meta tag Laravel)
+        const csrfToken = '{{ csrf_token() }}';
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        // 3. Tambahkan data tambahan jika ada (misal ID atau Method Spoofing)
+        for (const key in data) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = data[key];
+            form.appendChild(input);
+        }
+
+        // 4. Masukkan ke dokumen dan submit
+        document.body.appendChild(form);
+        form.submit();
+    }
     function openSecureFrame(type, category, id, footer={}) {
         // Footer = {acceptButton, rejectButton}
         //
         // Tampilkan Loading/Spinner di modal
-=======
-    function openSecurePdf(category, id, footer={}) {
-        // Footer = {acceptButton, rejectButton} that contains {label, action}
-        
+
         const defAcction = function (event) {
             event.preventDefault();
             target = event.target; // Tombol yang diklik
@@ -46,17 +70,12 @@
             };
         }
 
->>>>>>> 9e0d9fe (Add: Polda role)
         $('#pdfViewerModal').modal('show');
         $('#pdfIframe').hide();
         $('#pdfLoading').show();
 
         // Ambil signed URL dari backend
-<<<<<<< HEAD
         fetch(`/api/frame-access/${type}/${category}/${id}`, {
-=======
-        fetch(`/api/request-access/pdf/${category}/${id}`, {
->>>>>>> 9e0d9fe (Add: Polda role)
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         })
@@ -67,17 +86,27 @@
                 const iframe = document.getElementById('pdfIframe');
                 iframe.src = data.access_url;
                 iframe.onload = () => {
+                    var footerAccept = data.footer && data.footer.accept ? data.footer.accept : footer.acceptButton;
+                    var footerReject = data.footer && data.footer.reject ? data.footer.reject : footer.rejectButton
                     $('#pdfLoading').hide();
                     $('.modal-footer').html(`
-                        <button type="button" class="btn btn-danger" id="rejectBtn">${footer.rejectButton.label}</button>
-                        <button type="button" class="btn btn-success" id="acceptBtn">${footer.acceptButton.label}</button>
+                        <button type="button" class="btn ${ footerReject.class ? footerReject.class : 'btn-danger' }" id="rejectBtn">${footerReject.label}</button>
+                        <button type="button" class="btn ${ footerAccept.class ? footerAccept.class : 'btn-success'}" id="acceptBtn">${footerAccept.label}</button>
                     `);
-                    $('#acceptBtn').on('click', function(e) {
-                        footer.acceptButton.action(e);
-                    });
-                    $('#rejectBtn').on('click', function(e) {
-                        footer.rejectButton.action(e);
-                    });m  
+                    if (footerAccept.route) {
+                        $('#acceptBtn').on('click', function(e) {
+                            sendPost(footerAccept.route);
+                        });
+                    } else {
+                        $('#acceptBtn').on('click', footerAccept.action);
+                    }
+                    if (footerReject.route) {
+                        $('#rejectBtn').on('click', function(e) {
+                            sendPost(footerReject.route);
+                        });
+                    } else {
+                        $('#rejectBtn').on('click', footerReject.action);
+                    }
                     $(iframe).show();
 
                     

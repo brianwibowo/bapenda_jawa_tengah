@@ -21,6 +21,13 @@ class SuratKeputusanController extends Controller
             'form' => [
                 'view' => 'form.create_sk',
                 'permission' => 'create_sk',
+                'footer' => [
+                    'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
+                        'name' => 'surat-pengajuan.approve',
+                        'middleware' => 'signed'
+                    ]],
+                    'reject' => ['label' => 'Tolak', 'class' => 'btn-danger', 'action' => 'exit']
+                ]
             ]
         ];
 

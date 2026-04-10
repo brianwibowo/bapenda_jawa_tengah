@@ -29,7 +29,7 @@
                             </button>
                             <div></div>
                         @elseif ($pengajuan->status === 'pengajuan')
-                            <button class="btn btn-outline-primary" onclick="openSecureFrame('sk', 'pdf', {{$pengajuan->id}})">
+                            <button class="btn btn-outline-primary" onclick="openSecureFrame('sp', 'form', {{$pengajuan->id}})">
                                 <i class="fas fa-file me-1"></i> Ajukan Polda
                             </button>
                             <div></div>
@@ -79,17 +79,17 @@
                             <td>
                                 @if(in_array($log->tipe, ['komentar', 'admin']))
                                     <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
+                                @elseif($log->status_bar === 'selesai' || $log->tipe === 'system')
+                                    @php
+                                        $status_pascal = str($log->status_bar === 'selesai' ? $log->status_baru : $log->tipe)->studly();
+                                    @endphp
+                                    <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
                                 @elseif($log->tipe === 'revisi')
                                     <span class="badge bg-warning text-dark px-3 py-2">Revisi / Penolakan Berkas</span>
                                 @elseif($log->status_baru === 'pengajuan')
                                     <span class="badge bg-warning text-dark px-3 py-2">Baru (Pengajuan)</span>
                                 @elseif($log->status_baru === 'diproses')
                                     <span class="badge bg-info text-dark px-3 py-2">Diproses</span>
-                                @elseif($log->status_bar === 'selesai' || $log->tipe === 'system')
-                                    @php
-                                        $status_pascal = str($log->status_bar === 'selesai' ? $log->status_baru : $log->tipe)->studly();
-                                    @endphp
-                                    <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
                                 @elseif($log->status_baru === 'ditolak')
                                     <span class="badge bg-danger px-3 py-2">Ditolak / Dikembalikan</span>
                                 @else

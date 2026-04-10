@@ -979,7 +979,6 @@
 
                     updateTabStyles();
                     updateFinalizeButton();
-                    updatePdfPreviewButtonVisibility();
                     saveToStorage();
 
                     if (!isAuto && showSuccess) {

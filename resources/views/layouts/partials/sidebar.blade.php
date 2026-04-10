@@ -52,7 +52,7 @@
                 </li>
                 @endcan
 
-                @can('view_own_sk')
+                {{-- @can('view_own_sk')
                 <li class="nav-item {{ request()->routeIs('sk.index') || request()->routeIs('sk.show') ? 'active' : '' }}">
                     <a href="{{ route('sk.index') }}">
                         <i class="fas fa-file-alt"></i>
@@ -68,7 +68,7 @@
                         <p>Buat SKP</p>
                     </a>
                 </li>
-                @endcan
+                @endcan --}}
 
                 @can('view_menu_daftar_pengajuan')
                 <li class="nav-item {{ request()->routeIs('pengajuan.index') ? 'active' : '' }}">
