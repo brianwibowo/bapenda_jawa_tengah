@@ -453,19 +453,8 @@
 
             document.addEventListener('input', debounce(saveToStorage, 1000));
             document.addEventListener('change', debounce(saveToStorage, 1000));
-            $('.btn-save-kendaraan').on('click', showSecurePreview);
         }
 
-        function showSecurePreview() {
-            const activeForm = document.querySelector('.kendaraan-form[style="display: block;"]') || document.querySelector('.kendaraan-form:first-of-type');
-            if (!activeForm) return;
-
-            const index = activeForm.getAttribute('data-kendaraan-index');
-            const pengajuanId = savedKendaraans[index]?.pengajuan_id;
-            if (pengajuanId && !hasUnsavedChanges()) {
-                openSecurePdf('pengajuan', pengajuanId);
-            }
-        }
 
         function setupNavigationGuards() {
             const guardedLinks = document.querySelectorAll('.sidebar-content a');

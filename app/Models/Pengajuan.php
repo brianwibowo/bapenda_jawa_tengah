@@ -43,6 +43,15 @@ class Pengajuan extends Model
         return $this->hasMany(Kendaraan::class);
     }
 
+    // app/Models/Pengajuan.php
+    public function suratPengajuan() {
+        return $this->hasOne(SuratPengajuan::class);
+    }
+
+    public function suratKeputusans() {
+        return $this->hasMany(SuratKeputusan::class);
+    }
+
     /**
      * HAPUS Relasi: logs()
      * (Relasi logs() sekarang pindah ke model Kendaraan)

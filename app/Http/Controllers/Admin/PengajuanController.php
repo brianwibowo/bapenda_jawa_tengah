@@ -231,7 +231,10 @@ class PengajuanController extends Controller
             abort(404, 'Log tidak ditemukan dalam pengajuan ini.');
         }
 
+        $suratkeputusan = $log->whereTipe('System')->where('catatan', 'LIKE', 'Surat Keputusan')->latest();
+        $suratpengajuan = $log->whereTipe('System')->where('catatan', 'LIKE', 'Surat Pengajuan')->latest();
+        $systemlog = $log->whereTipe('System')->latest();
         $admin = true;
-        return view('pengajuan.log_show', compact('pengajuan', 'log', 'admin'));
+        return view('pengajuan.log_show', compact('pengajuan', 'log', 'admin', 'surat', 'suratkeputusan','suratpengajuan'));
     }
 }

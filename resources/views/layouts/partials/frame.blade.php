@@ -18,7 +18,7 @@
 </div>
 
 <script>
-    function openSecurePdf(category, id, footer={}) {
+    function openSecureFrame(type, category, id, footer={}) {
         // Footer = {acceptButton, rejectButton}
         //
         // Tampilkan Loading/Spinner di modal
@@ -27,7 +27,7 @@
         $('#pdfLoading').show();
 
         // Ambil signed URL dari backend
-        fetch(`/api/pdf-access/${category}/${id}`, {
+        fetch(`/api/frame-access/${type}/${category}/${id}`, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         })

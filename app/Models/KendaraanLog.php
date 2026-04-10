@@ -26,6 +26,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog whereAksi($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog whereTipe($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog whereCatatan($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog whereId($value)

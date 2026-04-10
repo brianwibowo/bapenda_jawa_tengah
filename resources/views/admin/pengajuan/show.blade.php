@@ -1,6 +1,6 @@
 <x-app-layout>
     @php
-        $canUpdateBatch = auth()->user()->can('approve_pengajuan') || auth()->user()->can('edit_pengajuan');
+        $canUpdateBatch = auth()->user()->can('approve_status_pengajuan');
     @endphp
     <x-slot name="header">
         Dasbor Bundel Pengajuan: {{ $pengajuan->nomor_pengajuan }}

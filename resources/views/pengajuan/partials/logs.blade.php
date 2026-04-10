@@ -7,7 +7,7 @@
         <div class="mb-3 d-flex justify-content-between align-items-center">
             <div>
                 <label class="form-label mb-0">Pilih Kendaraan</label>
-                <select id="filterKendaraan" class="form-select" style="width: 260px; display: inline-block;">
+                <select id="filterKendaraan" class="form-select" style="width: 260px; display: inline-block;" wire:model.live="kendaraan_id">
                     <option value="">Semua Kendaraan</option>
                     @foreach($pengajuan->kendaraans as $kend)
                         <option value="{{ $kend->id }}">{{ $kend->nrkb }} — {{ $kend->merk_kendaraan }}</option>
@@ -16,9 +16,34 @@
             </div>
 
             <div>
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                    <i class="fas fa-plus-circle me-1"></i> Buat Aksi
-                </button>
+                @if(!empty($admin) && $admin)
+                    @php
+                        if (!empty($suratkeputusan) && !empty($suratpengajuan)) {
+                            $surat = ($suratkeputusan->isEmpty() ? 'SK' : ($suratpengajuan->isEmpty() ? 'SP' : ''));
+                        }
+                    @endphp
+                    <div class="d-grid" style="grid-template-columns: {{!empty($surat) || $pengajuan->status === 'pengajuan' ? '40% 20% 40%' : '100%'}}; gap: 0; align-items: center;">
+                        @if (!empty($surat))
+                            <button class="btn btn-outline-primary">
+                                <i class="fas fa-file me-1"></i> Buat {{ $surat }}
+                            </button>
+                            <div></div>
+                        @elseif ($pengajuan->status === 'pengajuan')
+                            <button class="btn btn-outline-primary" onclick="openSecureFrame('sk', 'pdf', {{$pengajuan->id}})">
+                                <i class="fas fa-file me-1"></i> Ajukan Polda
+                            </button>
+                            <div></div>
+                        @endif
+                        
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
+                            <i class="fas fa-plus-circle me-1"></i> Buat Aksi
+                        </button>
+                    </div>
+                @else
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
+                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi
+                    </button>
+                @endif
             </div>
         </div>
 
@@ -52,21 +77,24 @@
                                 @endif
                             </td>
                             <td>
-                                @if(in_array($log->tipe, ['komentar', 'catatan_admin']))
-                                    <span class="badge bg-secondary">Catatan / Komentar</span>
-                                @elseif($log->tipe === 'revisi')
-                                    <span class="badge bg-warning text-dark">Revisi Dokumen</span>
-                                @elseif($log->tipe === 'status_pengajuan')
-                                    <span class="badge bg-warning text-dark">Baru (Pengajuan)</span>
-                                @elseif($log->tipe === 'status_diproses')
-                                    <span class="badge bg-info text-dark">Diproses</span>
-                                @elseif($log->tipe === 'status_selesai')
-                                    <span class="badge bg-success">Selesai</span>
-                                @elseif($log->tipe === 'status_ditolak')
-                                    <span class="badge bg-danger">Ditolak / Revisi</span>
-                                @else
-                                    <span class="badge bg-light text-dark">{{ $log->tipe ?? '-' }}</span>
-                                @endif
+                                 @if(in_array($log->tipe, ['komentar', 'admin']))
+                                        <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
+                                    @elseif($log->tipe === 'revisi')
+                                        <span class="badge bg-warning text-dark px-3 py-2">Revisi / Penolakan Berkas</span>
+                                    @elseif($log->status_baru === 'pengajuan')
+                                        <span class="badge bg-warning text-dark px-3 py-2">Baru (Pengajuan)</span>
+                                    @elseif($log->status_baru === 'diproses')
+                                        <span class="badge bg-info text-dark px-3 py-2">Diproses</span>
+                                    @elseif($log->status_bar === 'selesai' || $log->tipe === 'system')
+                                        @php
+                                            $status_pascal = str($log->status_bar === 'selesai' ? $log->status_baru : $log->tipe)->studly();
+                                        @endphp
+                                        <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
+                                    @elseif($log->status_baru === 'ditolak')
+                                        <span class="badge bg-danger px-3 py-2">Ditolak / Dikembalikan</span>
+                                    @else
+                                        <span class="badge bg-light text-dark px-3 py-2">{{ ucfirst($log->tipe) }}</span>
+                                    @endif
                             </td>
                             <td>{{ $log->user->name ?? 'N/A' }} @if($log->user && $log->user->unit_kerja) <br><small class="text-muted">{{ $log->user->unit_kerja }}</small>@endif</td>
                             <td class="text-center">

@@ -10,6 +10,7 @@ use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\KendaraanController;
 use App\Http\Controllers\FrameController;
 use App\Http\Controllers\SkController;
+use App\Http\Controllers\SuratKeputusanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -103,23 +104,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('sk')->name('sk.')->group(function () {
-        Route::get('/', [SkController::class, 'index'])
-            ->name('index')
-            ->middleware('permission:view_own_sk');
-        
-        Route::get('/buat', [SkController::class, 'create'])
-            ->name('create')
-            ->middleware('permission:create_sk');
-    });
 
     // API untuk mendapatkan tiket akses (UUID/Signature di URL)
-    Route::post('/api/pdf-access/{category}/{id}', [FrameController::class, 'requestAccess'])
-        ->name('pdf.access.request');
+    Route::post('/api/frame-access/{type}/{category}/{id}', [FrameController::class, 'requestAccess'])
+        ->name('frame.access.request');
 
     // Centralized Render Route
     // Middleware 'signed' memastikan URL tidak bisa dimodifikasi/ditebak
-    Route::get('/secure-pdf/{category}/{id}', [FrameController::class, 'render'])
+    Route::get('/secure-pdf/{type}/{category}/{id}', [FrameController::class, 'render'])
         ->middleware(['signed']) 
-        ->name('pdf.secure.render');
+        ->name('frame.secure.render');
 });

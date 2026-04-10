@@ -62,13 +62,16 @@
                                         <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
                                     @elseif($log->tipe === 'revisi')
                                         <span class="badge bg-warning text-dark px-3 py-2">Revisi / Penolakan Berkas</span>
-                                    @elseif($log->tipe === 'status_pengajuan')
+                                    @elseif($log->status_baru === 'pengajuan')
                                         <span class="badge bg-warning text-dark px-3 py-2">Baru (Pengajuan)</span>
-                                    @elseif($log->tipe === 'status_diproses')
+                                    @elseif($log->status_baru === 'diproses')
                                         <span class="badge bg-info text-dark px-3 py-2">Diproses</span>
-                                    @elseif($log->tipe === 'status_selesai')
-                                        <span class="badge bg-success px-3 py-2">Selesai</span>
-                                    @elseif($log->tipe === 'status_ditolak')
+                                    @elseif($log->status_bar === 'selesai' || $log->tipe === 'system')
+                                        @php
+                                            $status_pascal = str($log->status_bar === 'selesai' ? $log->status_baru : $log->tipe)->studly();
+                                        @endphp
+                                        <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
+                                    @elseif($log->status_baru === 'ditolak')
                                         <span class="badge bg-danger px-3 py-2">Ditolak / Dikembalikan</span>
                                     @else
                                         <span class="badge bg-light text-dark px-3 py-2">{{ ucfirst($log->tipe) }}</span>

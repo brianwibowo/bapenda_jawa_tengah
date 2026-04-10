@@ -6,41 +6,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\SuratKeputusanController as SKController;
+use App\Http\Controllers\SuratPengajuanController as SPController;
 
 class FrameController extends Controller
 {
-    /**
-     * Definisi Konfigurasi PDF secara Terpusat
-     * Ini membuat penambahan kategori baru sangat mudah.
-     */
-    protected function getPdfRegistry($category, $data = null)
-    {
-        $registry = [
-            'pengajuan' => [
-                'view' => 'pdf.view_pengajuan',
-                'prefix' => 'SPOPD-',
-                'permission' => 'view_own_pengajuan',
-                'filename' => $data ? $data->nomor_pengajuan : ''
-            ],
-            'sk' => [
-                'view' => 'pdf.sk',
-                'prefix' => 'SKP-',
-                'permission' => 'view_own_sk',
-                'filename' => $data ? $data->nomor_pengajuan : ''
-            ],
-        ];
-
-        return $registry[$category] ?? abort(404, 'Kategori laporan tidak ditemukan');
-    }
-
-    public function requestAccess(Request $request, $category, $id)
+    public function requestAccess(Request $request, $type, $category, $id)
     {
         $user = Auth::user();
         $pengajuan = Pengajuan::findOrFail($id);
-        $config = $this->getPdfRegistry($category);
+        $config = $type == 'sk' ? SKController::getRegistry($category) : SPController::getRegistry($category);
 
         // 1. Cek Permission dari RBAC Spatie secara dinamis sesuai kategori
-        if (!$user->can($config['permission'])) {
+        if (!$user->canAny($config['permission'])) {
             return response()->json(['error' => 'Anda tidak memiliki izin cetak untuk kategori ini.'], 403);
         }
 
@@ -59,18 +37,14 @@ class FrameController extends Controller
         return response()->json(['access_url' => $temporaryUrl]);
     }
 
-    public function render(Request $request, $category, $id)
+    public function render(Request $request, $type, $category, $id)
     {
         $data = Pengajuan::with(['kendaraans'])->findOrFail($id);
-        $config = $this->getPdfRegistry($category, $data);
+        $config = $type == 'sk' ? SKController::getRegistry($category, $data) : SPController::getRegistry($category, $data);
         
         // Render View secara modular berdasarkan konfigurasi
-        $pdf = Pdf::loadView($config['view'], [
-            'pengajuan' => $data,
-            'kendaraans' => $data->kendaraans,
-            'pemilik' => $data->kendaraans->first()->pemilik ?? null
-        ])->setPaper('a4', 'portrait');
+        $view = $type == 'sk' ? SKController::render($request, $category, $id) : SPController::render($request, $category, $id);
 
-        return $pdf->stream($config['prefix'] . $config['filename'] . '.pdf');
+        return $view;
     }
 }
