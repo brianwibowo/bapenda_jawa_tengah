@@ -22,9 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-<<<<<<< Updated upstream
 package-lock.json
-=======
->>>>>>> Stashed changes
-.devcontainer.json
+.devcontainer/
 vite.config.dev.js
