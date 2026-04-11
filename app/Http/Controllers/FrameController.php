@@ -15,13 +15,10 @@ class FrameController extends Controller
     public function requestAccess(Request $request, $type, $category, $id)
     {
         $user = Auth::user();
-        $pengajuan = Pengajuan::findOrFail($id);
-        $config = $type == 'sk' ? SKController::getRegistry($category) : SPController::getRegistry($category);
+        $config = $type == 'sk' ? SKController::getRegistry($category, $id) : SPController::getRegistry($category, $id);
 
         
         // 1. Cek Permission dari RBAC Spatie secara dinamis sesuai kategori
-
-
         if (!$user->canAny($config['permission'])) {
             return response()->json(['error' => 'Anda tidak memiliki izin akses untuk kategori ini.'], 403);
         } 
@@ -30,19 +27,27 @@ class FrameController extends Controller
             foreach ($config['footer'] as $key => $action) {
                 // Cek apakah key 'route' ada agar tidak error
                 if (isset($action['route'])) {
-                    if ($action['route']['middleware'] == 'signed') {
+                    if (isset($action['route']['middleware']) && $action['route']['middleware'] == 'signed') {
+                        $routeParams = $action['route']['params'] ?? ['id' => $id];
                         // Pastikan Anda mengupdate langsung ke array asli menggunakan $key
                         $config['footer'][$key]['route']['url'] = URL::temporarySignedRoute(
                             $action['route']['name'], 
                             now()->addMinutes(10), 
-                            ['id' => $id]
+                            $routeParams
                         );
                     }
                 }
             }
 
-            $config['footer']['accept']['route'] = $config['footer']['accept']['route']['url'] ?? null;
-            $config['footer']['reject']['route'] = $config['footer']['reject']['route']['url'] ?? null;
+            if (isset($config['footer']['accept']['route'])) {
+                $config['footer']['accept']['route'] = $config['footer']['accept']['route']['url'] ?? null;
+            }
+            if (isset($config['footer']['reject']['route'])) {
+                $config['footer']['reject']['route'] = $config['footer']['reject']['route']['url'] ?? null;
+            }
+            if (isset($config['footer']['back']['route'])) {
+                $config['footer']['back']['route'] = $config['footer']['back']['route']['url'] ?? null;
+            }
         }
         // 2. Logika District (Future Development)
         // if ($user->unit_kerja !== $pengajuan->unit_kerja && !$user->hasRole('superadmin')) {
@@ -60,9 +65,6 @@ class FrameController extends Controller
 
     public function render(Request $request, $type, $category, $id)
     {
-        $data = Pengajuan::with(['kendaraans'])->findOrFail($id);
-        $config = $type == 'sk' ? SKController::getRegistry($category, $data) : SPController::getRegistry($category, $data);
-        
         // Render View secara modular berdasarkan konfigurasi
         $view = $type == 'sk' ? SKController::render($request, $category, $id) : SPController::render($request, $category, $id);
 

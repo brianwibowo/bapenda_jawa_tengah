@@ -38,6 +38,7 @@ class RbacSeeder extends Seeder
             ['name' => 'create_pdf_pengajuan', 'group_name' => 'Surat Pengajuan PDF'],
             ['name' => 'create_pdf_pengajuan_bapenda_jr', 'group_name' => 'Surat Pengajuan PDF'],
             ['name' => 'create_pdf_balasan_polda', 'group_name' => 'Surat Balasan PDF'],
+            ['name' => 'create_pdf_balasan_samsat', 'group_name' => 'Surat Balasan PDF'],
             ['name' => 'view_dokumen_surat_pengajuan', 'group_name' => 'Akses Lihat File PDF'],
             ['name' => 'view_dokumen_surat_balasan', 'group_name' => 'Akses Lihat File PDF'],
 
@@ -97,7 +98,7 @@ class RbacSeeder extends Seeder
         // Polda
         $rolePolda->syncPermissions([
             'view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori',
-            'create_pdf_pengajuan_bapenda_jr', 'create_sk', 'view_own_sk', 
+            'create_pdf_pengajuan_bapenda_jr', 'create_pdf_balasan_samsat', 'create_pdf_pengajuan', 'create_sk', 'view_own_sk', 
             'view_dokumen_surat_balasan'
         ]);
 

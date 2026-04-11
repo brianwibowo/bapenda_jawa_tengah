@@ -41,7 +41,11 @@ class PengajuanController extends Controller
 
         $pengajuans = $query->paginate(10)->withQueryString();
 
-        return view('admin.pengajuan.index', compact('pengajuans'));
+        $progress = $pengajuans->mapWithKeys(function ($pengajuan) {
+            return [$pengajuan->id => $pengajuan->getProgress()];
+        });
+
+        return view('admin.pengajuan.index', compact('pengajuans', 'progress'));
     }
 
     /**
@@ -56,7 +60,46 @@ class PengajuanController extends Controller
             'kendaraans.logs.media' // Ambil lampiran log per kendaraan
         ]);
 
-        return view('admin.pengajuan.show', compact('pengajuan'));
+        $progress = $pengajuan->getTotalSurat();
+        $suratkeputusan = $pengajuan->suratKeputusans;
+        $suratpengajuan = $pengajuan->getSliceSuratPengajuanLastRejected();
+        $user = Auth::user();
+
+        // Logic Modular Condition
+        $permissionSurat = [
+            'canAjukanSP' => false,
+            'canAjukanSK' => false,
+            'canRespondSP' => false
+        ];
+
+        $lastSp = $pengajuan->getCurrentSuratPengajuan();
+
+        // Jika progres masih awal (0) dan belum ada SP
+        if ($progress == 0 && $suratpengajuan->isEmpty() && $user->unit_kerja == 'Samsat') {
+            $permissionSurat['canAjukanSP'] = true;
+        }
+        // Bapenda/JR merespon SP dari Polda
+        elseif ($lastSp && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
+            // Cek apakah user ini termasuk dalam daftar tujuan yang belum approve
+            $statusInstansi = $lastSp->persetujuan_unit_kerja
+                ? collect($lastSp->persetujuan_unit_kerja)->firstWhere('instansi', $user->unit_kerja)
+                : null;
+            if ($statusInstansi && $statusInstansi['status'] == 'pending') {
+                $permissionSurat['canRespondSP'] = true;
+            }
+        }
+        // Polda ke Bapenda (Jika SP pertama sudah approved)
+        elseif ($progress == 2 && $user->unit_kerja == 'Polda') {
+            $permissionSurat['canAjukanSP'] = true;
+        }
+        // Jika sudah fully approved tapi belum ada SK
+        elseif ($progress == 6 && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('instansi', $user->unit_kerja)->isEmpty()) {
+            $permissionSurat['canAjukanSK'] = true;
+        }
+
+        return view('admin.pengajuan.show', compact(
+            'pengajuan', 'suratkeputusan', 'suratpengajuan', 'progress', 'permissionSurat'
+        ));
     }
 
     /**
@@ -232,10 +275,11 @@ class PengajuanController extends Controller
         }
 
         // Ambil data surat terkait untuk ditampilkan di sidebar (jika ada)
-        $suratkeputusan = $pengajuan->suratKeputusan;
+        $progress = $pengajuan->getProgress();
+        $suratkeputusan = $pengajuan->suratKeputusans;
         $suratpengajuan = $pengajuan->suratPengajuan;
 
         $admin = true;
-        return view('pengajuan.log_show', compact('pengajuan', 'log', 'admin', 'suratkeputusan','suratpengajuan'));
+        return view('pengajuan.log_show', compact('pengajuan', 'log', 'admin', 'suratkeputusan','suratpengajuan', 'progress'));
     }
 }

@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\SuratKeputusan;
+use App\Models\KendaraanLog;
+use App\Models\Pengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class SuratKeputusanController extends Controller
 {
-    static public function getRegistry($type, $data = null)
+    static public function getRegistry($type, $id, $data = null)
     {
         $registries = [
             'pdf' => [
@@ -23,13 +26,14 @@ class SuratKeputusanController extends Controller
                 'permission' => 'create_sk',
                 'footer' => [
                     'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
-                        'name' => 'surat-pengajuan.approve',
+                        'name' => 'admin.pengajuan.buat_sk',
                         'middleware' => 'signed'
                     ]],
                     'reject' => ['label' => 'Tolak', 'class' => 'btn-danger', 'action' => 'exit']
                 ]
             ]
         ];
+
 
         $config = $registries[$type] ?? abort(404);
         $config['filename'] = $data ? ($config['prefix'] ?? '') . $data->nomor_sk : 'DOKUMEN_SK';
@@ -38,15 +42,69 @@ class SuratKeputusanController extends Controller
 
     static public function render(Request $request, $type, $id)
     {
-        $sk = SuratKeputusan::with('pengajuan')->findOrFail($id);
-        $config = SuratKeputusanController::getRegistry($type, $sk);
-
         if ($type == 'pdf') {
+            $sk = SuratKeputusan::with('pengajuan.kendaraans.pemilik')->findOrFail($id);
+            $config = SuratKeputusanController::getRegistry($type, $sk->pengajuan_id, $sk);
+
             return Pdf::loadView($config['view'], ['sk' => $sk])
                 ->setPaper('a4', 'portrait')
                 ->stream($config['filename'] . '.pdf');
         }
 
-        return view($config['view'], ['sk' => $sk]);
+        $pengajuan = Pengajuan::with(['kendaraans', 'suratKeputusans'])->findOrFail($id);
+        $sk = $pengajuan->suratKeputusans->last();
+        $config = SuratKeputusanController::getRegistry($type, $pengajuan->id, $sk);
+
+        return view($config['view'], ['sk' => $sk, 'pengajuan' => $pengajuan]);
     }
+
+    public function ajukan(Request $request, $id)
+    {
+        $pengajuan = Pengajuan::with('kendaraans')->findOrFail($id);
+
+        if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
+            return response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
+        }
+
+        $suratKeputusan = $pengajuan->suratKeputusans;
+
+        if ($suratKeputusan->isNotEmpty()) {
+            // Map suratKeputusan with unit_kerja
+            $skUnitKerja = $suratKeputusan->pluck('unit_kerja')->toArray();
+            return response()->json(['message' => 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja)], 400);
+        }
+
+        // Update status kendaraan menjadi "Diajukan ke Bapenda/JR"
+        foreach ($pengajuan->kendaraans as $kendaraan) {
+            if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
+                // Simpan log perubahan status
+                KendaraanLog::create([
+                    'kendaraan_id' => $kendaraan->id,
+                    'user_id' => Auth::id(),
+                    'aksi' => 'Surat Keputusan',
+                    'status_baru' => $kendaraan->status,
+                    'tipe' => 'system',
+                    'catatan' => 'Mengajukan Surat Keputusan Kendaraan Oleh ' . Auth::user()->name,
+                ]);
+            }
+        }
+
+        $console = new ConsoleOutput();
+        $console->writeln("User " . Auth::user()->unit_kerja );
+        $sk = SuratKeputusan::create([
+            'pengajuan_id' => $id,
+            'user_id' => Auth::id(),
+            'unit_kerja' => Auth::user()->unit_kerja,
+            'nomor_sk' => 'SK-' . strtoupper(uniqid()),
+            'perihal' => "Keputusan untuk Pengajuan ID: $id",
+            'isi_putusan' => "Surat Keputusan untuk Pengajuan ID: $id, dibuat oleh " . Auth::user()->name,
+            'tanggal_ditetapkkan' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('success', 'Surat Keputusan berhasil dibuat dan diajukan. Silakan lanjutkan proses persetujuan.');
+    }
+
 }

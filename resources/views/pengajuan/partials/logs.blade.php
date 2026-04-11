@@ -16,33 +16,52 @@
             </div>
 
             <div>
+                @if (isset($permissionSurat))
+                    {{ Auth::user()->unit_kerja }} {{ $progress }}\n
+                    {{ 'Hak Akses Surat: ' }}
+                    {{ $permissionSurat['canAjukanSP'] ? 'Bisa Ajukan SP' : '' }}
+                    {{ $permissionSurat['canAjukanSK'] ? 'Bisa Ajukan SK' : '' }}
+                    {{ $permissionSurat['canRespondSP'] ? 'Bisa Respond SP' : '' }}
+                @endif
                 @if(!empty($admin) && $admin)
                     @php
-                        if (!empty($suratkeputusan) && !empty($suratpengajuan)) {
-                            $surat = ($suratkeputusan->isEmpty() ? 'SK' : ($suratpengajuan->isEmpty() ? 'SP' : ''));
+                    $isAdmin = !empty($admin) && $admin;
+                    $hasSuratAction = $isAdmin && isset($permissionSurat);
+                    $type = '';
+                    $label = '';
+                    if ($hasSuratAction) {
+                        if ($permissionSurat['canAjukanSP']) {
+                            $type = 'sp';
+                            $label = 'Buat Pengajuan ke ' . (Auth::user()->unit_kerja == 'Samsat' ? 'Polda' : 'Bapenda/Jasa Raharja');
+                        } elseif ($permissionSurat['canRespondSP']) {
+                            $type = 'sp';
+                            $label = 'Review & Balas SP';
+                        } elseif ($permissionSurat['canAjukanSK']) {
+                            $type = 'sk';
+                            $label = 'Terbitkan Surat Keputusan';
+                        } else {
+                            $hasSuratAction = false; // Tidak ada aksi surat yang tersedia
                         }
-                    @endphp
-                    <div class="d-grid" style="grid-template-columns: {{!empty($surat) || $pengajuan->status === 'pengajuan' ? '40% 20% 40%' : '100%'}}; gap: 0; align-items: center;">
-                        @if (!empty($surat))
-                            <button class="btn btn-outline-primary">
-                                <i class="fas fa-file me-1"></i> Buat {{ $surat }}
-                            </button>
-                            <div></div>
-                        @elseif ($pengajuan->status === 'pengajuan')
-                            <button class="btn btn-outline-primary" onclick="openSecureFrame('sp', 'form', {{$pengajuan->id}})">
-                                <i class="fas fa-file me-1"></i> Ajukan Polda
-                            </button>
-                            <div></div>
-                        @endif
-                        
-                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                            <i class="fas fa-plus-circle me-1"></i> Buat Aksi
+                    }
+                    
+                @endphp
+
+                <div class="d-grid" style="grid-template-columns: {{ $hasSuratAction ? '45% 5% 45%' : '100%' }}; gap: 0; align-items: center;">
+                    {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
+                    @if($hasSuratAction)
+                        <button class="btn btn-outline-primary" 
+                                onclick="openSecureFrame('{{ $type }}', 'form', {{ $pengajuan->id }})">
+                            <i class="fas fa-file-signature me-1"></i> {{ $label }}
                         </button>
-                    </div>
-                @else
+                        <div></div> {{-- Spacer --}}
+                    @endif
+
+                    {{-- Tombol Buat Aksi (Selalu Ada untuk Log) --}}
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi
+                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
                     </button>
+                    
+                </div>
                 @endif
             </div>
         </div>
