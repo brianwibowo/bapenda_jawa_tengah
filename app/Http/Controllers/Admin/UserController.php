@@ -22,7 +22,7 @@ class UserController extends Controller
                   ->orWhere('unit_kerja', 'like', "%{$search}%");
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->latest()->paginate(7)->withQueryString();
 
         return view('admin.users.index', compact('users', 'search'));
     }

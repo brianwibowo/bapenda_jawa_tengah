@@ -63,6 +63,7 @@ class User extends Authenticatable
         'password',
         'unit_kerja', // Ini sudah benar
         'jabatan',
+        'profile_photo_path',
     ];
 
     /**

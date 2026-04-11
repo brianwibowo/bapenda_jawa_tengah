@@ -19,7 +19,7 @@ class RoleController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $roles = $query->paginate(10)->withQueryString();
+        $roles = $query->paginate(7)->withQueryString();
 
         return view('admin.roles.index', compact('roles', 'search'));
     }
