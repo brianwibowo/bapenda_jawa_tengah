@@ -5,7 +5,7 @@
     @endphp
 
     <x-slot name="header">
-        <h2 class="fw-bold mb-0">Kelola Pengajuan</h2>
+        <h2 class="fw-bold mb-0">Manajemen Pengajuan</h2>
     </x-slot>
 
     {{-- Pesan Sukses --}}
@@ -27,32 +27,32 @@
                     </label>
                     <ul class="nav nav-pills nav-fill flex-wrap gap-2" role="tablist">
                         <li class="nav-item flex-fill">
-                            <a class="nav-link {{ !request('status') ? 'active' : '' }}" 
-                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['search' => request('search')]) }}">
+                            <a class="nav-link {{ !request('status') ? 'active' : '' }}"
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['search' => request('search')]) }}">
                                 <i class="fas fa-list me-1"></i> Semua
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
-                            <a class="nav-link {{ request('status') == 'pengajuan' ? 'active' : '' }}" 
-                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'pengajuan', 'search' => request('search')]) }}">
+                            <a class="nav-link {{ request('status') == 'pengajuan' ? 'active' : '' }}"
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'pengajuan', 'search' => request('search')]) }}">
                                 <i class="fas fa-file-alt me-1"></i> Baru
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
-                            <a class="nav-link {{ request('status') == 'diproses' ? 'active' : '' }}" 
-                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'diproses', 'search' => request('search')]) }}">
+                            <a class="nav-link {{ request('status') == 'diproses' ? 'active' : '' }}"
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'diproses', 'search' => request('search')]) }}">
                                 <i class="fas fa-spinner me-1"></i> Diproses
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
-                            <a class="nav-link {{ request('status') == 'selesai' ? 'active' : '' }}" 
-                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'selesai', 'search' => request('search')]) }}">
+                            <a class="nav-link {{ request('status') == 'selesai' ? 'active' : '' }}"
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'selesai', 'search' => request('search')]) }}">
                                 <i class="fas fa-check-circle me-1"></i> Selesai
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
-                            <a class="nav-link {{ request('status') == 'ditolak' ? 'active' : '' }}" 
-                               href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'ditolak', 'search' => request('search')]) }}">
+                            <a class="nav-link {{ request('status') == 'ditolak' ? 'active' : '' }}"
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'ditolak', 'search' => request('search')]) }}">
                                 <i class="fas fa-times-circle me-1"></i> Ditolak
                             </a>
                         </li>
@@ -67,17 +67,15 @@
                             <span class="input-group-text">
                                 <i class="fas fa-search"></i>
                             </span>
-                            <input type="text" 
-                                   name="search" 
-                                   class="form-control" 
-                                   placeholder="Cari berdasarkan Nomor Pengajuan atau Nama..." 
-                                   value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control"
+                                placeholder="Cari berdasarkan Nomor Pengajuan atau Nama..."
+                                value="{{ request('search') }}">
                             <button class="btn btn-primary" type="submit">
                                 <i class="fas fa-search me-1"></i> Cari
                             </button>
                             @if(request('search'))
-                                <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}" 
-                                   class="btn btn-outline-secondary">
+                                <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}"
+                                    class="btn btn-outline-secondary">
                                     <i class="fas fa-times"></i> Reset
                                 </a>
                             @endif
@@ -186,128 +184,126 @@
                     </thead>
                     <tbody>
                         @forelse ($pengajuans as $pengajuan)
-                            <tr>
-                                <td class="px-4 py-3">
-                                    <strong class="text-primary">{{ $pengajuan->nomor_pengajuan }}</strong>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <i class="fas fa-calendar-alt text-muted me-2"></i>
-                                    {{ $pengajuan->created_at->format('d M Y') }}
-                                    <br>
-                                    <small class="text-muted">{{ $pengajuan->created_at->format('H:i') }}</small>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <i class="fas fa-clock text-muted me-2"></i>
-                                    {{ $pengajuan->updated_at->format('d M Y') }}
-                                    <br>
-                                    <small class="text-muted">{{ $pengajuan->updated_at->format('H:i') }}</small>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    @if($pengajuan->status == 'pengajuan')
-                                        <span class="badge bg-warning text-dark px-3 py-2">
-                                            <i class="fas fa-file-alt me-1"></i> Baru
-                                        </span>
-                                    @elseif($pengajuan->status == 'diproses')
-                                        <span class="badge bg-info text-dark px-3 py-2">
-                                            <i class="fas fa-spinner me-1"></i> Diproses
-                                        </span>
-                                    @elseif($pengajuan->status == 'selesai')
-                                        <span class="badge bg-success px-3 py-2">
-                                            <i class="fas fa-check-circle me-1"></i> Selesai
-                                        </span>
-                                    @elseif($pengajuan->status == 'ditolak')
-                                        <span class="badge bg-danger px-3 py-2">
-                                            <i class="fas fa-times-circle me-1"></i> Ditolak
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.show', $pengajuan) }}" 
-                                           class="btn btn-primary btn-sm"
-                                           data-bs-toggle="tooltip"
-                                           title="Lihat Detail">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        @if($isAdminRole)
-                                            <button type="button" 
-                                                    class="btn btn-danger btn-sm"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteModal{{ $pengajuan->id }}"
-                                                    title="Hapus">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-
-                                    @if($isAdminRole)
-                                    <!-- Delete Modal -->
-                                    <div class="modal fade" id="deleteModal{{ $pengajuan->id }}" tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-danger text-white">
-                                                    <h5 class="modal-title">
-                                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                                        Konfirmasi Hapus
-                                                    </h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="text-center mb-3">
-                                                        <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-                                                        <h6>Apakah Anda yakin ingin menghapus pengajuan ini?</h6>
-                                                        <p class="text-muted mb-0">
-                                                            <strong>{{ $pengajuan->nomor_pengajuan }}</strong>
-                                                        </p>
-                                                        <small class="text-danger">
-                                                            Data yang dihapus tidak dapat dikembalikan!
-                                                        </small>
+                                            <tr>
+                                                <td class="px-4 py-3">
+                                                    <strong class="text-primary">{{ $pengajuan->nomor_pengajuan }}</strong>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <i class="fas fa-calendar-alt text-muted me-2"></i>
+                                                    {{ $pengajuan->created_at->format('d M Y') }}
+                                                    <br>
+                                                    <small class="text-muted">{{ $pengajuan->created_at->format('H:i') }}</small>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <i class="fas fa-clock text-muted me-2"></i>
+                                                    {{ $pengajuan->updated_at->format('d M Y') }}
+                                                    <br>
+                                                    <small class="text-muted">{{ $pengajuan->updated_at->format('H:i') }}</small>
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    @if($pengajuan->status == 'pengajuan')
+                                                        <span class="badge bg-warning text-dark px-3 py-2">
+                                                            <i class="fas fa-file-alt me-1"></i> Baru
+                                                        </span>
+                                                    @elseif($pengajuan->status == 'diproses')
+                                                        <span class="badge bg-info text-dark px-3 py-2">
+                                                            <i class="fas fa-spinner me-1"></i> Diproses
+                                                        </span>
+                                                    @elseif($pengajuan->status == 'selesai')
+                                                        <span class="badge bg-success px-3 py-2">
+                                                            <i class="fas fa-check-circle me-1"></i> Selesai
+                                                        </span>
+                                                    @elseif($pengajuan->status == 'ditolak')
+                                                        <span class="badge bg-danger px-3 py-2">
+                                                            <i class="fas fa-times-circle me-1"></i> Ditolak
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-center">
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.show', $pengajuan) }}"
+                                                            class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="Lihat Detail">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        @if($isAdminRole)
+                                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                                data-bs-target="#deleteModal{{ $pengajuan->id }}" title="Hapus">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        @endif
                                                     </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        <i class="fas fa-times me-1"></i> Batal
-                                                    </button>
-                                                    <form action="{{ route($pengajuanRoutePrefix . '.pengajuan.destroy', $pengajuan) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">
-                                                            <i class="fas fa-trash me-1"></i> Hapus Permanen
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                                </td>
+
+                                                    @if($isAdminRole)
+                                                                                <!-- Delete Modal -->
+                                                                                <div class="modal fade" id="deleteModal{{ $pengajuan->id }}" tabindex="-1">
+                                                                                    <div class="modal-dialog modal-dialog-centered">
+                                                                                        <div class="modal-content">
+                                                                                            <div class="modal-header bg-danger text-white">
+                                                                                                <h5 class="modal-title">
+                                                                                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                                                                                    Konfirmasi Hapus
+                                                                                                </h5>
+                                                                                                <button type="button" class="btn-close btn-close-white"
+                                                                                                    data-bs-dismiss="modal"></button>
+                                                                                            </div>
+                                                                                            <div class="modal-body">
+                                                                                                <div class="text-center mb-3">
+                                                                                                    <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                                                                                                    <h6>Apakah Anda yakin ingin menghapus pengajuan ini?</h6>
+                                                                                                    <p class="text-muted mb-0">
+                                                                                                        <strong>{{ $pengajuan->nomor_pengajuan }}</strong>
+                                                                                                    </p>
+                                                                                                    <small class="text-danger">
+                                                                                                        Data yang dihapus tidak dapat dikembalikan!
+                                                                                                    </small>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="modal-footer">
+                                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                                                    <i class="fas fa-times me-1"></i> Batal
+                                                                                                </button>
+                                                                                                <form
+                                                                                                    action="{{ route($pengajuanRoutePrefix . '.pengajuan.destroy', $pengajuan) }}"
+                                                                                                    method="POST" class="d-inline">
+                                                                                                    @csrf
+                                                                                                    @method('DELETE')
+                                                                                                    <button type="submit" class="btn btn-danger">
+                                                                                                        <i class="fas fa-trash me-1"></i> Hapus Permanen
+                                                                                                    </button>
+                                                                                                </form>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                            </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="5" class="text-center py-5">
-                                    <div class="text-muted">
-                                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                        <h5>Tidak ada data pengajuan</h5>
-                                        <p>Belum ada pengajuan yang sesuai dengan filter yang dipilih.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Paginasi -->
-        @if($pengajuans->hasPages())
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <div class="text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                        <h5>Tidak ada data pengajuan</h5>
+                        <p>Belum ada pengajuan yang sesuai dengan filter yang dipilih.</p>
+                    </div>
+                </td>
+            </tr>
+        @endforelse
+        </tbody>
+        </table>
+    </div>
+    </div>
+
+    <!-- Paginasi -->
+    @if($pengajuans->hasPages())
         <div class="card-footer bg-white border-top">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="text-muted">
                     <i class="fas fa-info-circle me-1"></i>
-                    Menampilkan <strong>{{ $pengajuans->firstItem() ?? 0 }}</strong> 
-                    - <strong>{{ $pengajuans->lastItem() ?? 0 }}</strong> 
+                    Menampilkan <strong>{{ $pengajuans->firstItem() ?? 0 }}</strong>
+                    - <strong>{{ $pengajuans->lastItem() ?? 0 }}</strong>
                     dari <strong>{{ $pengajuans->total() }}</strong> hasil
                 </div>
                 <div>
@@ -315,7 +311,7 @@
                 </div>
             </div>
         </div>
-        @endif
+    @endif
     </div>
 
     <style>
@@ -325,33 +321,33 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-        
+
         .nav-pills .nav-link:not(.active):hover {
             background-color: #f8f9fa;
             transform: translateY(-2px);
         }
-        
+
         .nav-pills .nav-link.active {
             background-color: #0d6efd;
             box-shadow: 0 4px 6px rgba(13, 110, 253, 0.3);
         }
-        
+
         /* Cards */
         .card {
             border: none;
             border-radius: 12px;
             overflow: hidden;
         }
-        
+
         .stat-card {
             transition: all 0.3s ease;
         }
-        
+
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
         }
-        
+
         .stat-icon {
             width: 60px;
             height: 60px;
@@ -360,80 +356,80 @@
             justify-content: center;
             border-radius: 12px;
         }
-        
+
         /* Table */
-        .table > :not(caption) > * > * {
+        .table> :not(caption)>*>* {
             padding: 1rem 0.75rem;
         }
-        
+
         .table tbody tr {
             transition: all 0.2s ease;
         }
-        
+
         .table tbody tr:hover {
             background-color: #f8f9fa;
             transform: scale(1.01);
         }
-        
+
         /* Badge */
         .badge {
             font-weight: 500;
             font-size: 0.85rem;
         }
-        
+
         /* Buttons */
         .btn-sm {
             padding: 0.4rem 0.8rem;
             font-weight: 500;
             transition: all 0.3s ease;
         }
-        
+
         .btn-group .btn {
             border-radius: 0;
         }
-        
+
         .btn-group .btn:first-child {
             border-top-left-radius: 6px;
             border-bottom-left-radius: 6px;
         }
-        
+
         .btn-group .btn:last-child {
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
         }
-        
+
         .btn-sm:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
-        
+
         /* Alert */
         .alert {
             border-radius: 10px;
             border: none;
         }
-        
+
         /* Input Group */
         .input-group-text {
             background-color: #f8f9fa;
             border-right: none;
         }
-        
+
         .input-group .form-control {
             border-left: none;
         }
-        
+
         .input-group .form-control:focus {
             box-shadow: none;
             border-color: #ced4da;
         }
-        
+
         /* Modal */
         .modal-content {
             border-radius: 12px;
             border: none;
         }
-        
+
         .modal-header {
             border-top-left-radius: 12px;
             border-top-right-radius: 12px;
@@ -441,14 +437,14 @@
     </style>
 
     @push('scripts')
-    <script>
-        // Initialize tooltips
-        document.addEventListener('DOMContentLoaded', function() {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
+        <script>
+            // Initialize tooltips
+            document.addEventListener('DOMContentLoaded', function () {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
             });
-        });
-    </script>
+        </script>
     @endpush
 </x-app-layout>

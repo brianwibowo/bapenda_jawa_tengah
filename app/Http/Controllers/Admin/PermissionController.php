@@ -18,7 +18,17 @@ class PermissionController extends Controller
                   ->orWhere('group_name', 'like', "%{$search}%");
         }
         
-        $groupedPermissions = $query->get()->groupBy('group_name');
+        $allGrouped = $query->get()->groupBy('group_name');
+        
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $perPage = 7;
+        $groupedPermissions = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allGrouped->forPage($page, $perPage),
+            $allGrouped->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
         
         return view('admin.permissions.index', compact('groupedPermissions', 'search'));
     }

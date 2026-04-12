@@ -246,7 +246,7 @@ class PengajuanController extends Controller
             'user_id' => $adminUser->id,
             'aksi' => $aksiText,
             'tipe' => $request->tipe,
-            'status_baru' => $request->status_baru,
+            'status_baru' => $request->status_baru ?? $kendaraan->status,
             'catatan' => $request->catatan,
         ]);
 

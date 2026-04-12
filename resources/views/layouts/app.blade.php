@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>{{ $header ?? 'Dashboard' }} - Bapenda</title>
+    <title>{{ $title ?? (isset($header) ? trim(strip_tags($header)) : 'Aplikasi Bapenda') }}</title>
     <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
     <link rel="icon" href="{{ asset('kaiadmin/img/kaiadmin/favicon.ico') }}" type="image/x-icon" />
 
@@ -23,6 +24,7 @@
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/plugins.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/kaiadmin.min.css') }}" />
 </head>
+
 <body>
     @include('layouts.partials.frame')
     <div class="wrapper">
@@ -34,11 +36,11 @@
             <div class="container">
                 <div class="page-inner">
                     @if (isset($header))
-                    <div class="page-header" style="display:block!important;">
-                        {{ $header }}
-                    </div>
+                        <div class="page-header" style="display:block!important;">
+                            {!! $header !!}
+                        </div>
                     @endif
-                    
+
                     {{ $slot }}
                 </div>
             </div>
@@ -46,11 +48,12 @@
             @include('layouts.partials.footer')
         </div>
     </div>
-    
+
     <script src="{{ asset('kaiadmin/js/core/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/kaiadmin.min.js') }}"></script>
 </body>
+
 </html>

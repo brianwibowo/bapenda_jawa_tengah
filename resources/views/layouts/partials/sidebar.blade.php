@@ -1,5 +1,3 @@
-{{-- resources/views/layouts/partials/sidebar.blade.php --}}
-
 <div class="sidebar" data-background-color="dark">
 
     <div class="sidebar-logo">
@@ -44,16 +42,17 @@
                 {{-- == MENU BERBASIS PERMISSION == --}}
                 {{-- == MENU UNTUK MASYARAKAT (Yang Punya Akses Pengajuan) == --}}
                 @can('view_menu_buat_pengajuan')
-                <li class="nav-item {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
-                    <a href="{{ route('pengajuan.create') }}">
-                        <i class="fas fa-plus-circle"></i>
-                        <p>Buat Pengajuan</p>
-                    </a>
-                </li>
+                    <li class="nav-item {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
+                        <a href="{{ route('pengajuan.create') }}">
+                            <i class="fas fa-plus-circle"></i>
+                            <p>Buat Pengajuan</p>
+                        </a>
+                    </li>
                 @endcan
 
                 {{-- @can('view_own_sk')
-                <li class="nav-item {{ request()->routeIs('sk.index') || request()->routeIs('sk.show') ? 'active' : '' }}">
+                <li
+                    class="nav-item {{ request()->routeIs('sk.index') || request()->routeIs('sk.show') ? 'active' : '' }}">
                     <a href="{{ route('sk.index') }}">
                         <i class="fas fa-file-alt"></i>
                         <p>Daftar SKP</p>
@@ -71,12 +70,12 @@
                 @endcan --}}
 
                 @can('view_menu_daftar_pengajuan')
-                <li class="nav-item {{ request()->routeIs('pengajuan.index') ? 'active' : '' }}">
-                    <a href="{{ route('pengajuan.index') }}">
-                        <i class="fas fa-list-alt"></i>
-                        <p>Daftar Pengajuan</p>
-                    </a>
-                </li>
+                    <li class="nav-item {{ request()->routeIs('pengajuan.index') ? 'active' : '' }}">
+                        <a href="{{ route('pengajuan.index') }}">
+                            <i class="fas fa-list-alt"></i>
+                            <p>Daftar Pengajuan</p>
+                        </a>
+                    </li>
                 @endcan
 
                 {{-- == MENU UNTUK PENGELOLA PENGAJUAN (Semua Instansi) == --}}
@@ -99,33 +98,51 @@
                     </li>
 
                     @can('view_menu_hak_akses')
-                    <li class="nav-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.permissions.index') }}">
-                            <i class="fas fa-user-lock"></i>
-                            <p>Hak Akses</p>
-                        </a>
-                    </li>
+                        <li class="nav-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.permissions.index') }}">
+                                <i class="fas fa-user-lock"></i>
+                                <p>Hak Akses</p>
+                            </a>
+                        </li>
                     @endcan
 
                     @can('view_menu_akses_group')
-                    <li class="nav-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.roles.index') }}">
-                            <i class="fas fa-user-shield"></i>
-                            <p>Akses Group</p>
-                        </a>
-                    </li>
+                        <li class="nav-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.roles.index') }}">
+                                <i class="fas fa-user-shield"></i>
+                                <p>Akses Group</p>
+                            </a>
+                        </li>
                     @endcan
 
                     @can('view_menu_pengguna')
-                    <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.users.index') }}">
-                            <i class="fas fa-users-cog"></i>
-                            <p>Pengguna</p>
-                        </a>
-                    </li>
+                        <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.users.index') }}">
+                                <i class="fas fa-users-cog"></i>
+                                <p>Pengguna</p>
+                            </a>
+                        </li>
                     @endcan
                 @endcanany
 
+                <li class="nav-section">
+                    <span class="sidebar-mini-icon">
+                        <i class="fa fa-ellipsis-h"></i>
+                    </span>
+                    <h4 class="text-section">NAVIGASI</h4>
+                </li>
+
+                <li class="nav-item">
+                    {{-- Form untuk Logout --}}
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <a href="{{ route('logout') }}"
+                            onclick="event.preventDefault(); this.closest('form').submit();">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <p>Logout</p>
+                        </a>
+                    </form>
+                </li>
             </ul>
         </div>
     </div>
