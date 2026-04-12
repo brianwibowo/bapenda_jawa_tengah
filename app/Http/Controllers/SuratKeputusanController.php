@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 class SuratKeputusanController extends Controller
 {
@@ -65,7 +64,9 @@ class SuratKeputusanController extends Controller
         $baseLogTime = now();
 
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
-            return response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
+            //  response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
         }
 
         $suratKeputusan = $pengajuan->suratKeputusans;
@@ -75,7 +76,9 @@ class SuratKeputusanController extends Controller
         if ($suratKeputusan->where('unit_kerja', Auth::user()->unit_kerja)->isNotEmpty()) {
             // Map suratKeputusan with unit_kerja
             $skUnitKerja = $suratKeputusan->pluck('unit_kerja')->toArray();
-            return response()->json(['message' => 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja)], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja));
+            //  response()->json(['message' => 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja)], 400);
         }
 
         // Update status kendaraan menjadi "Diajukan ke Bapenda/JR"
@@ -96,8 +99,6 @@ class SuratKeputusanController extends Controller
             }
         }
 
-        $console = new ConsoleOutput();
-        $console->writeln("User " . Auth::user()->unit_kerja );
         $sk = SuratKeputusan::create([
             'pengajuan_id' => $id,
             'user_id' => Auth::id(),

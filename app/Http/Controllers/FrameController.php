@@ -8,7 +8,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuratKeputusanController as SKController;
 use App\Http\Controllers\SuratPengajuanController as SPController;
-use Symfony\Component\Console\Output\ConsoleOutput;
 
 class FrameController extends Controller
 {

@@ -192,7 +192,9 @@ class SuratPengajuanController extends Controller
         } else if ($progress == 2 && $user->unit_kerja == 'Polda') {
             return $this->ajukanBapendaJr($request, $id);
         } else {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Aksi tidak valid untuk status pengajuan saat ini.');
+            // response()->json(['message' => 'Unauthorized'], 403);
         }
     }
 
@@ -203,7 +205,9 @@ class SuratPengajuanController extends Controller
         
         // Validasi: Pastikan pengajuan memiliki kendaraan dengan status "Diajukan"
         if (!$pengajuan->kendaraans->where('status', 'pengajuan')->count()) {
-            return response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diajukan".'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diajukan".'); 
+            // response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diajukan".'], 400);
         }
 
         if ($suratpengajuan->contains(function ($sp) {
@@ -211,7 +215,9 @@ class SuratPengajuanController extends Controller
                 return strcasecmp($item['instansi'] ?? '', 'Polda') === 0;
             });
         })) {
-            return response()->json(['message' => 'Pengajuan sudah diajukan ke Polda.'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Pengajuan sudah diajukan ke Polda.');
+            //  response()->json(['message' => 'Pengajuan sudah diajukan ke Polda.'], 400);
         }
 
         // Update status kendaraan menjadi "Diajukan ke Polda"
@@ -249,7 +255,9 @@ class SuratPengajuanController extends Controller
         
         // Validasi: Pastikan pengajuan memiliki kendaraan dengan status "Diproses" ( sudah diverifikasi polda )
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
-            return response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
+            // response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
         }
 
         $sudahDiajukanKeBapendaAtauJr = $suratpengajuan->contains(function ($sp) {
@@ -261,7 +269,9 @@ class SuratPengajuanController extends Controller
         });
 
         if ($sudahDiajukanKeBapendaAtauJr) {
-            return response()->json(['message' => 'Pengajuan sudah diajukan ke Bapenda/Jasa Raharja.'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Pengajuan sudah diajukan ke Bapenda/Jasa Raharja.');
+            //  response()->json(['message' => 'Pengajuan sudah diajukan ke Bapenda/Jasa Raharja.'], 400);
         }
 
         // Update status kendaraan menjadi "Diajukan ke Bapenda/JR"
@@ -296,16 +306,22 @@ class SuratPengajuanController extends Controller
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($surat->pengajuan_id);
         
         if (!$request->user()->hasAnyPermission(['create_pdf_pengajuan', 'create_pdf_pengajuan_bapenda_jr', 'create_pdf_balasan_polda'])) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Unauthorized');
+            //  response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $currentSp = $pengajuan->getCurrentSuratPengajuan();
         if (!$currentSp || $currentSp->id !== $surat->id) {
-            return response()->json(['message' => 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.');
+            //  response()->json(['message' => 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.'], 400);
         }
 
         if ($surat->isFullyApprovedByAll()) {
-            return response()->json(['message' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Surat Pengajuan sudah disetujui semua instansi.');
+            //  response()->json(['message' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
         }
         $instansiUser = Auth::user()->unit_kerja;
 
@@ -335,16 +351,22 @@ class SuratPengajuanController extends Controller
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($surat->pengajuan_id);
         if (!$request->user()->hasAnyPermission(['create_pdf_pengajuan', 'create_pdf_pengajuan_bapenda_jr', 'create_pdf_balasan_polda'])) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Unauthorized');
+            //  response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $currentSp = $pengajuan->getCurrentSuratPengajuan();
         if (!$currentSp || $currentSp->id !== $surat->id) {
-            return response()->json(['message' => 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.'], 400);
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.');
+            //  response()->json(['message' => 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.'], 400);
         }
 
         if ($surat->isFullyApprovedByAll()) {
-            return response()->json(['message' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
+             return redirect()->route('admin.pengajuan.show', $pengajuan)
+            ->with('error', 'Surat Pengajuan sudah disetujui semua instansi.');
+            //  response()->json(['message' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
         }
         $instansiUser = Auth::user()->unit_kerja; // Misal: bapenda
 
