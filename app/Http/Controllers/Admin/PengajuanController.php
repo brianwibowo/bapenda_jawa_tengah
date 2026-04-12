@@ -42,7 +42,7 @@ class PengajuanController extends Controller
         $pengajuans = $query->paginate(10)->withQueryString();
 
         $progress = $pengajuans->mapWithKeys(function ($pengajuan) {
-            return [$pengajuan->id => $pengajuan->getProgress()];
+            return [$pengajuan->id => $pengajuan->getTotalSurat()];
         });
 
         return view('admin.pengajuan.index', compact('pengajuans', 'progress'));
@@ -93,7 +93,7 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSP'] = true;
         }
         // Jika sudah fully approved tapi belum ada SK
-        elseif ($progress == 6 && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('instansi', $user->unit_kerja)->isEmpty()) {
+        elseif ($progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty()) {
             $permissionSurat['canAjukanSK'] = true;
         }
 
@@ -273,6 +273,11 @@ class PengajuanController extends Controller
         if ($log->kendaraan->pengajuan_id !== $pengajuan->id) {
             abort(404, 'Log tidak ditemukan dalam pengajuan ini.');
         }
+
+        //Order by created_at desc untuk menampilkan log terbaru di atas
+        $log->load(['media' => function ($query) {
+            $query->orderBy('created_at', 'desc');
+        }]);
 
         // Ambil data surat terkait untuk ditampilkan di sidebar (jika ada)
         $progress = $pengajuan->getProgress();

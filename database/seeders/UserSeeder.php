@@ -21,6 +21,7 @@ class UserSeeder extends Seeder
             'unit_kerja' => 'Polda'
         ]);
         $poldaKepala->assignRole('kepala_instansi');
+        $poldaKepala->assignRole('polda');
 
         $poldaAdmin = User::create([
             'name' => 'Admin Polda',
@@ -29,6 +30,7 @@ class UserSeeder extends Seeder
             'unit_kerja' => 'Polda'
         ]);
         $poldaAdmin->assignRole('admin_instansi');
+        $poldaAdmin->assignRole('polda');
 
         // === SAMSAT ===
         $samsatAdmin = User::create([
@@ -38,6 +40,7 @@ class UserSeeder extends Seeder
             'unit_kerja' => 'Samsat'
         ]);
         $samsatAdmin->assignRole('admin_instansi');
+        $samsatAdmin->assignRole('samsat');
 
         // === BAPENDA ===
         $bapendaStaff = User::create([
@@ -47,6 +50,7 @@ class UserSeeder extends Seeder
             'unit_kerja' => 'Bapenda'
         ]);
         $bapendaStaff->assignRole('staff_instansi');
+        $bapendaStaff->assignRole('bapenda');
 
         // === JASA RAHARJA ===
         $jrKepala = User::create([
@@ -56,6 +60,7 @@ class UserSeeder extends Seeder
             'unit_kerja' => 'Jasa Raharja'
         ]);
         $jrKepala->assignRole('kepala_instansi');
+        $jrKepala->assignRole('jasa_raharja');
 
         // === WAJIB PAJAK ===
         $wp = User::create([

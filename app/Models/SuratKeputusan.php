@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $pengajuan_id
  * @property int $user_id
- * @property string $instansi
+ * @property string $unit_kerja
  * @property string $nomor_sk
  * @property string $perihal
  * @property string $isi_putusan
@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereInstansi($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereUnitKerja($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereIsiPutusan($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereNomorSk($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan wherePerihal($value)
@@ -40,8 +40,12 @@ class SuratKeputusan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'pengajuan_id', 'user_id', 'instansi', 
+        'pengajuan_id', 'user_id', 'unit_kerja',
         'nomor_sk', 'perihal', 'isi_putusan', 'tanggal_ditetapkan'
+    ];
+
+    protected $casts = [
+        'tanggal_ditetapkan' => 'date',
     ];
 
     public function pengajuan() {

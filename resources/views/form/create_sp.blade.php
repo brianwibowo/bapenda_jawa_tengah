@@ -24,17 +24,40 @@
         <link rel="stylesheet" href="{{ asset('kaiadmin/css/kaiadmin.min.css') }}" />
         <style>
             @page { margin: 2cm; }
-            body { font-family: Arial, sans-serif; font-size: 12px; }
+            body {
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                min-height: 100vh;
+                margin: 0;
+                background: #f7f9fc;
+            }
             .middle_body {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
+                margin: 64px auto;
+                max-width: 760px;
+                text-align: center;
+                background: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 48px 36px;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            }
+            .middle_body i {
+                display: block;
+                font-size: 64px;
+                color: #2563eb;
+                margin-bottom: 20px;
+            }
+            .middle_body p {
+                margin: 0;
+                font-size: 20px;
+                line-height: 1.5;
+                color: #334155;
             }
         </style>
     </head>
     <div class="middle_body">
-        <i class="fas fa-solid fa-file fa-2x"></i>This is a sample PDF document generated from a Blade template.
+        <i class="fas fa-solid fa-file"></i>
+        <p>This is a sample PDF document generated from a Blade template.</p>
     </div>
     <body>
 

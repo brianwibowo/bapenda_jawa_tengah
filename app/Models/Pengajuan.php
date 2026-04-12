@@ -219,9 +219,9 @@ class Pengajuan extends Model
             $step = 0; // Progres 0: Belum ada SP atau SP pertama ditolak
         } elseif ($totalsurat < 2 && $this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Polda')) {
             $step = 1; // Progres 1: Pengajuan ke Polda
-        } elseif ($totalsurat < 4) {
-            $step = 2; // Progres 2: Polda ke Bapenda/JR & Balasan dari Bapenda/JR
         } elseif ($totalsurat < 6) {
+            $step = 2; // Progres 2: Polda ke Bapenda/JR & Balasan dari Bapenda/JR
+        } elseif ($totalsurat < 10) {
             $step = 3; // Progres 3: Polda, Bapenda, dan JR membuat SK
         } else {
             $step = 4; // Progres 4: Semua SP terpenuhi dan SK sudah dibuat

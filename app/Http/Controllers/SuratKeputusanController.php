@@ -29,7 +29,8 @@ class SuratKeputusanController extends Controller
                         'name' => 'admin.pengajuan.buat_sk',
                         'middleware' => 'signed'
                     ]],
-                    'reject' => ['label' => 'Tolak', 'class' => 'btn-danger', 'action' => 'exit']
+                    'reject' => false,
+                    'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
                 ]
             ]
         ];
@@ -61,14 +62,17 @@ class SuratKeputusanController extends Controller
     public function ajukan(Request $request, $id)
     {
         $pengajuan = Pengajuan::with('kendaraans')->findOrFail($id);
+        $baseLogTime = now();
 
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
             return response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
         }
 
         $suratKeputusan = $pengajuan->suratKeputusans;
+        $count = $suratKeputusan->count();
 
-        if ($suratKeputusan->isNotEmpty()) {
+        // Cek untuk unit_kerja user sekarang, apakah sudah ada SK yang diajukan untuk unit kerja tersebut
+        if ($suratKeputusan->where('unit_kerja', Auth::user()->unit_kerja)->isNotEmpty()) {
             // Map suratKeputusan with unit_kerja
             $skUnitKerja = $suratKeputusan->pluck('unit_kerja')->toArray();
             return response()->json(['message' => 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja)], 400);
@@ -78,7 +82,7 @@ class SuratKeputusanController extends Controller
         foreach ($pengajuan->kendaraans as $kendaraan) {
             if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
                 // Simpan log perubahan status
-                KendaraanLog::create([
+                $logSk = new KendaraanLog([
                     'kendaraan_id' => $kendaraan->id,
                     'user_id' => Auth::id(),
                     'aksi' => 'Surat Keputusan',
@@ -86,6 +90,9 @@ class SuratKeputusanController extends Controller
                     'tipe' => 'system',
                     'catatan' => 'Mengajukan Surat Keputusan Kendaraan Oleh ' . Auth::user()->name,
                 ]);
+                $logSk->created_at = $baseLogTime;
+                $logSk->updated_at = $baseLogTime;
+                $logSk->save();
             }
         }
 
@@ -98,10 +105,32 @@ class SuratKeputusanController extends Controller
             'nomor_sk' => 'SK-' . strtoupper(uniqid()),
             'perihal' => "Keputusan untuk Pengajuan ID: $id",
             'isi_putusan' => "Surat Keputusan untuk Pengajuan ID: $id, dibuat oleh " . Auth::user()->name,
-            'tanggal_ditetapkkan' => now(),
+            'tanggal_ditetapkan' => now(),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        if ($count+1 == 3) {
+            foreach ($pengajuan->kendaraans as $kendaraan) {
+                if ($kendaraan->status == 'diproses') {
+                    $kendaraan->update(['status' => 'selesai']);
+                    // Simpan log untuk status selesai.
+                    $logSelesai = new KendaraanLog([
+                        'kendaraan_id' => $kendaraan->id,
+                        'user_id' => Auth::id(),
+                        'aksi' => 'Pengajuan Selesai',
+                        'status_baru' => 'selesai',
+                        'tipe' => 'system',
+                        'catatan' => 'Pengajuan Selesai Setelah Ketiga Surat Keputusan Ditetapkan.',
+                    ]);
+                    // Record 1 second after the SK log so chronological order is explicit.
+                    $logSelesai->created_at = $baseLogTime->copy()->addSecond();
+                    $logSelesai->updated_at = $baseLogTime->copy()->addSecond();
+                    $logSelesai->save();
+                }
+                
+            }
+            
+        }
 
         return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('success', 'Surat Keputusan berhasil dibuat dan diajukan. Silakan lanjutkan proses persetujuan.');

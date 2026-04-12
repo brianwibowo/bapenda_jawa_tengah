@@ -1,28 +1,11 @@
 
-<div class="card mt-4">
-    <div class="card-header">
+<div class="card mt-4 border-0 shadow-sm log-panel">
+    <div class="card-header bg-white border-bottom">
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
-        <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div class="mb-3 d-flex justify-content-end align-items-center">
             <div>
-                <label class="form-label mb-0">Pilih Kendaraan</label>
-                <select id="filterKendaraan" class="form-select" style="width: 260px; display: inline-block;" wire:model.live="kendaraan_id">
-                    <option value="">Semua Kendaraan</option>
-                    @foreach($pengajuan->kendaraans as $kend)
-                        <option value="{{ $kend->id }}">{{ $kend->nrkb }} — {{ $kend->merk_kendaraan }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                @if (isset($permissionSurat))
-                    {{ Auth::user()->unit_kerja }} {{ $progress }}\n
-                    {{ 'Hak Akses Surat: ' }}
-                    {{ $permissionSurat['canAjukanSP'] ? 'Bisa Ajukan SP' : '' }}
-                    {{ $permissionSurat['canAjukanSK'] ? 'Bisa Ajukan SK' : '' }}
-                    {{ $permissionSurat['canRespondSP'] ? 'Bisa Respond SP' : '' }}
-                @endif
                 @if(!empty($admin) && $admin)
                     @php
                     $isAdmin = !empty($admin) && $admin;
@@ -46,7 +29,7 @@
                     
                 @endphp
 
-                <div class="d-grid" style="grid-template-columns: {{ $hasSuratAction ? '45% 5% 45%' : '100%' }}; gap: 0; align-items: center;">
+                <div class="d-grid" style="grid-template-columns: {{ $hasSuratAction ? '46% 4% 50%' : '100%' }}; gap: 0; align-items: center;">
                     {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
                     @if($hasSuratAction)
                         <button class="btn btn-outline-primary" 
@@ -234,18 +217,6 @@
                 if (sel && kendId) sel.value = kendId;
             });
         });
-
-        // If user chooses a kendaraan from filter, filter log rows
-        const filter = document.getElementById('filterKendaraan');
-        if (filter) {
-            filter.addEventListener('change', function () {
-                const val = this.value;
-                document.querySelectorAll('tbody tr[data-kendaraan-id]').forEach(row => {
-                    if (!val) { row.style.display = ''; return; }
-                    row.style.display = row.getAttribute('data-kendaraan-id') === val ? '' : 'none';
-                });
-            });
-        }
         
         // Dynamic Multiple File Input Logic
         const btnAddFile = document.getElementById('btnAddFile');
