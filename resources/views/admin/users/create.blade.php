@@ -63,6 +63,18 @@
                                 placeholder="Ketik nama instansi baru..." value="{{ old('new_unit_kerja') }}">
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Cabang Samsat</label>
+                        <select name="cabang_id" class="form-select">
+                            <option value="">-- Tidak ada / Pilih cabang --</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}" {{ old('cabang_id') == $branch->id ? 'selected' : '' }}>
+                                    {{ $branch->nama }} - {{ $branch->wilayah }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Opsional untuk pengguna yang memiliki cabang samsat terkait.</div>
+                    </div>
                 </div>
 
                 <hr class="my-4">

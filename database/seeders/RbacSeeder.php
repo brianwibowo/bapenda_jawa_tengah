@@ -51,6 +51,12 @@ class RbacSeeder extends Seeder
             ['name' => 'edit_akses_group', 'group_name' => 'Akses Group'],
             ['name' => 'delete_akses_group', 'group_name' => 'Akses Group'],
 
+            // Cabang Samsat
+            ['name' => 'view_menu_cabang', 'group_name' => 'Cabang'],
+            ['name' => 'create_cabang', 'group_name' => 'Cabang'],
+            ['name' => 'edit_cabang', 'group_name' => 'Cabang'],
+            ['name' => 'delete_cabang', 'group_name' => 'Cabang'],
+
             // Pengguna (Admin)
             ['name' => 'view_menu_pengguna', 'group_name' => 'Pengguna'],
             ['name' => 'create_pengguna', 'group_name' => 'Pengguna'],

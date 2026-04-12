@@ -164,6 +164,7 @@ class PengajuanController extends Controller
             // Buat pengajuan baru jika belum ada
             $pengajuan = Pengajuan::create([
                 'user_id' => Auth::id(),
+                'cabang_id' => Auth::user()->cabang_id,
             ]);
         }
 

@@ -74,10 +74,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // == ROUTE KHUSUS PENGELOLA RBAC & USER ==
     // ===========================================================
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::middleware(['permission:view_menu_pengguna|view_menu_akses_group|view_menu_hak_akses'])->group(function () {
+        Route::middleware(['permission:view_menu_pengguna|view_menu_akses_group|view_menu_hak_akses|view_menu_cabang'])->group(function () {
             Route::resource('users', UserController::class);
             Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class)->except(['show', 'edit', 'update']);
             Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+            Route::resource('cabangs', \App\Http\Controllers\Admin\CabangController::class);
         });
 
         // ===========================================================
