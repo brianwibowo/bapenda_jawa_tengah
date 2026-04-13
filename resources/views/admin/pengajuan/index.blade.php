@@ -63,22 +63,40 @@
                 <div class="col-12">
                     <form method="GET" action="{{ route($pengajuanRoutePrefix . '.pengajuan.index') }}">
                         <input type="hidden" name="status" value="{{ request('status') }}">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-search"></i>
-                            </span>
-                            <input type="text" name="search" class="form-control"
-                                placeholder="Cari berdasarkan Nomor Pengajuan atau Nama..."
-                                value="{{ request('search') }}">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="fas fa-search me-1"></i> Cari
-                            </button>
-                            @if(request('search'))
-                                <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}"
-                                    class="btn btn-outline-secondary">
-                                    <i class="fas fa-times"></i> Reset
-                                </a>
-                            @endif
+                        <div class="row gy-2 gx-2 align-items-center">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" 
+                                           name="search" 
+                                           class="form-control" 
+                                           placeholder="Cari berdasarkan Nomor Pengajuan atau Nama..." 
+                                           value="{{ request('search') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="cabang_id" class="form-select">
+                                    <option value="">-- Filter Cabang / Wilayah --</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ request('cabang_id') == $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->nama }} - {{ $branch->wilayah }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex gap-2">
+                                <button class="btn btn-primary flex-grow-1" type="submit">
+                                    <i class="fas fa-search me-1"></i> Cari
+                                </button>
+                                @if(request('search') || request('cabang_id'))
+                                    <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -176,6 +194,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="px-4 py-3">Nomor Pengajuan</th>
+                            <th class="px-4 py-3">Cabang / Wilayah</th>
                             <th class="px-4 py-3">Tanggal Masuk</th>
                             <th class="px-4 py-3">Update Terakhir</th>
                             <th class="px-4 py-3 text-center">Status</th>
@@ -188,6 +207,11 @@
                             <tr>
                                 <td class="px-4 py-3">
                                     <strong class="text-primary">{{ $pengajuan->nomor_pengajuan }}</strong>
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ $pengajuan->cabang?->nama ?? '-' }}
+                                    <br>
+                                    <small class="text-muted">{{ $pengajuan->cabang?->wilayah ?? '-' }}</small>
                                 </td>
                                 <td class="px-4 py-3">
                                     <i class="fas fa-calendar-alt text-muted me-2"></i>

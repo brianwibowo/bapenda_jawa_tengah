@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cabang;
 use App\Models\Pengajuan;
 use App\Models\Kendaraan;
 use App\Models\KendaraanLog;
@@ -18,10 +19,17 @@ class PengajuanController extends Controller
     {
         $status = $request->query('status');
         $search = $request->query('search');
+        $selectedCabang = $request->query('cabang_id');
 
-        $query = Pengajuan::with(['user', 'kendaraans:id,pengajuan_id,status'])
+        $query = Pengajuan::with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
             ->withCount('kendaraans')
             ->latest('updated_at');
+
+        if (Auth::user()->cabang_id) {
+            $query->where('cabang_id', Auth::user()->cabang_id);
+        } elseif ($selectedCabang) {
+            $query->where('cabang_id', $selectedCabang);
+        }
 
         if ($status) {
             $query->whereHas('kendaraans', function ($q) use ($status) {
@@ -39,13 +47,10 @@ class PengajuanController extends Controller
             });
         }
 
+        $branches = Cabang::orderBy('wilayah')->get();
         $pengajuans = $query->paginate(10)->withQueryString();
 
-        $progress = $pengajuans->mapWithKeys(function ($pengajuan) {
-            return [$pengajuan->id => $pengajuan->getTotalSurat()];
-        });
-
-        return view('admin.pengajuan.index', compact('pengajuans', 'progress'));
+        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang'));
     }
 
     /**
@@ -53,6 +58,8 @@ class PengajuanController extends Controller
      */
     public function show(Pengajuan $pengajuan)
     {
+        $this->authorizeBranch($pengajuan);
+
         $pengajuan->load([
             'kendaraans',
             'kendaraans.media',
@@ -108,6 +115,8 @@ class PengajuanController extends Controller
      */
     public function batchUpdateKendaraanStatus(Request $request, Pengajuan $pengajuan)
     {
+        $this->authorizeBranch($pengajuan);
+
         // 1. Validasi input (termasuk 'lampiran')
         $request->validate([
             'status' => 'required|array',
@@ -201,6 +210,8 @@ class PengajuanController extends Controller
      */
     public function destroy(Pengajuan $pengajuan)
     {
+        $this->authorizeBranch($pengajuan);
+
         $pengajuan->delete();
 
         return redirect()->route('admin.pengajuan.index')
@@ -210,8 +221,17 @@ class PengajuanController extends Controller
     /**
      * Menyimpan log/diskusi/revisi baru dari Admin untuk Kendaraan tertentu.
      */
+
+    private function authorizeBranch(Pengajuan $pengajuan): void
+    {
+        if (Auth::user()->cabang_id && $pengajuan->cabang_id !== Auth::user()->cabang_id) {
+            abort(403, 'Akses ditolak: cabang berbeda.');
+        }
+    }
     public function storeLog(Request $request, Pengajuan $pengajuan)
     {
+        $this->authorizeBranch($pengajuan);
+
         $request->validate([
             'kendaraan_id' => 'required|exists:kendaraans,id',
             'tipe' => 'required|in:komentar,revisi,catatan_admin',
@@ -267,6 +287,8 @@ class PengajuanController extends Controller
      */
     public function showLog(Pengajuan $pengajuan, $logId)
     {
+        $this->authorizeBranch($pengajuan);
+
         $log = \App\Models\KendaraanLog::with(['user', 'kendaraan', 'media'])->findOrFail($logId);
 
         // Pastikan log tersebut milik bundel pengajuan ini

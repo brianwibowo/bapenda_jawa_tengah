@@ -40,6 +40,7 @@
                             <th>Email</th>
                             <th>Jabatan</th>
                             <th>Unit Kerja</th>
+                            <th>Cabang</th>
                             <th>Akses Group</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -51,6 +52,9 @@
                                 <td>{{ $user->email }}</td>
                                 <td><span class="fw-semibold">{{ $user->jabatan ?? '-' }}</span></td>
                                 <td><span class="badge bg-info text-dark">{{ $user->unit_kerja ?? 'N/A' }}</span></td>
+                                <td>
+                                    {{ $user->cabang?->nama ? $user->cabang->nama . ' (' . $user->cabang->wilayah . ')' : '-' }}
+                                </td>
                                 <td>
                                     @foreach($user->roles as $role)
                                         <span

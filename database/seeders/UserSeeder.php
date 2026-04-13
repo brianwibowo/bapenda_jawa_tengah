@@ -14,61 +14,68 @@ class UserSeeder extends Seeder
         // Semua Password Dummy: 12345678
 
         // === POLDA ===
-        $poldaKepala = User::create([
-            'name' => 'Jenderal Polda',
-            'email' => 'polda_kepala@example.com',
-            'password' => Hash::make('12345678'),
-            'unit_kerja' => 'Polda'
-        ]);
-        $poldaKepala->assignRole('kepala_instansi');
-        $poldaKepala->assignRole('polda');
+        $poldaKepala = User::updateOrCreate(
+            ['email' => 'polda_kepala@example.com'],
+            [
+                'name' => 'Jenderal Polda',
+                'password' => Hash::make('12345678'),
+                'unit_kerja' => 'Polda',
+            ]
+        );
+        $poldaKepala->assignRole(['kepala_instansi', 'polda']);
 
-        $poldaAdmin = User::create([
-            'name' => 'Admin Polda',
-            'email' => 'polda_admin@example.com',
-            'password' => Hash::make('12345678'),
-            'unit_kerja' => 'Polda'
-        ]);
-        $poldaAdmin->assignRole('admin_instansi');
-        $poldaAdmin->assignRole('polda');
+        $poldaAdmin = User::updateOrCreate(
+            ['email' => 'polda_admin@example.com'],
+            [
+                'name' => 'Admin Polda',
+                'password' => Hash::make('12345678'),
+                'unit_kerja' => 'Polda',
+            ]
+        );
+        $poldaAdmin->assignRole(['admin_instansi', 'polda']);
 
         // === SAMSAT ===
-        $samsatAdmin = User::create([
-            'name' => 'Admin Samsat Raya',
-            'email' => 'samsat_admin@example.com',
-            'password' => Hash::make('12345678'),
-            'unit_kerja' => 'Samsat'
-        ]);
-        $samsatAdmin->assignRole('admin_instansi');
-        $samsatAdmin->assignRole('samsat');
+        $samsatAdmin = User::updateOrCreate(
+            ['email' => 'samsat_admin@example.com'],
+            [
+                'name' => 'Admin Samsat Raya',
+                'password' => Hash::make('12345678'),
+                'unit_kerja' => 'Samsat',
+            ]
+        );
+        $samsatAdmin->assignRole(['admin_instansi', 'samsat']);
 
         // === BAPENDA ===
-        $bapendaStaff = User::create([
-            'name' => 'Staff Bapenda',
-            'email' => 'bapenda_staff@example.com',
-            'password' => Hash::make('12345678'),
-            'unit_kerja' => 'Bapenda'
-        ]);
-        $bapendaStaff->assignRole('staff_instansi');
-        $bapendaStaff->assignRole('bapenda');
+        $bapendaStaff = User::updateOrCreate(
+            ['email' => 'bapenda_staff@example.com'],
+            [
+                'name' => 'Staff Bapenda',
+                'password' => Hash::make('12345678'),
+                'unit_kerja' => 'Bapenda',
+            ]
+        );
+        $bapendaStaff->assignRole(['staff_instansi', 'bapenda']);
 
         // === JASA RAHARJA ===
-        $jrKepala = User::create([
-            'name' => 'Kepala Jasa Raharja',
-            'email' => 'jr_kepala@example.com',
-            'password' => Hash::make('12345678'),
-            'unit_kerja' => 'Jasa Raharja'
-        ]);
-        $jrKepala->assignRole('kepala_instansi');
-        $jrKepala->assignRole('jasa_raharja');
+        $jrKepala = User::updateOrCreate(
+            ['email' => 'jr_kepala@example.com'],
+            [
+                'name' => 'Kepala Jasa Raharja',
+                'password' => Hash::make('12345678'),
+                'unit_kerja' => 'Jasa Raharja',
+            ]
+        );
+        $jrKepala->assignRole(['kepala_instansi', 'jasa_raharja']);
 
         // === WAJIB PAJAK ===
-        $wp = User::create([
-            'name' => 'Budi Wajib Pajak',
-            'email' => 'wp@example.com',
-            'password' => Hash::make('12345678'),
-            'unit_kerja' => 'Wajib Pajak'
-        ]);
+        $wp = User::updateOrCreate(
+            ['email' => 'wp@example.com'],
+            [
+                'name' => 'Budi Wajib Pajak',
+                'password' => Hash::make('12345678'),
+                'unit_kerja' => 'Wajib Pajak',
+            ]
+        );
         $wp->assignRole('wajib_pajak');
     }
 }
