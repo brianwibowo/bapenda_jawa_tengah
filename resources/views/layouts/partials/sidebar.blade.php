@@ -89,7 +89,7 @@
                 @endcan
 
                 {{-- == MENU UNTUK SUPERADMIN / ADMIN UTAMA (RBAC) == --}}
-                @canany(['view_menu_hak_akses', 'view_menu_akses_group', 'view_menu_pengguna'])
+                @canany(['view_menu_hak_akses', 'view_menu_akses_group', 'view_menu_pengguna', 'view_menu_cabang'])
                     <li class="nav-section">
                         <span class="sidebar-mini-icon">
                             <i class="fa fa-ellipsis-h"></i>
@@ -113,6 +113,15 @@
                                 <p>Akses Group</p>
                             </a>
                         </li>
+                    @endcan
+
+                    @can('view_menu_cabang')
+                    <li class="nav-item {{ request()->routeIs('admin.cabangs.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.cabangs.index') }}">
+                            <i class="fas fa-building"></i>
+                            <p>Cabang</p>
+                        </a>
+                    </li>
                     @endcan
 
                     @can('view_menu_pengguna')

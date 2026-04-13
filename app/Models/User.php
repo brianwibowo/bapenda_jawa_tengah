@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles; // <-- Ini sudah benar
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Cabang;
 use App\Models\KendaraanLog; // <-- Tambahkan ini untuk jaga-jaga
 
 /**
@@ -63,6 +65,7 @@ class User extends Authenticatable
         'password',
         'unit_kerja', // Ini sudah benar
         'jabatan',
+        'cabang_id',
         'profile_photo_path',
     ];
 
@@ -101,5 +104,13 @@ class User extends Authenticatable
     public function kendaraanLogs(): HasMany
     {
         return $this->hasMany(KendaraanLog::class);
+    }
+
+    /**
+     * Relasi: Cabang Samsat yang ditetapkan ke user ini.
+     */
+    public function cabang(): BelongsTo
+    {
+        return $this->belongsTo(Cabang::class);
     }
 }

@@ -25,6 +25,7 @@ class Pengajuan extends Model
     protected $fillable = [
         'user_id',
         'nomor_pengajuan',
+        'cabang_id',
     ];
 
     /**
@@ -41,6 +42,11 @@ class Pengajuan extends Model
     public function kendaraans(): HasMany
     {
         return $this->hasMany(Kendaraan::class);
+    }
+
+    public function cabang(): BelongsTo
+    {
+        return $this->belongsTo(Cabang::class);
     }
 
     // app/Models/Pengajuan.php
