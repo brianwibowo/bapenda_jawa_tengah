@@ -27,3 +27,5 @@ package-lock.json
 vite.config.dev.js
 .devcontainer.json
 vite.config.dev.js
+composer-setup.php
+package-lock.json

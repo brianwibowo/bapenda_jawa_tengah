@@ -93,7 +93,7 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSP'] = true;
         }
         // Jika sudah fully approved tapi belum ada SK
-        elseif ($progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty()) {
+        elseif ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || ($pengajuan->getStep()==3)) &&  $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty()) {
             $permissionSurat['canAjukanSK'] = true;
         }
 

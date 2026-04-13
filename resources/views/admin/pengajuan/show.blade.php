@@ -16,12 +16,6 @@
             </div>
         </div>
     </div>
-    </x-slot>
-    @php
-        $totalSurat = 9;
-        $progressValue = max(0, min((int) ($progress ?? 0), $totalSurat));
-        $progressPercent = (int) round(($progressValue / $totalSurat) * 100);
-    @endphp
 
     {{-- Pesan Sukses/Error --}}
     @if (session('success'))
@@ -132,16 +126,21 @@
         <div class="col-12 mt-4">
             @includeWhen(true, 'pengajuan.partials.logs', ['admin' => true])
 
-            <div class="card border-0 shadow-sm mt-3 vehicle-switcher-card">
-                <div class="card-body py-3 px-3">
-                    <div class="small text-muted mb-2">Pilih Kendaraan</div>
-                    <div class="vehicle-chip-group" id="vehicleFilterGroup">
-                        <button type="button" class="btn vehicle-chip active" data-kendaraan-id="">
-                            <i class="fas fa-car-side me-2"></i> Semua
+            <div class="card mb-4 border-0 shadow-sm vehicle-switcher-card mt-3">
+                <div class="card-body p-4">
+                    <h6 class="text-muted mb-3">Pilih Kendaraan</h6>
+                    <div class="d-flex flex-wrap gap-2 vehicle-chip-group" id="vehicleFilterGroup">
+                        <button type="button" class="btn btn-kendaraan-tab active" data-kendaraan-id="">
+                            <i class="fas fa-car-side me-2"></i>
+                            <span>Semua Kendaraan</span>
                         </button>
-                        @foreach ($pengajuan->kendaraans as $kend)
-                            <button type="button" class="btn vehicle-chip" data-kendaraan-id="{{ $kend->id }}">
-                                <i class="fas fa-car me-2"></i> {{ $kend->nrkb }}
+                        @foreach ($pengajuan->kendaraans as $index => $kend)
+                            <button type="button" class="btn btn-kendaraan-tab" data-kendaraan-id="{{ $kend->id }}">
+                                <i class="fas fa-car me-2"></i>
+                                <span class="d-flex flex-column align-items-start lh-sm">
+                                    <span class="fw-semibold">Kendaraan {{ $index + 1 }}</span>
+                                    <small class="text-muted">{{ $kend->nrkb }}</small>
+                                </span>
                             </button>
                         @endforeach
                     </div>
@@ -370,7 +369,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            const chipButtons = document.querySelectorAll('#vehicleFilterGroup .vehicle-chip');
+            const chipButtons = document.querySelectorAll('#vehicleFilterGroup .btn-kendaraan-tab');
             chipButtons.forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     chipButtons.forEach(function (chip) {
@@ -491,36 +490,56 @@
         }
 
         .vehicle-switcher-card {
-            border-radius: 12px;
+            border-radius: 16px;
         }
 
         .vehicle-chip-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            align-items: stretch;
         }
 
-        .vehicle-chip {
-            border-radius: 8px;
-            border: 1px solid #dbe6f3;
-            background: #f8fbff;
-            color: #4b5563;
-            padding: 10px 18px;
-            font-weight: 500;
-            font-size: 0.95rem;
-            line-height: 1.2;
+        .btn-kendaraan-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 64px;
+            padding: 0.95rem 1.2rem;
+            border-radius: 16px;
+            border: 1px solid #d8e5f3;
+            background: linear-gradient(180deg, #f9fcff 0%, #eef6ff 100%);
+            color: #334155;
+            font-weight: 600;
+            font-size: 1rem;
+            line-height: 1.1;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            transition: all 0.2s ease;
         }
 
-        .vehicle-chip:hover {
-            border-color: #93c5fd;
+        .btn-kendaraan-tab i {
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .btn-kendaraan-tab:hover {
+            border-color: #8ab8ea;
             color: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(47, 134, 223, 0.12);
         }
 
-        .vehicle-chip.active {
-            background: #2f86df;
+        .btn-kendaraan-tab.active {
+            background: linear-gradient(135deg, #2f86df 0%, #4b9cf0 100%);
             color: #ffffff;
             border-color: #2f86df;
-            box-shadow: 0 4px 10px rgba(47, 134, 223, 0.25);
+            box-shadow: 0 10px 20px rgba(47, 134, 223, 0.24);
+        }
+
+        .btn-kendaraan-tab.active small {
+            color: rgba(255, 255, 255, 0.82) !important;
+        }
+
+        .btn-kendaraan-tab small {
+            font-size: 0.78rem;
+            font-weight: 500;
         }
     </style>
 
