@@ -1,10 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="fw-bold mb-0">Manajemen Pengguna (User)</h2>
-            <a href="{{ route('admin.users.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah
-                User</a>
-        </div>
+        <h2 class="fw-bold mb-0">Manajemen Pengguna</h2>
     </x-slot>
 
     @if (session('success'))
@@ -30,7 +26,11 @@
                         <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Cari</button>
                     </div>
                 </form>
+                <a href="{{ route('admin.users.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i>
+                    Tambah User
+                </a>
             </div>
+
 
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">

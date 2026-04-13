@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-bold mb-0">Kelola Hak Akses (Permissionss)</h2>
+        <h2 class="fw-bold mb-0">Hak Akses</h2>
     </x-slot>
 
     @if (session('success'))
@@ -85,7 +85,11 @@
                 @endforelse
             </div>
 
-
+            @if($groupedPermissions->hasPages())
+                <div class="mt-4">
+                    {{ $groupedPermissions->appends(request()->except('page'))->links('pagination::bootstrap-5') }}
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

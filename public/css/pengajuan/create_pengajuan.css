@@ -1,0 +1,35 @@
+.btn-kendaraan-tab {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-kendaraan-tab.active {
+    transform: scale(1.05);
+}
+
+.kendaraan-form {
+    display: none;
+}
+
+.kendaraan-form:first-of-type {
+    display: block;
+}
+
+.file-input-group {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

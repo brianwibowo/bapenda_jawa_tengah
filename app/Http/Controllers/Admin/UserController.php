@@ -29,7 +29,7 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->latest()->paginate(7)->withQueryString();
 
         return view('admin.users.index', compact('users', 'search'));
     }

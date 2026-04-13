@@ -1,24 +1,51 @@
 
-<div class="card mt-4">
-    <div class="card-header">
+<div class="card mt-4 border-0 shadow-sm log-panel">
+    <div class="card-header bg-white border-bottom">
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
-        <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div class="mb-3 d-flex justify-content-end align-items-center">
             <div>
-                <label class="form-label mb-0">Pilih Kendaraan</label>
-                <select id="filterKendaraan" class="form-select" style="width: 260px; display: inline-block;">
-                    <option value="">Semua Kendaraan</option>
-                    @foreach($pengajuan->kendaraans as $kend)
-                        <option value="{{ $kend->id }}">{{ $kend->nrkb }} — {{ $kend->merk_kendaraan }}</option>
-                    @endforeach
-                </select>
-            </div>
+                @if(!empty($admin) && $admin)
+                    @php
+                    $isAdmin = !empty($admin) && $admin;
+                    $hasSuratAction = $isAdmin && isset($permissionSurat);
+                    $type = '';
+                    $label = '';
+                    if ($hasSuratAction) {
+                        if ($permissionSurat['canAjukanSP']) {
+                            $type = 'sp';
+                            $label = 'Buat Pengajuan ke ' . (Auth::user()->unit_kerja == 'Samsat' ? 'Polda' : 'Bapenda/Jasa Raharja');
+                        } elseif ($permissionSurat['canRespondSP']) {
+                            $type = 'sp';
+                            $label = 'Review & Balas SP';
+                        } elseif ($permissionSurat['canAjukanSK']) {
+                            $type = 'sk';
+                            $label = 'Terbitkan Surat Keputusan';
+                        } else {
+                            $hasSuratAction = false; // Tidak ada aksi surat yang tersedia
+                        }
+                    }
+                    
+                @endphp
 
-            <div>
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                    <i class="fas fa-plus-circle me-1"></i> Buat Aksi
-                </button>
+                <div class="d-grid" style="grid-template-columns: {{ $hasSuratAction ? '46% 4% 50%' : '100%' }}; gap: 0; align-items: center;">
+                    {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
+                    @if($hasSuratAction)
+                        <button class="btn btn-outline-primary" 
+                                onclick="openSecureFrame('{{ $type }}', 'form', {{ $pengajuan->id }})">
+                            <i class="fas fa-file-signature me-1"></i> {{ $label }}
+                        </button>
+                        <div></div> {{-- Spacer --}}
+                    @endif
+
+                    {{-- Tombol Buat Aksi (Selalu Ada untuk Log) --}}
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
+                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
+                    </button>
+                    
+                </div>
+                @endif
             </div>
         </div>
 
@@ -52,20 +79,23 @@
                                 @endif
                             </td>
                             <td>
-                                @if(in_array($log->tipe, ['komentar', 'catatan_admin']))
-                                    <span class="badge bg-secondary">Catatan / Komentar</span>
+                                @if(in_array($log->tipe, ['komentar', 'admin']))
+                                    <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
+                                @elseif($log->status_bar === 'selesai' || $log->tipe === 'system')
+                                    @php
+                                        $status_pascal = str($log->status_bar === 'selesai' ? $log->status_baru : $log->tipe)->studly();
+                                    @endphp
+                                    <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
                                 @elseif($log->tipe === 'revisi')
-                                    <span class="badge bg-warning text-dark">Revisi Dokumen</span>
-                                @elseif($log->tipe === 'status_pengajuan')
-                                    <span class="badge bg-warning text-dark">Baru (Pengajuan)</span>
-                                @elseif($log->tipe === 'status_diproses')
-                                    <span class="badge bg-info text-dark">Diproses</span>
-                                @elseif($log->tipe === 'status_selesai')
-                                    <span class="badge bg-success">Selesai</span>
-                                @elseif($log->tipe === 'status_ditolak')
-                                    <span class="badge bg-danger">Ditolak / Revisi</span>
+                                    <span class="badge bg-warning text-dark px-3 py-2">Revisi / Penolakan Berkas</span>
+                                @elseif($log->status_baru === 'pengajuan')
+                                    <span class="badge bg-warning text-dark px-3 py-2">Baru (Pengajuan)</span>
+                                @elseif($log->status_baru === 'diproses')
+                                    <span class="badge bg-info text-dark px-3 py-2">Diproses</span>
+                                @elseif($log->status_baru === 'ditolak')
+                                    <span class="badge bg-danger px-3 py-2">Ditolak / Dikembalikan</span>
                                 @else
-                                    <span class="badge bg-light text-dark">{{ $log->tipe ?? '-' }}</span>
+                                    <span class="badge bg-light text-dark px-3 py-2">{{ ucfirst($log->tipe) }}</span>
                                 @endif
                             </td>
                             <td>{{ $log->user->name ?? 'N/A' }} @if($log->user && $log->user->unit_kerja) <br><small class="text-muted">{{ $log->user->unit_kerja }}</small>@endif</td>
@@ -187,18 +217,6 @@
                 if (sel && kendId) sel.value = kendId;
             });
         });
-
-        // If user chooses a kendaraan from filter, filter log rows
-        const filter = document.getElementById('filterKendaraan');
-        if (filter) {
-            filter.addEventListener('change', function () {
-                const val = this.value;
-                document.querySelectorAll('tbody tr[data-kendaraan-id]').forEach(row => {
-                    if (!val) { row.style.display = ''; return; }
-                    row.style.display = row.getAttribute('data-kendaraan-id') === val ? '' : 'none';
-                });
-            });
-        }
         
         // Dynamic Multiple File Input Logic
         const btnAddFile = document.getElementById('btnAddFile');

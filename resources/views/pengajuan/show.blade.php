@@ -6,16 +6,11 @@
                 <p class="text-muted mb-0">{{ $pengajuan->nomor_pengajuan }}</p>
             </div>
             <div></div>
-            <div class="d-grid" style="grid-template-columns: 50% 15% 35%; gap: 0; align-items: center;">
+            <div class="d-grid" style="grid-template-columns: 30% 70%; gap: 0; align-items: center;">
+                <div></div>
                 <a href="{{ route('pengajuan.index') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Kembali
                 </a>
-                <div></div>
-                <button type="button" 
-                    class="btn btn-primary btn-sm" 
-                    onclick="openSecurePdf('pengajuan', '{{ $pengajuan->id }}')">
-                <i class="fas fa-file-pdf"></i> Preview SPOPD
-            </button>
             </div>
         </div>
     </x-slot>

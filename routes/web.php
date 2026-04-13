@@ -9,7 +9,8 @@ use App\Http\Controllers\Admin\PengajuanController as AdminPengajuanController;
 use App\Http\Controllers\RedirectController;
 use App\Http\Controllers\KendaraanController;
 use App\Http\Controllers\FrameController;
-use App\Http\Controllers\SkController;
+use App\Http\Controllers\SuratKeputusanController as SKController;
+use App\Http\Controllers\SuratPengajuanController as SPController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +93,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::patch('/pengajuan/{pengajuan}/batch-update', [AdminPengajuanController::class, 'batchUpdateKendaraanStatus'])->name('pengajuan.batchUpdate')->middleware('permission:approve_status_pengajuan');
             Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
         });
+
+        Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
+            ->name('pengajuan.ajukan')
+            ->middleware(['signed']);
+
+        Route::post('/pengajuan/sp/terima/{surat}', [SPController::class, 'terima'])
+            ->name('pengajuan.sp.terima')
+            ->middleware(['signed']);
+        Route::post('/pengajuan/sp/tolak/{surat}', [SPController::class, 'tolak'])
+            ->name('pengajuan.sp.tolak')
+            ->middleware(['signed']);
+
+        Route::post('/pengajuan/buat-sk/{id}', [SKController::class, 'ajukan'])
+            ->name('pengajuan.buat_sk')
+            ->middleware(['signed']);
     });
 
     // =================================================================
@@ -104,23 +120,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('sk')->name('sk.')->group(function () {
-        Route::get('/', [SkController::class, 'index'])
-            ->name('index')
-            ->middleware('permission:view_own_sk');
-        
-        Route::get('/buat', [SkController::class, 'create'])
-            ->name('create')
-            ->middleware('permission:create_sk');
-    });
 
     // API untuk mendapatkan tiket akses (UUID/Signature di URL)
-    Route::post('/api/pdf-access/{category}/{id}', [FrameController::class, 'requestAccess'])
-        ->name('pdf.access.request');
+    Route::post('/api/frame-access/{type}/{category}/{id}', [FrameController::class, 'requestAccess'])
+        ->name('frame.access.request');
 
     // Centralized Render Route
     // Middleware 'signed' memastikan URL tidak bisa dimodifikasi/ditebak
-    Route::get('/secure-pdf/{category}/{id}', [FrameController::class, 'render'])
+    Route::get('/secure-frame/{type}/{category}/{id}', [FrameController::class, 'render'])
         ->middleware(['signed']) 
-        ->name('pdf.secure.render');
+        ->name('frame.secure.render');
 });

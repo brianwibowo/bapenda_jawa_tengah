@@ -47,8 +47,10 @@ return new class extends Migration
         // 1. Kembalikan kolom-kolom ke 'kendaraans'
         Schema::table('kendaraans', function (Blueprint $table) {
             // Hapus foreign key dulu
-            $table->dropForeign(['pemilik_id']);
-            $table->dropColumn('pemilik_id');
+            if (Schema::hasColumn('kendaraans', 'pemilik_id')) {
+                $table->dropForeign(['pemilik_id']);
+                $table->dropColumn('pemilik_id');
+            }
 
             // Tambahkan lagi kolom-kolom lama
             $table->string('nama_pemilik')->after('pengajuan_id');

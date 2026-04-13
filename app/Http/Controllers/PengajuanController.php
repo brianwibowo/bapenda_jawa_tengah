@@ -27,10 +27,10 @@ class PengajuanController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Pengajuan::where('user_id', Auth::id())
-            ->with('kendaraans:id,pengajuan_id,status')
-            ->withCount('kendaraans')
-            ->latest();
+            $query = Pengajuan::where('user_id', Auth::id())
+                ->with('kendaraans:id,pengajuan_id,status')
+                ->withCount('kendaraans')
+                ->latest();
 
         // Filter: search by nomor_pengajuan
         if ($request->filled('q')) {
@@ -345,7 +345,7 @@ class PengajuanController extends Controller
 
         $validated = $request->validate([
             'kendaraan_id' => 'required|exists:kendaraans,id',
-            'tipe' => 'required|in:komentar,revisi',
+            'tipe' => 'required|in:komentar,revisi,admin,system',
             'aksi' => 'nullable|string|max:255',
             'status_baru' => 'nullable|in:pengajuan,diproses,selesai,ditolak',
             'catatan' => 'nullable|string',
