@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users'); // Admin yang membuat SK
             
             // Klasifikasi Instansi: polda / bapenda / jasa_raharja
-            $table->enum('unit_kerja', ['polda', 'bapenda', 'jasa_raharja']);
+            $table->string('unit_kerja');
             $table->string('nomor_sk')->unique();
             $table->string('perihal');
             $table->text('isi_putusan');

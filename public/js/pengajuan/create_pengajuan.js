@@ -699,10 +699,19 @@ async function finalizePengajuan() {
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = window.PengajuanConfig.routePengajuanStore;
-    form.innerHTML = `
-                @csrf
-                <input type="hidden" name="pengajuan_id" value="${currentPengajuanId}">
-            `;
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = window.PengajuanConfig.csrfToken;
+    form.appendChild(csrfInput);
+
+    const pengajuanInput = document.createElement('input');
+    pengajuanInput.type = 'hidden';
+    pengajuanInput.name = 'pengajuan_id';
+    pengajuanInput.value = currentPengajuanId;
+    form.appendChild(pengajuanInput);
+
     document.body.appendChild(form);
     form.submit();
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('surat_pengajuans', function (Blueprint $table) {
             $table->dropColumn(['status_bapenda', 'status_jasa_raharja']);
-            $table->json('persetujuan_unit_kerja')->nullable()->after('tanggal_surat');
+            $table->json('persetujuan_unit_kerja')->after('tanggal_surat');
         });
     }
 

@@ -96,6 +96,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
             ->name('pengajuan.ajukan')
             ->middleware(['signed']);
+
+        Route::post('/pengajuan/sp/terima/{surat}', [SPController::class, 'terima'])
+            ->name('pengajuan.sp.terima')
+            ->middleware(['signed']);
+        Route::post('/pengajuan/sp/tolak/{surat}', [SPController::class, 'tolak'])
+            ->name('pengajuan.sp.tolak')
+            ->middleware(['signed']);
+
+        Route::post('/pengajuan/buat-sk/{id}', [SKController::class, 'ajukan'])
+            ->name('pengajuan.buat_sk')
+            ->middleware(['signed']);
     });
 
     // =================================================================

@@ -1,48 +1,50 @@
 
-<div class="card mt-4">
-    <div class="card-header">
+<div class="card mt-4 border-0 shadow-sm log-panel">
+    <div class="card-header bg-white border-bottom">
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
-        <div class="mb-3 d-flex justify-content-between align-items-center">
-            <div>
-                <label class="form-label mb-0">Pilih Kendaraan</label>
-                <select id="filterKendaraan" class="form-select" style="width: 260px; display: inline-block;" wire:model.live="kendaraan_id">
-                    <option value="">Semua Kendaraan</option>
-                    @foreach($pengajuan->kendaraans as $kend)
-                        <option value="{{ $kend->id }}">{{ $kend->nrkb }} — {{ $kend->merk_kendaraan }}</option>
-                    @endforeach
-                </select>
-            </div>
-
+        <div class="mb-3 d-flex justify-content-end align-items-center">
             <div>
                 @if(!empty($admin) && $admin)
                     @php
-                        if (!empty($suratkeputusan) && !empty($suratpengajuan)) {
-                            $surat = ($suratkeputusan->isEmpty() ? 'SK' : ($suratpengajuan->isEmpty() ? 'SP' : ''));
+                    $isAdmin = !empty($admin) && $admin;
+                    $hasSuratAction = $isAdmin && isset($permissionSurat);
+                    $type = '';
+                    $label = '';
+                    if ($hasSuratAction) {
+                        if ($permissionSurat['canAjukanSP']) {
+                            $type = 'sp';
+                            $label = 'Buat Pengajuan ke ' . (Auth::user()->unit_kerja == 'Samsat' ? 'Polda' : 'Bapenda/Jasa Raharja');
+                        } elseif ($permissionSurat['canRespondSP']) {
+                            $type = 'sp';
+                            $label = 'Review & Balas SP';
+                        } elseif ($permissionSurat['canAjukanSK']) {
+                            $type = 'sk';
+                            $label = 'Terbitkan Surat Keputusan';
+                        } else {
+                            $hasSuratAction = false; // Tidak ada aksi surat yang tersedia
                         }
-                    @endphp
-                    <div class="d-grid" style="grid-template-columns: {{!empty($surat) || $pengajuan->status === 'pengajuan' ? '40% 20% 40%' : '100%'}}; gap: 0; align-items: center;">
-                        @if (!empty($surat))
-                            <button class="btn btn-outline-primary">
-                                <i class="fas fa-file me-1"></i> Buat {{ $surat }}
-                            </button>
-                            <div></div>
-                        @elseif ($pengajuan->status === 'pengajuan')
-                            <button class="btn btn-outline-primary" onclick="openSecureFrame('sp', 'form', {{$pengajuan->id}})">
-                                <i class="fas fa-file me-1"></i> Ajukan Polda
-                            </button>
-                            <div></div>
-                        @endif
-                        
-                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                            <i class="fas fa-plus-circle me-1"></i> Buat Aksi
+                    }
+                    
+                @endphp
+
+                <div class="d-grid" style="grid-template-columns: {{ $hasSuratAction ? '46% 4% 50%' : '100%' }}; gap: 0; align-items: center;">
+                    {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
+                    @if($hasSuratAction)
+                        <button class="btn btn-outline-primary" 
+                                onclick="openSecureFrame('{{ $type }}', 'form', {{ $pengajuan->id }})">
+                            <i class="fas fa-file-signature me-1"></i> {{ $label }}
                         </button>
-                    </div>
-                @else
+                        <div></div> {{-- Spacer --}}
+                    @endif
+
+                    {{-- Tombol Buat Aksi (Selalu Ada untuk Log) --}}
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi
+                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
                     </button>
+                    
+                </div>
                 @endif
             </div>
         </div>
@@ -215,18 +217,6 @@
                 if (sel && kendId) sel.value = kendId;
             });
         });
-
-        // If user chooses a kendaraan from filter, filter log rows
-        const filter = document.getElementById('filterKendaraan');
-        if (filter) {
-            filter.addEventListener('change', function () {
-                const val = this.value;
-                document.querySelectorAll('tbody tr[data-kendaraan-id]').forEach(row => {
-                    if (!val) { row.style.display = ''; return; }
-                    row.style.display = row.getAttribute('data-kendaraan-id') === val ? '' : 'none';
-                });
-            });
-        }
         
         // Dynamic Multiple File Input Logic
         const btnAddFile = document.getElementById('btnAddFile');
