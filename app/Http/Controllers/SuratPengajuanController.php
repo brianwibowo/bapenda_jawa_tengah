@@ -81,7 +81,7 @@ class SuratPengajuanController extends Controller
         $footer['reject'] = false; // Default tidak ada tombol tolak
 
         // 3. Logika Tombol Tolak (Muncul jika ada SP yang perlu direview)
-        if ($lastSp && in_array($progress, [1, 3, 4]) && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
+        if ($lastSp && in_array($progress, [1]) && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
              $footer['reject'] = [
                 'label' => 'Tolak',
                 'class' => 'btn-danger',
@@ -189,7 +189,7 @@ class SuratPengajuanController extends Controller
 
         if ($user->unit_kerja == 'Samsat') {
             return $this->ajukanPolda($request, $id);
-        } else if ($progress == 2 && $user->unit_kerja == 'Polda') {
+        } else if ($progress == 2 && $user->unit_kerja == 'Polda') {    
             return $this->ajukanBapendaJr($request, $id);
         } else {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
