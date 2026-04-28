@@ -309,4 +309,14 @@ class PengajuanController extends Controller
         $admin = true;
         return view('pengajuan.log_show', compact('pengajuan', 'log', 'admin', 'suratkeputusan','suratpengajuan', 'progress'));
     }
+
+    /**
+     * Menampilkan halaman pilihan SK (Admin)
+     */
+    public function pilihSk(Pengajuan $pengajuan)
+    {
+        $this->authorizeBranch($pengajuan);
+        $admin = true;
+        return view('pengajuan.pilih_sk', compact('pengajuan', 'admin'));
+    }
 }

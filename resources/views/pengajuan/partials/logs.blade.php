@@ -29,21 +29,23 @@
                     
                 @endphp
 
-                <div class="d-grid" style="grid-template-columns: {{ $hasSuratAction ? '46% 4% 50%' : '100%' }}; gap: 0; align-items: center;">
+                <div class="d-flex justify-content-end gap-2 w-100">
                     {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
                     @if($hasSuratAction)
                         <button class="btn btn-outline-primary" 
                                 onclick="openSecureFrame('{{ $type }}', 'form', {{ $pengajuan->id }})">
                             <i class="fas fa-file-signature me-1"></i> {{ $label }}
                         </button>
-                        <div></div> {{-- Spacer --}}
                     @endif
+
+                    <a href="{{ !empty($admin) && $admin ? route('admin.pengajuan.pilih_sk', $pengajuan->id) : route('pengajuan.pilih_sk', $pengajuan->id) }}" class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;">
+                        <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
+                    </a>
 
                     {{-- Tombol Buat Aksi (Selalu Ada untuk Log) --}}
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
                         <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
                     </button>
-                    
                 </div>
                 @endif
             </div>

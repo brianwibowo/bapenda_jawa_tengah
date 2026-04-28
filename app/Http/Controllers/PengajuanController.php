@@ -422,4 +422,17 @@ class PengajuanController extends Controller
 
         return view('pengajuan.log_show', compact('pengajuan', 'log'));
     }
+
+    /**
+     * Menampilkan halaman pilihan SK
+     */
+    public function pilihSk(Pengajuan $pengajuan)
+    {
+        if (Auth::id() !== $pengajuan->user_id) {
+            abort(403);
+        }
+        
+        $admin = false;
+        return view('pengajuan.pilih_sk', compact('pengajuan', 'admin'));
+    }
 }
