@@ -124,6 +124,7 @@ class PengajuanController extends Controller
             'jenis_bahan_bakar' => 'required|string|max:100',
             'nomor_rangka' => 'required|string|max:255',
             'nomor_mesin' => 'required|string|max:255',
+            'warna_kendaraan' => 'required|string|max:100',
             'warna_tnkb' => 'required|string|max:50',
             'nomor_bpkb' => 'required|string|max:255',
 

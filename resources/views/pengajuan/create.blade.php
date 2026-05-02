@@ -78,11 +78,11 @@
                             <div class="col-md-6 mb-4">
                                 <div class="card h-100">
                                     <div class="card-header text-white" style="background-color: #0d6efd;">
-                                        <h4 class="card-title text-white mb-0">1. Identitas Pemilik (Kendaraan Ini)</h4>
+                                        <h4 class="card-title text-white mb-0">1. Identitas Pemilik</h4>
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
-                                            <label class="form-label">Atas Nama</label>
+                                            <label class="form-label">Nama Pemilik</label>
                                             <input type="text" class="form-control" name="nama_pemilik" required>
                                         </div>
                                         <div class="mb-3">
@@ -119,22 +119,22 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Jenis</label>
-                                                <input type="text" class="form-control" name="jenis_kendaraan" required>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Model</label>
-                                                <input type="text" class="form-control" name="model_kendaraan" required>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
                                                 <label class="form-label">Merk</label>
                                                 <input type="text" class="form-control" name="merk_kendaraan" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Tipe</label>
                                                 <input type="text" class="form-control" name="tipe_kendaraan" required>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Jenis</label>
+                                                <input type="text" class="form-control" name="jenis_kendaraan" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Model</label>
+                                                <input type="text" class="form-control" name="model_kendaraan" required>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -149,16 +149,20 @@
                                             </div>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Jenis Bahan Bakar / Sumber Energi</label>
-                                            <input type="text" class="form-control" name="jenis_bahan_bakar" required>
-                                        </div>
-                                        <div class="mb-3">
                                             <label class="form-label">Nomor Rangka</label>
                                             <input type="text" class="form-control" name="nomor_rangka" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Nomor Mesin</label>
                                             <input type="text" class="form-control" name="nomor_mesin" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Warna Kendaraan Bermotor</label>
+                                            <input type="text" class="form-control" name="warna_kendaraan" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Bahan Bakar / Sumber Energi</label>
+                                            <input type="text" class="form-control" name="jenis_bahan_bakar" required>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">

@@ -15,8 +15,9 @@
 
         <div class="row g-4 mt-2">
             <div class="col-md-6 col-lg-4">
-                <button class="btn w-100 py-3 fw-bold text-dark shadow-sm hover-shadow"
-                    style="background-color: #FEC014; border: none; font-size: 14px;">
+                <button type="button" class="btn w-100 py-3 fw-bold text-dark shadow-sm hover-shadow"
+                    style="background-color: #FEC014; border: none; font-size: 14px;"
+                    data-bs-toggle="modal" data-bs-target="#modalSkRegident">
                     <i class="fas fa-file-alt mb-2 fs-3 d-block text-center"></i>
                     SURAT KETERANGAN PENGHAPUSAN REGIDENT RANMOR (ABDUL)
                 </button>
@@ -58,4 +59,7 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Form SK Regident di-include dari file terpisah -->
+    @include('pengajuan.modals.sk_regident')
 </x-app-layout>

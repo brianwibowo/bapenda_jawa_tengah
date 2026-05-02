@@ -95,6 +95,7 @@ class Kendaraan extends Model implements HasMedia
         'jenis_bahan_bakar',
         'nomor_rangka',
         'nomor_mesin',
+        'warna_kendaraan',
         'warna_tnkb',
         'nomor_bpkb',
 

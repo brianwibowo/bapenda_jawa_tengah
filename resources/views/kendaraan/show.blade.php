@@ -71,7 +71,7 @@
                             <td><span class="badge bg-dark px-3 py-2">{{ $kendaraan->nrkb }}</span></td>
                         </tr>
                         <tr>
-                            <td class="text-muted">Merk</td>
+                            <td class="text-muted">Merek</td>
                             <td class="fw-semibold">{{ $kendaraan->merk_kendaraan }}</td>
                         </tr>
                         <tr>
@@ -95,16 +95,20 @@
                             <td class="fw-semibold">{{ $kendaraan->isi_silinder }}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted">Jenis Bahan Bakar</td>
-                            <td class="fw-semibold">{{ $kendaraan->jenis_bahan_bakar }}</td>
-                        </tr>
-                        <tr>
                             <td class="text-muted">Nomor Rangka</td>
                             <td class="fw-semibold">{{ $kendaraan->nomor_rangka }}</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Nomor Mesin</td>
                             <td class="fw-semibold">{{ $kendaraan->nomor_mesin }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Warna Kendaraan Bermotor</td>
+                            <td class="fw-semibold">{{ $kendaraan->warna_kendaraan }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Bahan Bakar / Sumber Energi</td>
+                            <td class="fw-semibold">{{ $kendaraan->jenis_bahan_bakar }}</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Warna TNKB</td>

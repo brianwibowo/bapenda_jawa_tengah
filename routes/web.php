@@ -94,6 +94,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::patch('/pengajuan/{pengajuan}/batch-update', [AdminPengajuanController::class, 'batchUpdateKendaraanStatus'])->name('pengajuan.batchUpdate')->middleware('permission:approve_status_pengajuan');
             Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
             Route::get('/pengajuan/{pengajuan}/pilih-sk', [AdminPengajuanController::class, 'pilihSk'])->name('pengajuan.pilih_sk');
+            Route::post('/pengajuan/{pengajuan}/generate-sk-regident', [AdminPengajuanController::class, 'generateSkRegident'])->name('pengajuan.generate_sk_regident');
         });
 
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
@@ -132,4 +133,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/secure-frame/{type}/{category}/{id}', [FrameController::class, 'render'])
         ->middleware(['signed']) 
         ->name('frame.secure.render');
+
+    // === TEMPORARY: Preview SK PDF (hapus setelah controller siap) ===
+    Route::get('/preview-sk-regident', function () {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_penghapusan_regident', [
+            'kendaraan' => (object) [
+                'nrkb' => 'AA 9660 QE',
+                'merk_kendaraan' => 'VIAR',
+                'tipe_kendaraan' => 'V 15 RL',
+                'jenis_kendaraan' => 'SEPEDA MOTOR',
+                'model_kendaraan' => 'RODA TIGA',
+                'tahun_pembuatan' => '2015',
+                'isi_silinder' => '150 CC',
+                'nomor_rangka' => 'MGRVR15TAFL207980',
+                'nomor_mesin' => 'YX161FMG15207805',
+                'jenis_bahan_bakar' => 'BENSIN',
+                'warna_tnkb' => 'MERAH',
+                'nomor_bpkb' => 'M01679715',
+                'pemilik' => (object) [
+                    'nama_pemilik' => 'PEMERINTAH DESA GANDUWETAN',
+                    'alamat_pemilik' => 'JL JUMO NO 03 KEC. NGADIREJO KAB. TEMANGGUNG',
+                    'nik_pemilik' => '-',
+                    'telp_pemilik' => '-',
+                    'email_pemilik' => '-',
+                ],
+            ],
+            'warna_kendaraan' => 'BIRU',
+            'nomor_surat' => 'SKET/ 01 /VI/YAN.1/2025/Ditlantas',
+            'nama_pembuat_pernyataan' => 'Dwiyanto Setyo Budi',
+            'lokasi_pernyataan' => 'Temanggung',
+            'tanggal_pernyataan' => '13 Mei 2024',
+            'nama_pembuat_permohonan' => 'Dwiyanto Setyo Budi',
+            'lokasi_permohonan' => 'Temanggung',
+            'tanggal_permohonan' => '13 Mei 2024',
+            'tempat_dikeluarkan' => 'Semarang',
+            'tanggal_surat' => '30 Juni 2025',
+            'jabatan_penandatangan' => 'DIREKTUR LALU LINTAS POLDA JAWA TENGAH',
+        ]);
+        return $pdf->setPaper('a4', 'portrait')->stream('SK_PENGHAPUSAN_REGIDENT.pdf');
+    })->name('preview.sk.regident');
 });

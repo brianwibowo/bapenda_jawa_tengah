@@ -100,12 +100,16 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSP'] = true;
         }
         // Jika sudah fully approved tapi belum ada SK
-        elseif ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || ($pengajuan->getStep()==3)) &&  $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty()) {
+        elseif ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || ($pengajuan->getStep() == 3)) && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty()) {
             $permissionSurat['canAjukanSK'] = true;
         }
 
         return view('admin.pengajuan.show', compact(
-            'pengajuan', 'suratkeputusan', 'suratpengajuan', 'progress', 'permissionSurat'
+            'pengajuan',
+            'suratkeputusan',
+            'suratpengajuan',
+            'progress',
+            'permissionSurat'
         ));
     }
 
@@ -261,7 +265,7 @@ class PengajuanController extends Controller
         }
 
         // 1. Buat Log
-        $log = \App\Models\KendaraanLog::create([
+        $log = KendaraanLog::create([
             'kendaraan_id' => $kendaraan->id,
             'user_id' => $adminUser->id,
             'aksi' => $aksiText,
@@ -297,9 +301,11 @@ class PengajuanController extends Controller
         }
 
         //Order by created_at desc untuk menampilkan log terbaru di atas
-        $log->load(['media' => function ($query) {
-            $query->orderBy('created_at', 'desc');
-        }]);
+        $log->load([
+            'media' => function ($query) {
+                $query->orderBy('created_at', 'desc');
+            }
+        ]);
 
         // Ambil data surat terkait untuk ditampilkan di sidebar (jika ada)
         $progress = $pengajuan->getProgress();
@@ -307,7 +313,7 @@ class PengajuanController extends Controller
         $suratpengajuan = $pengajuan->suratPengajuan;
 
         $admin = true;
-        return view('pengajuan.log_show', compact('pengajuan', 'log', 'admin', 'suratkeputusan','suratpengajuan', 'progress'));
+        return view('pengajuan.log_show', compact('pengajuan', 'log', 'admin', 'suratkeputusan', 'suratpengajuan', 'progress'));
     }
 
     /**
@@ -318,5 +324,71 @@ class PengajuanController extends Controller
         $this->authorizeBranch($pengajuan);
         $admin = true;
         return view('pengajuan.pilih_sk', compact('pengajuan', 'admin'));
+    }
+
+    /**
+     * Generate PDF Surat Keterangan Penghapusan Regident
+     */
+    public function generateSkRegident(Request $request, Pengajuan $pengajuan)
+    {
+        $this->authorizeBranch($pengajuan);
+
+        $request->validate([
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+            'nomor_surat' => 'required',
+            'nama_pembuat' => 'required',
+            'tempat' => 'required',
+            'tanggal_keluar' => 'required',
+            'nama_direktur' => 'required',
+            'pangkat_direktur' => 'required',
+        ]);
+
+        // Ambil data kendaraan berdasarkan pilihan dari form modal
+        $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
+
+        if (!$kendaraan) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        // Gabungkan data dari database dengan inputan form
+        $dataPdf = [
+            // Dari Form Input
+            'nomor_surat' => strtoupper($request->nomor_surat),
+            'nama_pembuat' => strtoupper($request->nama_pembuat),
+            'tempat' => strtoupper($request->tempat),
+            'tanggal_keluar' => strtoupper($request->tanggal_keluar),
+            'nama_direktur' => strtoupper($request->nama_direktur),
+            'pangkat_direktur' => strtoupper($request->pangkat_direktur),
+            
+            // Dari Database Kendaraan/Pemilik
+            'data' => (object)[
+                'nama' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
+                'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
+                'nik' => strtoupper(optional($kendaraan->pemilik)->nik_pemilik ?? '-'),
+                'no_tlp' => strtoupper(optional($kendaraan->pemilik)->telp_pemilik ?? '-'),
+                'email' => strtoupper(optional($kendaraan->pemilik)->email_pemilik ?? '-'),
+                'nrkb' => strtoupper($kendaraan->nrkb ?? '-'),
+                'merek' => strtoupper($kendaraan->merk_kendaraan ?? '-'),
+                'tipe' => strtoupper($kendaraan->tipe_kendaraan ?? '-'),
+                'jenis' => strtoupper($kendaraan->jenis_kendaraan ?? '-'),
+                'model' => strtoupper($kendaraan->model_kendaraan ?? '-'),
+                'tahun' => strtoupper($kendaraan->tahun_pembuatan ?? '-'),
+                'isi_silinder' => strtoupper($kendaraan->isi_silinder ?? '-'),
+                'no_rangka' => strtoupper($kendaraan->nomor_rangka ?? '-'),
+                'no_mesin' => strtoupper($kendaraan->nomor_mesin ?? '-'),
+                'warna_kendaraan' => strtoupper($kendaraan->warna_kendaraan ?? '-'),
+                'bahan_bakar' => strtoupper($kendaraan->jenis_bahan_bakar ?? '-'),
+                'warna_tnkb' => strtoupper($kendaraan->warna_tnkb ?? '-'),
+                'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
+            ]
+        ];
+
+        // Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_penghapusan_regident', $dataPdf);
+        
+        // Atur ukuran dan orientasi kertas (bisa diset di view CSS juga, tapi ini untuk memastikan)
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
     }
 }
