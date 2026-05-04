@@ -92,8 +92,10 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Kendaraan whereWarnaTnkb($value)
  * @mixin \Eloquent
  * @property int|null $pemilik_id
+ * @property string|null $warna_kendaraan
  * @property-read \App\Models\Pemilik|null $pemilik
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Kendaraan wherePemilikId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Kendaraan whereWarnaKendaraan($value)
  */
 	class Kendaraan extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
@@ -125,7 +127,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|KendaraanLog whereUserId($value)
  * @mixin \Eloquent
- * @property string|null $tipe tipe log: komentar|revisi|admin|system
+ * @property string|null $tipe
  */
 	class KendaraanLog extends \Eloquent implements \Spatie\MediaLibrary\HasMedia {}
 }
@@ -160,10 +162,10 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
- * @property string|null $nomor_pengajuan
  * @property int $user_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $nomor_pengajuan
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property int|null $cabang_id
  * @property-read \App\Models\Cabang|null $cabang
@@ -290,9 +292,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutPermission($permissions)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User withoutRole($roles, $guard = null)
  * @mixin \Eloquent
- * @property string|null $profile_photo_path
  * @property string|null $jabatan
  * @property int|null $cabang_id
+ * @property string|null $profile_photo_path
  * @property-read \App\Models\Cabang|null $cabang
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCabangId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereJabatan($value)

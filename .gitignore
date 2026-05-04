@@ -29,3 +29,6 @@ vite.config.dev.js
 vite.config.dev.js
 composer-setup.php
 package-lock.json
+phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php

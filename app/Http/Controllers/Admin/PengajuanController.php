@@ -47,7 +47,7 @@ class PengajuanController extends Controller
             });
         }
 
-        $branches = Cabang::orderBy('wilayah')->get();
+        $branches = Cabang::orderBy('wilayah', 'asc')->get();
         $pengajuans = $query->paginate(10)->withQueryString();
 
         return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang'));
@@ -139,7 +139,7 @@ class PengajuanController extends Controller
         $logCount = 0;
 
         // Fetch all related kendaraans upfront to prevent N+1 Queries
-        $kendaraans = Kendaraan::whereIn('id', array_keys($statuses))
+        $kendaraans = Kendaraan::whereIn('id', array_keys($statuses), 'and', false)
             ->where('pengajuan_id', $pengajuan->id)
             ->get()
             ->keyBy('id');
@@ -197,6 +197,8 @@ class PengajuanController extends Controller
 
                 // 6. Handle upload lampiran (jika ada) dan tempelkan ke LOG
                 if ($lampiranFile) {
+                    /** @var \App\Models\KendaraanLog $log */
+                    // addMedia berasal dari trait InteractsWithMedia pada model KendaraanLog
                     $log->addMedia($lampiranFile)->toMediaCollection('lampiran_log');
                 }
 
@@ -289,7 +291,7 @@ class PengajuanController extends Controller
     /**
      * Menampilkan halaman detail khusus dari suatu Log / Aksi (beserta lampiran full)
      */
-    public function showLog(Pengajuan $pengajuan, $logId)
+    public function showLog(Pengajuan $pengajuan, int $logId)
     {
         $this->authorizeBranch($pengajuan);
 
@@ -390,5 +392,74 @@ class PengajuanController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
+    }
+
+    /**
+     * Generate PDF Surat Keputusan Pembebasan
+     */
+    public function generateSkPembebasan(Request $request, Pengajuan $pengajuan)
+    {
+        $this->authorizeBranch($pengajuan);
+
+        $request->validate([
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+            'nama_pembuat_surat_permohonan' => 'required',
+            'tempat_pembuat_surat_permohonan' => 'required',
+            'tanggal_pembuat_surat_permohonan' => 'required',
+            'nomor_surat_regident' => 'required',
+            'nama_pembuat_surat_regident' => 'required',
+            'tempat_pembuat_surat_regident' => 'required',
+            'tanggal_pembuat_surat_regident' => 'required',
+            'nomor_surat_Pembebasan' => 'required',
+            'tempat_sk' => 'required',
+            'tanggal_sk' => 'required',
+            'nama_direktur' => 'required',
+            'pangkat_direktur' => 'required',
+        ]);
+
+        $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
+
+        if (!$kendaraan) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        $dataPdf = [
+            'nama_pembuat_surat_permohonan' => strtoupper($request->nama_pembuat_surat_permohonan),
+            'tempat_pembuat_surat_permohonan' => strtoupper($request->tempat_pembuat_surat_permohonan),
+            'tanggal_pembuat_surat_permohonan' => strtoupper($request->tanggal_pembuat_surat_permohonan),
+            'nomor_surat_regident' => strtoupper($request->nomor_surat_regident),
+            'nama_pembuat_surat_regident' => strtoupper($request->nama_pembuat_surat_regident),
+            'tempat_pembuat_surat_regident' => strtoupper($request->tempat_pembuat_surat_regident),
+            'tanggal_pembuat_surat_regident' => strtoupper($request->tanggal_pembuat_surat_regident),
+            'tempat_sk' => strtoupper($request->tempat_sk),
+            'tanggal_sk' => strtoupper($request->tanggal_sk),
+            'nama_direktur' => strtoupper($request->nama_direktur),
+            'pangkat_direktur' => strtoupper($request->pangkat_direktur),
+            'data' => (object)[
+                'nama' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
+                'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
+                'nik' => strtoupper(optional($kendaraan->pemilik)->nik_pemilik ?? '-'),
+                'no_tlp' => strtoupper(optional($kendaraan->pemilik)->telp_pemilik ?? '-'),
+                'email' => strtoupper(optional($kendaraan->pemilik)->email_pemilik ?? '-'),
+                'nrkb' => strtoupper($kendaraan->nrkb ?? '-'),
+                'merek' => strtoupper($kendaraan->merk_kendaraan ?? '-'),
+                'tipe' => strtoupper($kendaraan->tipe_kendaraan ?? '-'),
+                'jenis' => strtoupper($kendaraan->jenis_kendaraan ?? '-'),
+                'model' => strtoupper($kendaraan->model_kendaraan ?? '-'),
+                'tahun' => strtoupper($kendaraan->tahun_pembuatan ?? '-'),
+                'isi_silinder' => strtoupper($kendaraan->isi_silinder ?? '-'),
+                'no_rangka' => strtoupper($kendaraan->nomor_rangka ?? '-'),
+                'no_mesin' => strtoupper($kendaraan->nomor_mesin ?? '-'),
+                'warna_kendaraan' => strtoupper($kendaraan->warna_kendaraan ?? '-'),
+                'bahan_bakar' => strtoupper($kendaraan->jenis_bahan_bakar ?? '-'),
+                'warna_tnkb' => strtoupper($kendaraan->warna_tnkb ?? '-'),
+                'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
+            ],
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
     }
 }
