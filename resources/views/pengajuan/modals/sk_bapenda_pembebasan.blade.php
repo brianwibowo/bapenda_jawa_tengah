@@ -74,7 +74,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat Keterangan Pembebasan</label>
-                            <input type="text" class="form-control" name="nomor_surat_Pembebasan" required>
+                            <input type="text" class="form-control" name="nomor_surat_pembebasan" required>
                             <small class="text-muted d-block mt-1">Contoh: 900.1.13.1 /1865/2025</small>
                         </div>
                         <div class="col-md-6 mb-3">

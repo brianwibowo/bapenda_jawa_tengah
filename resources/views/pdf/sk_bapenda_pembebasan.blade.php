@@ -66,7 +66,7 @@
 
     <div class="title-box">
         <div class="uc">KEPUTUSAN KEPALA BADAN PENGELOLA PENDAPATAN DAERAH<br>PROVINSI JAWA TENGAH</div>
-        <div>NOMOR {{ $nomor_surat_regident ?? '-' }}</div>
+        <div>NOMOR {{ $nomor_surat_pembebasan ?? '-' }}</div>
         <br>
         <div class="uc">TENTANG<br>
             PEMBEBASAN ATAS POKOK DAN TUNGGAKAN PKB<br>
