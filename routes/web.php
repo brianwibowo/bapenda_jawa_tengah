@@ -113,15 +113,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware(['signed']);
     });
 
-    // =================================================================
-    // == ROUTE SHARED (PENULIS & ADMIN) UNTUK KENDARAAN INDIVIDUAL ==
-    // =================================================================
     Route::prefix('kendaraan')->name('kendaraan.')->group(function () {
         Route::get('/{kendaraan}', [KendaraanController::class, 'show'])->name('show');
         Route::get('/{kendaraan}/edit', [KendaraanController::class, 'edit'])->name('edit');
         Route::patch('/{kendaraan}', [KendaraanController::class, 'update'])->name('update');
         Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
     });
+
+    // Generate PDF routes (shared between user and admin)
+    Route::post('/pengajuan/generate-sk-polda', [AdminPengajuanController::class, 'generateSkPolda'])->name('pengajuan.generate_sk_polda');
 
 
     // API untuk mendapatkan tiket akses (UUID/Signature di URL)
@@ -172,4 +172,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         return $pdf->setPaper('a4', 'portrait')->stream('SK_PENGHAPUSAN_REGIDENT.pdf');
     })->name('preview.sk.regident');
+
+    Route::get('/preview-sk-polda', function () {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_polda', [
+            'data' => (object) [
+                'nrkb' => 'AA 9660 QE',
+                'nama' => 'PEMERINTAH DESA GANDUWETAN',
+                'alamat' => 'JL. JUMO NO 03 KEL NGADIREJO KAB TEMANGGUNG',
+                'jenis_model' => 'SEPEDA MOTOR/RODA TIGA',
+                'merek_tipe' => 'VIAR/V15 RL',
+                'tahun' => '2015',
+                'isi_silinder' => '150 CC',
+                'bahan_bakar' => 'BENSIN',
+                'no_rangka' => 'MGRVR15TAFL207980',
+                'no_mesin' => 'YX161FMG15207805',
+                'warna' => 'BIRU',
+                'no_bpkb' => 'M01679715',
+            ],
+            'nama_direktur' => 'M. PRATAMA, S.I.K., S.H., M.H.',
+            'pangkat_direktur' => 'KOMISARIS BESAR POLISI NRP 68090397',
+        ]);
+        return $pdf->setPaper('a4', 'portrait')->stream('SK_POLDA.pdf');
+    })->name('preview.sk.polda');
 });

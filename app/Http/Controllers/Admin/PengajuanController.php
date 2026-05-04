@@ -391,4 +391,63 @@ class PengajuanController extends Controller
 
         return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
     }
+
+    /**
+     * Generate PDF Surat Keputusan POLDA (Lampiran Surat Kapolda)
+     */
+    public function generateSkPolda(Request $request)
+    {
+        $request->validate([
+            'pengajuan_id' => 'required|exists:pengajuans,id',
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+            'nomor_surat' => 'required|string',
+            'nama_pembuat' => 'required|string',
+            'tempat' => 'required|string',
+            'tanggal_keluar' => 'required|string',
+            'nama_direktur' => 'required|string',
+            'pangkat_direktur' => 'required|string',
+        ]);
+
+        $pengajuan = Pengajuan::findOrFail($request->pengajuan_id);
+        $this->authorizeBranch($pengajuan);
+
+        // Ambil kendaraan yang dipilih
+        $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
+
+        if (!$kendaraan) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        // Siapkan data untuk PDF
+        $dataPdf = [
+            'kendaraan' => $kendaraan,
+            'data' => (object)[
+                'nrkb' => strtoupper($kendaraan->nrkb ?? '-'),
+                'nama' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
+                'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
+                'jenis_model' => strtoupper(($kendaraan->jenis_kendaraan ?? '-') . '/' . ($kendaraan->model_kendaraan ?? '-')),
+                'merek_tipe' => strtoupper(($kendaraan->merk_kendaraan ?? '-') . '/' . ($kendaraan->tipe_kendaraan ?? '-')),
+                'tahun' => $kendaraan->tahun_pembuatan ?? '-',
+                'isi_silinder' => strtoupper($kendaraan->isi_silinder ?? '-'),
+                'bahan_bakar' => strtoupper($kendaraan->jenis_bahan_bakar ?? '-'),
+                'no_rangka' => strtoupper($kendaraan->nomor_rangka ?? '-'),
+                'no_mesin' => strtoupper($kendaraan->nomor_mesin ?? '-'),
+                'warna' => strtoupper($kendaraan->warna_kendaraan ?? '-'),
+                'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
+            ],
+            'nomor_surat' => $request->nomor_surat,
+            'nama_pembuat' => $request->nama_pembuat,
+            'tempat' => $request->tempat,
+            'tanggal_keluar' => $request->tanggal_keluar,
+            'nama_direktur' => $request->nama_direktur,
+            'pangkat_direktur' => $request->pangkat_direktur,
+        ];
+
+        // Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_polda', $dataPdf);
+        
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SK_POLDA_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
+    }
 }
