@@ -95,6 +95,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
             Route::get('/pengajuan/{pengajuan}/pilih-sk', [AdminPengajuanController::class, 'pilihSk'])->name('pengajuan.pilih_sk');
             Route::post('/pengajuan/{pengajuan}/generate-sk-regident', [AdminPengajuanController::class, 'generateSkRegident'])->name('pengajuan.generate_sk_regident');
+            Route::post('/pengajuan/{pengajuan}/generate-sk-pembebasan', [AdminPengajuanController::class, 'generateSkPembebasan'])->name('pengajuan.generate_sk_pembebasan');
         });
 
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
