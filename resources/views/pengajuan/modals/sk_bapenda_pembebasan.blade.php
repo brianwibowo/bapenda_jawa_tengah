@@ -92,12 +92,6 @@
                     <h6 class="fw-bold mb-3">Data Penandatangan (Direktur)</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Nama Direktur (Beserta Pangkat/Gelar)</label>
-                            <input type="text" class="form-control" name="nama_direktur" required>
-                            <small class="text-muted d-block mt-1">Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H.,
-                                M.H.</small>
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Pangkat / NRP</label>
                             <input type="text" class="form-control" name="pangkat_direktur" required>
                             <small class="text-muted d-block mt-1">Contoh: KOMISARIS BESAR POLISI NRP 680903</small>
