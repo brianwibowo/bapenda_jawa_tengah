@@ -457,6 +457,7 @@ class PengajuanController extends Controller
             ],
         ];
 
+        // return view('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
 
