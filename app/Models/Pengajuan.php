@@ -7,14 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-// Hapus 'use Spatie\MediaLibrary\HasMedia'
-// Hapus 'use Spatie\MediaLibrary\InteractsWithMedia'
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-// Hapus 'implements HasMedia'
-class Pengajuan extends Model
+class Pengajuan extends Model implements HasMedia
 {
-    // Hapus 'InteractsWithMedia', TAPI TETAPKAN 'SoftDeletes'
-    use HasFactory, SoftDeletes; 
+    use HasFactory, SoftDeletes, InteractsWithMedia; 
 
     /**
      * The attributes that are mass assignable.

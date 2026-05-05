@@ -450,7 +450,37 @@ class PengajuanController extends Controller
         
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream('SK_POLDA_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
+        // Save PDF to storage temporarily
+        $pdfContent = $pdf->output();
+        $filename = 'SK_POLDA_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf';
+        $tempPath = storage_path('app/temp/' . $filename);
+        
+        // Ensure temp directory exists
+        if (!file_exists(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+        
+        file_put_contents($tempPath, $pdfContent);
+
+        // Add PDF to pengajuan media
+        $pengajuan->addMedia($tempPath)
+            ->usingName($filename)
+            ->usingFileName($filename)
+            ->toMediaCollection('sk_polda_pdf');
+
+        // Create log entry
+        $kendaraan->logs()->create([
+            'user_id' => auth()->id(),
+            'aksi' => 'SK POLDA berhasil dibuat dan disimpan',
+            'tipe' => 'system',
+            'status_baru' => 'sk_polda_created',
+            'catatan' => 'Nomor Surat: ' . $request->nomor_surat,
+        ]);
+
+        // Note: Media library moves the file, so no need to unlink
+
+        // Stream the PDF to browser
+        return $pdf->stream($filename);
     }
 
     /**
