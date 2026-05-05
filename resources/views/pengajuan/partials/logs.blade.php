@@ -4,6 +4,55 @@
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
+        {{-- Display SK POLDA PDFs --}}
+        @php
+            $skPoldaPdfs = $pengajuan->getMedia('sk_polda_pdf');
+        @endphp
+        @if($skPoldaPdfs->isNotEmpty())
+            <div class="mb-4">
+                <h5 class="mb-3">Dokumen SK POLDA</h5>
+                <div class="row">
+                    @foreach($skPoldaPdfs as $pdf)
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
+                                    <h6 class="card-title">{{ $pdf->name }}</h6>
+                                    <p class="card-text small text-muted">
+                                        Dibuat: {{ $pdf->created_at->format('d M Y H:i') }}
+                                    </p>
+                                    @php
+                                        // Build a safe URL: if host is localhost or 127.0.0.1, force port 8000
+                                        $originalUrl = $pdf->getUrl();
+                                        $viewUrl = $originalUrl;
+                                        $downloadUrl = $originalUrl;
+                                        $parts = @parse_url($originalUrl);
+                                        if ($parts && isset($parts['host']) && in_array($parts['host'], ['localhost', '127.0.0.1'])) {
+                                            $scheme = isset($parts['scheme']) ? $parts['scheme'] : 'http';
+                                            $host = $parts['host'];
+                                            $port = 8000;
+                                            $path = isset($parts['path']) ? $parts['path'] : '';
+                                            $query = isset($parts['query']) ? ('?'.$parts['query']) : '';
+                                            $fragment = isset($parts['fragment']) ? ('#'.$parts['fragment']) : '';
+                                            $viewUrl = $scheme.'://'.$host.':'.$port.$path.$query.$fragment;
+                                            $downloadUrl = $viewUrl;
+                                        }
+                                    @endphp
+                                    <a href="{{ $viewUrl }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i> Lihat PDF
+                                    </a>
+                                    <a href="{{ $downloadUrl }}" download class="btn btn-sm btn-outline-secondary ms-1">
+                                        <i class="fas fa-download me-1"></i> Unduh
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            <hr>
+        @endif
+
         <div class="mb-3 d-flex justify-content-end align-items-center">
             <div>
                 @if(!empty($admin) && $admin)
