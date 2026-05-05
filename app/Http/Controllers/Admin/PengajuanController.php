@@ -503,7 +503,6 @@ class PengajuanController extends Controller
             'tempat_sk' => 'required',
             'tanggal_sk' => 'required',
             'nama_direktur' => 'required',
-            'pangkat_direktur' => 'required',
         ]);
 
         $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
@@ -524,7 +523,6 @@ class PengajuanController extends Controller
             'tempat_sk' => strtoupper($request->tempat_sk),
             'tanggal_sk' => strtoupper($request->tanggal_sk),
             'nama_direktur' => strtoupper($request->nama_direktur),
-            'pangkat_direktur' => strtoupper($request->pangkat_direktur),
             'data' => (object)[
                 'nama' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
                 'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
@@ -547,7 +545,6 @@ class PengajuanController extends Controller
             ],
         ];
 
-        // return view('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
 
