@@ -55,8 +55,8 @@ services:
     container_name: bapenda-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      # - "443:443"  # Uncomment when SSL is added
+      - "8080:80"
+      # Native Nginx handles port 80/443 and proxies here
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - app-public:/var/www/html/public:ro
