@@ -28,7 +28,8 @@ RUN composer install \
     --no-scripts \
     --no-autoloader \
     --prefer-dist \
-    --no-interaction
+    --no-interaction \
+    --ignore-platform-reqs
 
 COPY . .
 RUN composer dump-autoload --optimize --no-dev
@@ -36,7 +37,7 @@ RUN composer dump-autoload --optimize --no-dev
 # ============================================
 # Stage 3: Production PHP-FPM image
 # ============================================
-FROM php:8.2-fpm-bookworm AS production
+FROM php:8.4-fpm-bookworm AS production
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
