@@ -22,7 +22,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-bold">Pilih Hak Akses (Permissions) untuk grup ini:</label>
+                    <label class="form-label fw-bold">Pilih Hak Akses untuk grup ini:</label>
                     @foreach($permissions as $group => $perms)
                         @php $groupLabel = $group ?: 'Fitur Lainnya (Belum Dikategorikan)'; @endphp
                         <div class="card mb-3 shadow-none border">
