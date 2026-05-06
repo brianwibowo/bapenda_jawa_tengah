@@ -1,3 +1,8 @@
+# ==================================================
+# GitHub Actions — Deploy Bapenda Jateng to VPS
+# Triggers on push to main branch
+# ==================================================
+
 name: Deploy to VPS
 
 on:
@@ -7,28 +12,55 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    name: Deploy to Production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
+          host: 203.175.11.198
+          username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
+          port: 22
+          script_stop: true
           script: |
-            # Pindah ke direktori project di VPS
-            cd ${{ secrets.VPS_PROJECT_PATH }}
-            
-            # (PENTING) Reset semua perubahan lokal di VPS yang mungkin tidak sengaja terjadi (seperti saat error sebelumnya), agar git pull dari github jadi prioritas/bersih
+            set -e
+
+            PROJECT_DIR="/var/www/audira.site"
+            echo "=========================================="
+            echo "🚀 Deploying Bapenda Jateng"
+            echo "=========================================="
+
+            # Navigate to project directory
+            cd "$PROJECT_DIR"
+
+            # Pull latest code
+            echo "📥 Pulling latest code from main..."
             git fetch origin main
             git reset --hard origin/main
-            git clean -df
-            
-            # Tarik deploy.sh (dan semua file terbaru) terlebih dahulu ke VPS
-            git pull origin main
-            
-            # Beri hak akses agar file bisa dijalankan, kemudian jalankan script-nya
-            chmod +x deploy.sh
-            bash deploy.sh
+
+            # Build and recreate containers
+            echo "🔨 Building & restarting containers..."
+            docker compose up -d --build
+
+            # Wait a moment for containers to be ready
+            sleep 5
+
+            # Run Laravel post-deploy commands inside the container
+            echo "⚙️  Running Laravel post-deploy..."
+            docker compose exec -T app php artisan migrate --force
+            docker compose exec -T app php artisan config:cache
+            docker compose exec -T app php artisan route:cache
+            docker compose exec -T app php artisan view:cache
+            docker compose exec -T app php artisan storage:link || true
+            docker compose exec -T app php artisan event:cache
+
+            # Cleanup old Docker images
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f
+
+            echo "=========================================="
+            echo "✅ Deployment complete!"
+            echo "=========================================="
