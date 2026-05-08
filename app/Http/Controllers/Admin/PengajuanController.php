@@ -20,13 +20,20 @@ class PengajuanController extends Controller
         $status = $request->query('status');
         $search = $request->query('search');
         $selectedCabang = $request->query('cabang_id');
+        $user = Auth::user();
+        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
 
         $query = Pengajuan::with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
             ->withCount('kendaraans')
             ->latest('updated_at');
 
-        if (Auth::user()->cabang_id) {
-            $query->where('cabang_id', Auth::user()->cabang_id);
+        if ($isSamsat) {
+            // Samsat wajib terbatas ke cabang/wilayah sendiri.
+            if (!$user->cabang_id) {
+                abort(403, 'Akun Samsat belum ditetapkan ke cabang/wilayah.');
+            }
+
+            $query->where('cabang_id', $user->cabang_id);
         } elseif ($selectedCabang) {
             $query->where('cabang_id', $selectedCabang);
         }
@@ -42,7 +49,9 @@ class PengajuanController extends Controller
                 $q->where('nomor_pengajuan', 'like', "%{$search}%")
                     ->orWhereHas('kendaraans', function ($sq) use ($search) {
                         $sq->where('nrkb', 'like', "%{$search}%")
-                            ->orWhere('nama_pemilik', 'like', "%{$search}%");
+                            ->orWhereHas('pemilik', function ($ownerQuery) use ($search) {
+                                $ownerQuery->where('nama_pemilik', 'like', "%{$search}%");
+                            });
                     });
             });
         }
@@ -50,7 +59,7 @@ class PengajuanController extends Controller
         $branches = Cabang::orderBy('wilayah', 'asc')->get();
         $pengajuans = $query->paginate(10)->withQueryString();
 
-        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang'));
+        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang', 'isSamsat'));
     }
 
     /**
@@ -230,7 +239,10 @@ class PengajuanController extends Controller
 
     private function authorizeBranch(Pengajuan $pengajuan): void
     {
-        if (Auth::user()->cabang_id && $pengajuan->cabang_id !== Auth::user()->cabang_id) {
+        $user = Auth::user();
+        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+
+        if ($isSamsat && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
             abort(403, 'Akses ditolak: cabang berbeda.');
         }
     }

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use App\Models\Cabang;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -68,12 +69,18 @@ class UserSeeder extends Seeder
         $jrKepala->assignRole(['kepala_instansi', 'jasa_raharja']);
 
         // === WAJIB PAJAK ===
+        $cabangSemarang = Cabang::firstOrCreate(
+            ['nama' => 'Samsat kota semarang 1', 'wilayah' => 'Semarang']
+        );
+
         $wp = User::updateOrCreate(
             ['email' => 'wp@example.com'],
             [
                 'name' => 'Budi Wajib Pajak',
                 'password' => Hash::make('12345678'),
-                'unit_kerja' => 'Wajib Pajak',
+                'unit_kerja' => 'Wajib Pajak Semarang',
+                'jabatan' => 'Pemilik Kendaraan',
+                'cabang_id' => $cabangSemarang->id,
             ]
         );
         $wp->assignRole('wajib_pajak');

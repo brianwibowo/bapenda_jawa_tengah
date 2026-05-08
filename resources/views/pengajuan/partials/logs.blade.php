@@ -116,10 +116,24 @@
                 </thead>
                 <tbody>
                     @php
-                        $allLogs = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->sortByDesc('created_at');
+                        $allLogs = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->sortByDesc('created_at')->values();
+                        $logPerPage = 7;
+                        $logCurrentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage('log_page');
+                        $logCurrentItems = $allLogs->forPage($logCurrentPage, $logPerPage);
+                        $paginatedLogs = new \Illuminate\Pagination\LengthAwarePaginator(
+                            $logCurrentItems,
+                            $allLogs->count(),
+                            $logPerPage,
+                            $logCurrentPage,
+                            [
+                                'path' => request()->url(),
+                                'pageName' => 'log_page',
+                            ]
+                        );
+                        $paginatedLogs->appends(request()->except('log_page'));
                     @endphp
 
-                    @forelse($allLogs as $log)
+                    @forelse($paginatedLogs as $log)
                         <tr data-kendaraan-id="{{ $log->kendaraan_id }}">
                             <td class="text-nowrap">{{ $log->created_at->timezone('Asia/Jakarta')->format('H:i, d M Y') }}</td>
                             <td><strong>{{ $log->kendaraan->nrkb ?? 'N/A' }}</strong></td>
@@ -132,9 +146,9 @@
                             <td>
                                 @if(in_array($log->tipe, ['komentar', 'admin']))
                                     <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
-                                @elseif($log->status_bar === 'selesai' || $log->tipe === 'system')
+                                @elseif($log->status_baru === 'selesai' || $log->tipe === 'system')
                                     @php
-                                        $status_pascal = str($log->status_bar === 'selesai' ? $log->status_baru : $log->tipe)->studly();
+                                        $status_pascal = str($log->status_baru === 'selesai' ? $log->status_baru : $log->tipe)->studly();
                                     @endphp
                                     <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
                                 @elseif($log->tipe === 'revisi')
@@ -171,6 +185,11 @@
                 </tbody>
             </table>
         </div>
+        @if($paginatedLogs->hasPages())
+            <div class="mt-3">
+                {{ $paginatedLogs->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     </div>
 </div>
 

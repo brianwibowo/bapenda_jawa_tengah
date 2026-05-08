@@ -29,6 +29,7 @@ class PengajuanController extends Controller
     {
             $query = Pengajuan::where('user_id', Auth::id())
                 ->with('kendaraans:id,pengajuan_id,status')
+                ->with('cabang:id,nama,wilayah')
                 ->withCount('kendaraans')
                 ->latest();
 

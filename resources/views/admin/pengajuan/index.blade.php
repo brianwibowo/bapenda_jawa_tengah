@@ -2,6 +2,7 @@
     @php
         $pengajuanRoutePrefix = 'admin';
         $isAdminRole = auth()->user()->can('view_menu_pengguna');
+        $isSamsatUser = $isSamsat ?? false;
     @endphp
 
     <x-slot name="header">
@@ -76,21 +77,23 @@
                                            value="{{ request('search') }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <select name="cabang_id" class="form-select">
-                                    <option value="">-- Filter Cabang / Wilayah --</option>
-                                    @foreach($branches as $branch)
-                                        <option value="{{ $branch->id }}" {{ request('cabang_id') == $branch->id ? 'selected' : '' }}>
-                                            {{ $branch->nama }} - {{ $branch->wilayah }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @unless($isSamsatUser)
+                                <div class="col-md-4">
+                                    <select name="cabang_id" class="form-select">
+                                        <option value="">-- Filter Cabang / Wilayah --</option>
+                                        @foreach($branches as $branch)
+                                            <option value="{{ $branch->id }}" {{ request('cabang_id') == $branch->id ? 'selected' : '' }}>
+                                                {{ $branch->nama }} - {{ $branch->wilayah }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endunless
                             <div class="col-md-2 d-flex gap-2">
                                 <button class="btn btn-primary flex-grow-1" type="submit">
                                     <i class="fas fa-search me-1"></i> Cari
                                 </button>
-                                @if(request('search') || request('cabang_id'))
+                                @if(request('search') || (!$isSamsatUser && request('cabang_id')))
                                     <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}" 
                                        class="btn btn-outline-secondary">
                                         <i class="fas fa-times"></i>
@@ -194,6 +197,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="px-4 py-3">Nomor Pengajuan</th>
+                            <th class="px-4 py-3">Wajib Pajak</th>
                             <th class="px-4 py-3">Cabang / Wilayah</th>
                             <th class="px-4 py-3">Tanggal Masuk</th>
                             <th class="px-4 py-3">Update Terakhir</th>
@@ -207,6 +211,9 @@
                             <tr>
                                 <td class="px-4 py-3">
                                     <strong class="text-primary">{{ $pengajuan->nomor_pengajuan }}</strong>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="fw-semibold">{{ $pengajuan->user?->name ?? '-' }}</span>
                                 </td>
                                 <td class="px-4 py-3">
                                     {{ $pengajuan->cabang?->nama ?? '-' }}
@@ -226,9 +233,6 @@
                                     <small class="text-muted">{{ $pengajuan->updated_at->format('H:i') }}</small>
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    {{ $progress[$pengajuan->id] ?? 0 }} / 9
-                                </td>
-                                <td class="px-4 py-3 text-center">
                                     @if($pengajuan->status == 'pengajuan')
                                         <span class="badge bg-warning text-dark px-3 py-2">
                                             <i class="fas fa-file-alt me-1"></i> Baru
@@ -246,6 +250,9 @@
                                             <i class="fas fa-times-circle me-1"></i> Ditolak
                                         </span>
                                     @endif
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    {{ $progress[$pengajuan->id] ?? 0 }} / 9
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="btn-group" role="group">
@@ -310,7 +317,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="8" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                         <h5>Tidak ada data pengajuan</h5>
