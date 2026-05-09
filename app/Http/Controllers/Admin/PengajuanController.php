@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppNotification;
 use App\Models\Cabang;
 use App\Models\Pengajuan;
 use App\Models\Kendaraan;
 use App\Models\KendaraanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PengajuanController extends Controller
 {
@@ -420,9 +423,39 @@ class PengajuanController extends Controller
 
         // Generate PDF
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_penghapusan_regident', $dataPdf);
-        
-        // Atur ukuran dan orientasi kertas (bisa diset di view CSS juga, tapi ini untuk memastikan)
         $pdf->setPaper('a4', 'portrait');
+
+        $filename   = 'SK_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . Str::uuid() . '.pdf';
+        $storagePath = 'sk/' . $filename;
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+
+        // Catat log
+        $this->logSuratActionByKendaraanId(
+            $pengajuan,
+            $kendaraan->id,
+            'SK Penghapusan Regident berhasil diterbitkan',
+            'Nomor Surat: ' . $request->nomor_surat,
+        );
+
+        // Dispatch WA notification (non-blocking, non-fatal)
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp) {
+            try {
+                SendWhatsAppNotification::dispatch(
+                    pengajuan:    $pengajuan,
+                    kendaraan:    $kendaraan,
+                    skType:       'regident',
+                    pdfUrl:       $pdfUrlAbsolute,
+                    localPdfPath: Storage::disk('public')->path($storagePath),
+                    wpPhone:      $wpUser->no_hp,
+                    wpName:       $wpUser->name,
+                    nrkb:         $kendaraan->nrkb,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident): ' . $e->getMessage());
+            }
+        }
 
         return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
     }
@@ -512,6 +545,30 @@ class PengajuanController extends Controller
 
         // Note: Media library moves the file, so no need to unlink
 
+        // Ambil URL publik dari media yang baru disimpan
+        $media = $pengajuan->getMedia('sk_polda_pdf')->last();
+        $pdfUrlAbsolute = $media ? $media->getFullUrl() : null;
+        $localPdfPath = $media ? $media->getPath() : null;
+
+        // Dispatch WA notification (non-blocking, non-fatal)
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp && $pdfUrlAbsolute && $localPdfPath) {
+            try {
+                SendWhatsAppNotification::dispatch(
+                    pengajuan:    $pengajuan,
+                    kendaraan:    $kendaraan,
+                    skType:       'polda',
+                    pdfUrl:       $pdfUrlAbsolute,
+                    localPdfPath: $localPdfPath,
+                    wpPhone:      $wpUser->no_hp,
+                    wpName:       $wpUser->name,
+                    nrkb:         $kendaraan->nrkb,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Polda): ' . $e->getMessage());
+            }
+        }
+
         // Stream the PDF to browser
         return $pdf->stream($filename);
     }
@@ -580,23 +637,49 @@ class PengajuanController extends Controller
                 'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
             ],
         ];
-        if ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah') && !$request->has('preview')) {
-            $log = $this->logSuratActionByKendaraanId(
-                $pengajuan,
-                $kendaraan->id,
-                'SK Pembebasan berhasil dibuat dan ditandatangani',
-                'Nomor Surat: ' . $request->nomor_surat_pembebasan,
-                $request->file('sk_pembebasan_ttd_basah')
-            );
-        }
-
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
         $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace(' ', '_', $request->nomor_surat_pembebasan) . '.pdf';
-        
 
         if ($request->has('preview')) {
             return $pdf->download($filename);
+        }
+
+        // Simpan PDF ke storage publik
+        $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+
+        // Catat log & lampirkan file TTD basah jika ada
+        $uploadedFile = ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah'))
+            ? $request->file('sk_pembebasan_ttd_basah')
+            : null;
+
+        $this->logSuratActionByKendaraanId(
+            $pengajuan,
+            $kendaraan->id,
+            'SK Pembebasan berhasil diterbitkan',
+            'Nomor Surat: ' . $request->nomor_surat_pembebasan,
+            $uploadedFile,
+        );
+
+        // Dispatch WA notification (non-blocking, non-fatal)
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp) {
+            try {
+                SendWhatsAppNotification::dispatch(
+                    pengajuan:    $pengajuan,
+                    kendaraan:    $kendaraan,
+                    skType:       'pembebasan',
+                    pdfUrl:       $pdfUrlAbsolute,
+                    localPdfPath: Storage::disk('public')->path($storagePath),
+                    wpPhone:      $wpUser->no_hp,
+                    wpName:       $wpUser->name,
+                    nrkb:         $kendaraan->nrkb,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
+            }
         }
 
         return $pdf->stream($filename);
