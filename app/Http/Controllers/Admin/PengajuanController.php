@@ -137,7 +137,7 @@ class PengajuanController extends Controller
             'catatan' => 'nullable|array',
             'catatan.*' => 'nullable|string',
             'lampiran' => 'nullable|array', // Validasi array lampiran
-            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240', // Validasi tiap file
+            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,heic,heif,docx|max:10240', // Validasi tiap file
         ]);
 
         $adminUser = Auth::user();
@@ -252,10 +252,10 @@ class PengajuanController extends Controller
 
         $request->validate([
             'kendaraan_id' => 'required|exists:kendaraans,id',
-            'tipe' => 'required|in:komentar,revisi,catatan_admin',
+            'tipe' => 'required|in:komentar,revisi,catatan_admin,status_pengajuan,status_diproses,status_selesai,status_ditolak',
             'status_baru' => 'nullable|string',
             'catatan' => 'nullable|string|max:1000',
-            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120', // Max 5MB per file
+            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,heic,heif,doc,docx|max:5120',
         ]);
 
         $kendaraan = Kendaraan::findOrFail($request->kendaraan_id);
@@ -265,17 +265,27 @@ class PengajuanController extends Controller
             abort(403, 'Kendaraan tidak valid.');
         }
 
+        // Parse tipe: jika tipe berformat "status_xxx", extract status aslinya
+        $rawTipe = $request->tipe;
+        $resolvedTipe = $rawTipe;
+        $resolvedStatusBaru = $request->status_baru ?? $kendaraan->status;
+
+        if (str_starts_with($rawTipe, 'status_')) {
+            $resolvedStatusBaru = str_replace('status_', '', $rawTipe);
+            $resolvedTipe = 'catatan_admin'; // Normalkan tipe ke catatan_admin
+        }
+
         $adminUser = Auth::user();
-        if ($request->tipe === 'revisi') {
+        if ($resolvedTipe === 'revisi') {
             $aksiText = "Admin {$adminUser->name} meminta revisi dokumen";
-        } elseif ($request->tipe === 'komentar') {
+        } elseif ($resolvedTipe === 'komentar') {
             $aksiText = "Admin {$adminUser->name} menambahkan komentar";
         } else {
             $aksiText = "Admin {$adminUser->name} menambahkan catatan internal";
         }
 
-        if ($request->status_baru) {
-            $aksiText .= " (Terkait Status: " . ucfirst($request->status_baru) . ")";
+        if ($resolvedStatusBaru && $resolvedStatusBaru !== $kendaraan->status) {
+            $aksiText .= " (Terkait Status: " . ucfirst($resolvedStatusBaru) . ")";
         }
 
         // 1. Buat Log
@@ -283,8 +293,8 @@ class PengajuanController extends Controller
             'kendaraan_id' => $kendaraan->id,
             'user_id' => $adminUser->id,
             'aksi' => $aksiText,
-            'tipe' => $request->tipe,
-            'status_baru' => $request->status_baru ?? $kendaraan->status,
+            'tipe' => $resolvedTipe,
+            'status_baru' => $resolvedStatusBaru,
             'catatan' => $request->catatan,
         ]);
 
@@ -297,7 +307,18 @@ class PengajuanController extends Controller
             }
         }
 
-        return back()->with('success', 'Catatan admin berhasil disimpan ke log (Tidak merubah status riil kendaraan).');
+        // 3. Auto-update status kendaraan ke 'diproses' jika Samsat melakukan
+        //    aksi catatan_admin atau revisi dan kendaraan masih berstatus 'pengajuan'.
+        $isSamsat = $adminUser->hasRole('samsat')
+            || strcasecmp((string) $adminUser->unit_kerja, 'Samsat') === 0;
+
+        if ($isSamsat
+            && $kendaraan->status === 'pengajuan'
+            && in_array($resolvedTipe, ['catatan_admin', 'revisi'])) {
+            $kendaraan->update(['status' => 'diproses']);
+        }
+
+        return back()->with('success', 'Catatan admin berhasil disimpan ke log.');
     }
 
     /**

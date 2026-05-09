@@ -80,8 +80,9 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Budi Wajib Pajak',
                 'password' => Hash::make('12345678'),
-                'unit_kerja' => 'Wajib Pajak Semarang',
-                'jabatan' => 'Pemilik Kendaraan',
+                'unit' => 'Wajib Pajak',
+                'unit_kerja' => null,
+                'jabatan' => null,
                 'cabang_id' => $cabangSemarang->id,
             ]
         );

@@ -89,7 +89,7 @@
                 @endcan
 
                 {{-- == MENU UNTUK SUPERADMIN / ADMIN UTAMA (RBAC) == --}}
-                @canany(['view_menu_hak_akses', 'view_menu_akses_group', 'view_menu_pengguna', 'view_menu_cabang'])
+                @canany(['view_menu_hak_akses', 'view_menu_akses_group', 'view_menu_pengguna', 'view_menu_pengguna_wp', 'view_menu_pengguna_stakeholder', 'view_menu_cabang'])
                     <li class="nav-section">
                         <span class="sidebar-mini-icon">
                             <i class="fa fa-ellipsis-h"></i>
@@ -124,14 +124,23 @@
                     </li>
                     @endcan
 
-                    @can('view_menu_pengguna')
-                        <li class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                            <a href="{{ route('admin.users.index') }}">
-                                <i class="fas fa-users-cog"></i>
-                                <p>Pengguna</p>
+                    @canany(['view_menu_pengguna', 'view_menu_pengguna_wp'])
+                        <li class="nav-item {{ request()->routeIs('admin.users.wp.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.users.wp.index') }}">
+                                <i class="fas fa-users"></i>
+                                <p>Manajemen Pengguna</p>
                             </a>
                         </li>
-                    @endcan
+                    @endcanany
+
+                    @canany(['view_menu_pengguna', 'view_menu_pengguna_stakeholder'])
+                        <li class="nav-item {{ request()->routeIs('admin.users.stakeholder.*') || request()->routeIs('admin.users.index') || request()->routeIs('admin.users.create') || request()->routeIs('admin.users.edit') ? 'active' : '' }}">
+                            <a href="{{ route('admin.users.stakeholder.index') }}">
+                                <i class="fas fa-users-cog"></i>
+                                <p>Pemangku Kepentingan</p>
+                            </a>
+                        </li>
+                    @endcanany
                 @endcanany
 
                 <li class="nav-section">

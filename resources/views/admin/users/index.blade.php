@@ -1,6 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-bold mb-0">Manajemen Pengguna</h2>
+        <h2 class="fw-bold mb-0">
+            @if($type === 'wp')
+                Manajemen Pengguna (Wajib Pajak)
+            @else
+                Manajemen Pemangku Kepentingan
+            @endif
+        </h2>
     </x-slot>
 
     @if (session('success'))
@@ -19,18 +25,22 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex w-50">
+                <form method="GET"
+                    action="{{ route($type === 'wp' ? 'admin.users.wp.index' : 'admin.users.stakeholder.index') }}"
+                    class="d-flex w-50">
                     <div class="input-group">
                         <input type="text" name="search" class="form-control"
-                            placeholder="Cari nama, email, atau unit kerja..." value="{{ request('search') }}">
+                            placeholder="{{ $type === 'wp' ? 'Cari nama, email, no HP, atau domisili...' : 'Cari nama, email, atau unit kerja...' }}"
+                            value="{{ request('search') }}">
                         <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Cari</button>
                     </div>
                 </form>
-                <a href="{{ route('admin.users.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i>
-                    Tambah User
-                </a>
+                @if($type === 'stakeholder')
+                    <a href="{{ route('admin.users.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i>
+                        Tambah User
+                    </a>
+                @endif
             </div>
-
 
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -38,10 +48,16 @@
                         <tr>
                             <th>Nama</th>
                             <th>Email</th>
-                            <th>Jabatan</th>
-                            <th>Unit Kerja</th>
-                            <th>Cabang</th>
-                            <th>Akses Group</th>
+                            @if($type === 'wp')
+                                <th>No HP</th>
+                                <th>Domisili</th>
+                                <th>Tgl Daftar</th>
+                            @else
+                                <th>Jabatan</th>
+                                <th>Unit Kerja</th>
+                                <th>Cabang</th>
+                                <th>Akses Group</th>
+                            @endif
                             <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -50,20 +66,34 @@
                             <tr>
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
-                                <td><span class="fw-semibold">{{ $user->jabatan ?? '-' }}</span></td>
-                                <td><span class="badge bg-info text-dark">{{ $user->unit_kerja ?? 'N/A' }}</span></td>
-                                <td>
-                                    {{ $user->cabang?->nama ? $user->cabang->nama . ' (' . $user->cabang->wilayah . ')' : '-' }}
-                                </td>
-                                <td>
-                                    @foreach($user->roles as $role)
-                                        <span
-                                            class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $role->name)) }}</span>
-                                    @endforeach
-                                </td>
+                                @if($type === 'wp')
+                                    <td>{{ $user->no_hp ?? '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">{{ $user->domisiliRegency->name ?? '-' }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ $user->created_at->format('d M Y') }}</small>
+                                    </td>
+                                @else
+                                    <td><span class="fw-semibold">{{ $user->jabatan ?? '-' }}</span></td>
+                                    <td><span class="badge bg-info text-dark">{{ $user->unit_kerja ?? 'N/A' }}</span></td>
+                                    <td>
+                                        {{ $user->cabang?->nama ? $user->cabang->nama . ' (' . $user->cabang->wilayah . ')' : '-' }}
+                                    </td>
+                                    <td>
+                                        @foreach($user->roles as $role)
+                                            <span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $role->name)) }}</span>
+                                        @endforeach
+                                    </td>
+                                @endif
                                 <td class="text-center">
-                                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning btn-sm"
-                                        title="Edit"><i class="fas fa-edit"></i></a>
+                                    @if($type === 'wp')
+                                        <a href="{{ route('admin.users.editWp', $user) }}" class="btn btn-warning btn-sm"
+                                            title="Edit"><i class="fas fa-edit"></i></a>
+                                    @else
+                                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning btn-sm"
+                                            title="Edit"><i class="fas fa-edit"></i></a>
+                                    @endif
                                     <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline"
                                         onsubmit="return confirm('Yakin ingin menghapus user ini?');">
                                         @csrf
@@ -75,7 +105,9 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">Tidak ada data Pengguna.</td>
+                                <td colspan="{{ $type === 'wp' ? 6 : 7 }}" class="text-center text-muted py-4">
+                                    Tidak ada data {{ $type === 'wp' ? 'Wajib Pajak' : 'Pemangku Kepentingan' }}.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

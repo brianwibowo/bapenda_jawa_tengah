@@ -143,4 +143,15 @@ class AdminPengajuanVisibilityTest extends TestCase
 
         return $user;
     }
+
+    /**
+     * @return array<int, Cabang>
+     */
+    private function createCabangs(): array
+    {
+        return [
+            Cabang::create(['nama' => 'Samsat Cilacap', 'wilayah' => 'Cilacap']),
+            Cabang::create(['nama' => 'Samsat Pekalongan', 'wilayah' => 'Pekalongan']),
+        ];
+    }
 }
