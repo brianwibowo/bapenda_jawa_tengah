@@ -515,6 +515,8 @@ class PengajuanController extends Controller
             'tempat_sk' => 'required',
             'tanggal_sk' => 'required',
             'nama_direktur' => 'required',
+            'metode_penanda_tangan' => 'required',
+            'sk_pembebasan_ttd_basah' => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240',
         ]);
 
         $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
@@ -535,6 +537,7 @@ class PengajuanController extends Controller
             'tempat_sk' => strtoupper($request->tempat_sk),
             'tanggal_sk' => strtoupper($request->tanggal_sk),
             'nama_direktur' => strtoupper($request->nama_direktur),
+            'metode_penanda_tangan' => $request->metode_penanda_tangan,
             'data' => (object)[
                 'nama' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
                 'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
@@ -556,10 +559,61 @@ class PengajuanController extends Controller
                 'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
             ],
         ];
+        if ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah') && !$request->has('preview')) {
+            $log = $this->logSuratActionByKendaraanId(
+                $pengajuan,
+                $kendaraan->id,
+                'SK Pembebasan berhasil dibuat dan ditandatangani',
+                'Nomor Surat: ' . $request->nomor_surat_pembebasan,
+                $request->file('sk_pembebasan_ttd_basah')
+            );
+        }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
+        $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace(' ', '_', $request->nomor_surat_pembebasan) . '.pdf';
+        
 
-        return $pdf->stream('SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
+        if ($request->has('preview')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
+    }
+
+    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null): KendaraanLog
+    {
+        $log = KendaraanLog::create([
+            'kendaraan_id' => $kendaraan_id,
+            'user_id' => Auth::id(),
+            'aksi' => $actionLabel,
+            'status_baru' => $pengajuan->kendaraans->find($kendaraan_id)->status,
+            'tipe' => 'system',
+            'catatan' => $notes,
+        ]);
+        if ($file) {
+            $log->addMedia($file)->toMediaCollection("lampiran_log");
+        }
+        return $log;
+    }
+
+    private function logSuratAction(Pengajuan $pengajuan, string $actionLabel, string $notes, $file = null): array
+    {
+        $logArray = [];
+        foreach ($pengajuan->kendaraans as $kendaraan) {
+            $logArray[$kendaraan->id] = KendaraanLog::create([
+                'kendaraan_id' => $kendaraan->id,
+                'user_id' => Auth::id(),
+                'aksi' => $actionLabel,
+                'status_baru' => $kendaraan->status,
+                'tipe' => 'system',
+                'catatan' => $notes,
+            ]);
+            if ($file) {
+                $logArray[$kendaraan->id]->addMedia($file)->toMediaCollection("lampiran_log");
+            }
+        }
+
+        return $logArray;
     }
 }

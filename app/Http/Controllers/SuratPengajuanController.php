@@ -429,10 +429,10 @@ class SuratPengajuanController extends Controller
         });
     }
 
-    private function logSuratAction(Pengajuan $pengajuan, string $actionLabel, string $notes): void
+    private function logSuratAction(Pengajuan $pengajuan, string $actionLabel, string $notes, $file = null): void
     {
         foreach ($pengajuan->kendaraans as $kendaraan) {
-            KendaraanLog::create([
+            $logCurrent = KendaraanLog::create([
                 'kendaraan_id' => $kendaraan->id,
                 'user_id' => Auth::id(),
                 'aksi' => $actionLabel,
@@ -440,6 +440,9 @@ class SuratPengajuanController extends Controller
                 'tipe' => 'system',
                 'catatan' => $notes,
             ]);
+            if ($file) {
+                $logCurrent->addMedia($file)->toMediaCollection("lampiran_log");
+            }
         }
     }
 

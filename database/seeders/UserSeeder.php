@@ -14,6 +14,10 @@ class UserSeeder extends Seeder
         // Struktur Baru: unit_kerja membatasi lingkup data Instansi, role membatasi jabatan fitur.
         // Semua Password Dummy: 12345678
 
+        $cabangSemarang = Cabang::firstOrCreate(
+            ['nama' => 'Samsat kota semarang 1', 'wilayah' => 'Semarang']
+        );
+
         // === POLDA ===
         $poldaKepala = User::updateOrCreate(
             ['email' => 'polda_kepala@example.com'],
@@ -42,6 +46,7 @@ class UserSeeder extends Seeder
                 'name' => 'Admin Samsat Raya',
                 'password' => Hash::make('12345678'),
                 'unit_kerja' => 'Samsat',
+                'cabang_id' => $cabangSemarang->id,
             ]
         );
         $samsatAdmin->assignRole(['admin_instansi', 'samsat']);
@@ -69,9 +74,6 @@ class UserSeeder extends Seeder
         $jrKepala->assignRole(['kepala_instansi', 'jasa_raharja']);
 
         // === WAJIB PAJAK ===
-        $cabangSemarang = Cabang::firstOrCreate(
-            ['nama' => 'Samsat kota semarang 1', 'wilayah' => 'Semarang']
-        );
 
         $wp = User::updateOrCreate(
             ['email' => 'wp@example.com'],
