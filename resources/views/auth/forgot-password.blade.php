@@ -1,25 +1,33 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-dark mb-1">Lupa Password</h3>
+        <p class="text-muted small mb-0">
+            Masukkan email akun Anda. Jika terdaftar, kami akan mengirim tautan reset password.
+        </p>
     </div>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-auth-session-status class="mb-4 fw-bold p-3 rounded border border-success border-opacity-25" style="background-color: #d1e7dd; color: #0f5132;" :status="session('status')" />
 
     <form method="POST" action="{{ route('password.email') }}">
         @csrf
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="mb-4">
+            <label for="email" class="form-label fw-bold small text-dark">ALAMAT EMAIL</label>
+            <input id="email" class="form-control @error('email') is-invalid @enderror"
+                type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
+                placeholder="nama@email.com">
+            @error('email')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ route('login') }}" class="text-decoration-none small text-primary fw-semibold">
+                Kembali ke login
+            </a>
+            <button type="submit" class="btn btn-primary fw-bold px-4">
+                Kirim Link Reset
+            </button>
         </div>
     </form>
 </x-guest-layout>

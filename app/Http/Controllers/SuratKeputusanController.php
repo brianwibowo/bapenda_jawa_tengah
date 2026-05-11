@@ -85,14 +85,12 @@ class SuratKeputusanController extends Controller
         foreach ($pengajuan->kendaraans as $kendaraan) {
             if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
                 // Simpan log perubahan status
-                $logSk = new KendaraanLog([
-                    'kendaraan_id' => $kendaraan->id,
-                    'user_id' => Auth::id(),
-                    'aksi' => 'Surat Keputusan',
-                    'status_baru' => $kendaraan->status,
-                    'tipe' => 'system',
-                    'catatan' => 'Mengajukan Surat Keputusan Kendaraan Oleh ' . Auth::user()->name,
-                ]);
+                $logSk = $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $kendaraan->id,
+                    'Surat Keputusan',
+                    'Mengajukan Surat Keputusan Kendaraan Oleh ' . Auth::user()->name,
+                );
                 $logSk->created_at = $baseLogTime;
                 $logSk->updated_at = $baseLogTime;
                 $logSk->save();
@@ -115,14 +113,12 @@ class SuratKeputusanController extends Controller
                 if ($kendaraan->status == 'diproses') {
                     $kendaraan->update(['status' => 'selesai']);
                     // Simpan log untuk status selesai.
-                    $logSelesai = new KendaraanLog([
-                        'kendaraan_id' => $kendaraan->id,
-                        'user_id' => Auth::id(),
-                        'aksi' => 'Pengajuan Selesai',
-                        'status_baru' => 'selesai',
-                        'tipe' => 'system',
-                        'catatan' => 'Pengajuan Selesai Setelah Ketiga Surat Keputusan Ditetapkan.',
-                    ]);
+                    $logSelesai = $this->logSuratActionByKendaraanId(
+                        $pengajuan,
+                        $kendaraan->id,
+                        'Pengajuan Selesai',
+                        'Pengajuan Selesai Setelah Ketiga Surat Keputusan Ditetapkan.'
+                    );
                     // Record 1 second after the SK log so chronological order is explicit.
                     $logSelesai->created_at = $baseLogTime->copy()->addSecond();
                     $logSelesai->updated_at = $baseLogTime->copy()->addSecond();
@@ -137,4 +133,39 @@ class SuratKeputusanController extends Controller
             ->with('success', 'Surat Keputusan berhasil dibuat dan diajukan. Silakan lanjutkan proses persetujuan.');
     }
 
+    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null): KendaraanLog
+    {
+        $log = KendaraanLog::create([
+            'kendaraan_id' => $kendaraan_id,
+            'user_id' => Auth::id(),
+            'aksi' => $actionLabel,
+            'status_baru' => $pengajuan->kendaraans->find($kendaraan_id)->status,
+            'tipe' => 'system',
+            'catatan' => $notes,
+        ]);
+        if ($file) {
+            $log->addMedia($file)->toMediaCollection("lampiran_log");
+        }
+        return $log;
+    }
+
+    private function logSuratAction(Pengajuan $pengajuan, string $actionLabel, string $notes, $file = null): array
+    {
+        $logArray = [];
+        foreach ($pengajuan->kendaraans as $kendaraan) {
+            $logArray[$kendaraan->id] = KendaraanLog::create([
+                'kendaraan_id' => $kendaraan->id,
+                'user_id' => Auth::id(),
+                'aksi' => $actionLabel,
+                'status_baru' => $kendaraan->status,
+                'tipe' => 'system',
+                'catatan' => $notes,
+            ]);
+            if ($file) {
+                $logArray[$kendaraan->id]->addMedia($file)->toMediaCollection("lampiran_log");
+            }
+        }
+
+        return $logArray;
+    }
 }

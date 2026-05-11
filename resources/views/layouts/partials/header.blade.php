@@ -30,8 +30,8 @@
                         </div>
                         <span class="profile-username d-flex flex-column align-items-start ms-2">
                             <span class="fw-bold">{{ Auth::user()->name }}</span>
-                            <span class="badge bg-secondary"
-                                style="font-size: 0.65rem;"><i class="fas fa-id-badge me-1"></i>{{ Auth::user()->jabatan ?? 'Pegawai' }}</span>
+                            <span class="badge bg-secondary" style="font-size: 0.65rem;"><i
+                                    class="fas fa-id-badge me-1"></i>{{ Auth::user()->hasRole('wajib_pajak') ? 'Wajib Pajak' : (Auth::user()->jabatan ?? 'Pegawai') }}</span>
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-user animated fadeIn">
@@ -45,7 +45,7 @@
                                     <div class="u-text">
                                         <h4 class="mb-1">{{ Auth::user()->name }}</h4>
                                         <div class="text-muted small mb-1"><i class="fas fa-id-badge me-1"></i>
-                                            {{ Auth::user()->jabatan ?? 'Pegawai' }}</div>
+                                            {{ Auth::user()->hasRole('wajib_pajak') ? 'Wajib Pajak' : (Auth::user()->jabatan ?? 'Pegawai') }}</div>
                                         <p class="text-muted">{{ Auth::user()->email }}</p>
                                     </div>
                                 </div>

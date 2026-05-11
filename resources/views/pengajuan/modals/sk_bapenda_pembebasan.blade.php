@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form action="{{ route('admin.pengajuan.generate_sk_pembebasan', $pengajuan->id) }}" method="POST"
-                target="_blank">
+                target="_blank" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalSkRegidentLabel">Input Data Surat Keputusan Pembebasan</h5>
@@ -97,20 +97,93 @@
                             <small class="text-muted d-block mt-1">Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H.,
                                 M.H.</small>
                         </div>
+                    </div>
+                    <h6 class="fw-bold mb-3">Metode Penanda Tangan</h6>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">Pangkat / NRP</label>
-                            <input type="text" class="form-control" name="pangkat_direktur" required>
-                            <small class="text-muted d-block mt-1">Contoh: KOMISARIS BESAR POLISI NRP 680903</small>
+                            <label for="metode_penanda_tangan" class="form-label fw-bold">Metode Penanda Tangan</label>
+                            <select name="metode_penanda_tangan" id="metode_penanda_tangan" class="form-select" required>
+                                <option value="" selected>Pilih Metode Penanda Tangan </option>
+                                <option value="ttd_elektronik">TTD Elektronik</option>
+                                <option value="ttd_basah">TTD Basah</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" style="display:none;" id="sk_pembebasan_ttd_basah_container">
+                            <label class="form-label fw-bold">Upload SK (Setelah TTD Basah)</label>
+                            <div class="file-container" data-field="sk_pembebasan_ttd_basah"
+                                data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
+                                <div class="file-input-group mb-2">
+                                    <input type="file" class="form-control file-input" name="sk_pembebasan_ttd_basah"
+                                        accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" id="sk_pembebasan_ttd_basah" required>
+                                    <small class="text-muted file-preview"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3" style="display:none;" id="preview_pdf_container">
+                            <button type="button" class="btn btn-primary" id="btnPreviewPDF">Download Preview PDF</button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-success">
-                        <i class="fas fa-file-pdf me-1"></i> Generate PDF
+                        <i class="fas fa-file-pdf me-1"></i> Ajukan Surat
                     </button>
                 </div>
             </form>
         </div>
     </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+       const metodePenandaTangan = document.getElementById('metode_penanda_tangan');
+       metodePenandaTangan.addEventListener('change', function () {
+            if (this.value === 'ttd_basah') {
+                document.getElementById('preview_pdf_container').style.display = 'block';
+                document.getElementById('sk_pembebasan_ttd_basah_container').style.display = 'block';
+                document.getElementById('sk_pembebasan_ttd_basah').required = true;
+            } else {
+                document.getElementById('preview_pdf_container').style.display = 'none';
+                document.getElementById('sk_pembebasan_ttd_basah_container').style.display = 'none';
+                document.getElementById('sk_pembebasan_ttd_basah').required = false;
+            }
+       });
+
+       const btnPreviewPDF = document.getElementById('btnPreviewPDF');
+       btnPreviewPDF.addEventListener('click', function () {
+           const form = document.querySelector('#modalSkPembebasan form');
+           const formData = new FormData(form);
+           // Send 'preview' as form data so $request->has('preview') works in Laravel
+           formData.append('preview', '1');
+
+           const url = `{{ route('admin.pengajuan.generate_sk_pembebasan', $pengajuan->id) }}`;
+           fetch(url, {
+               method: 'POST',
+               body: formData,
+               headers: {
+                   'X-CSRF-TOKEN': '{{ csrf_token() }}'
+               }
+           })
+           .then(response => {
+               if (!response.ok) throw new Error('Request failed: ' + response.status);
+               return response.blob();
+           })
+           .then(blob => {
+               const blobUrl = URL.createObjectURL(blob);
+               const a = document.createElement('a');
+               a.href = blobUrl;
+               a.download = 'SK_PEMBEBASAN_PREVIEW.pdf';
+               document.body.appendChild(a);
+               a.click();
+               document.body.removeChild(a);
+               URL.revokeObjectURL(blobUrl);
+           })
+           .catch(error => {
+               console.error('Preview download failed:', error);
+               alert('Gagal mengunduh preview PDF. Silakan coba lagi.');
+           });
+       });
+    });
+    </script>
 </div>

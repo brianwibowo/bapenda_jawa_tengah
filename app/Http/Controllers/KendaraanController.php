@@ -58,21 +58,21 @@ class KendaraanController extends Controller
 
             // Validasi file (array, max 10MB)
             'surat_permohonan' => 'required|array|min:1',
-            'surat_permohonan.*' => 'required|mimes:pdf,docx|max:10240',
+            'surat_permohonan.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'surat_pernyataan' => 'required|array|min:1',
-            'surat_pernyataan.*' => 'required|mimes:pdf,docx|max:10240',
+            'surat_pernyataan.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'ktp' => 'required|array|min:1',
-            'ktp.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'ktp.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'bpkb' => 'required|array|min:1',
-            'bpkb.*' => 'required|mimes:pdf,docx|max:10240',
+            'bpkb.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'tbpkp' => 'required|array|min:1',
-            'tbpkp.*' => 'required|mimes:pdf,docx|max:10240',
+            'tbpkp.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'cek_fisik' => 'required|array|min:1',
-            'cek_fisik.*' => 'required|mimes:pdf,docx|max:10240',
+            'cek_fisik.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'foto_ranmor' => 'required|array|min:1',
-            'foto_ranmor.*' => 'required|image|max:10240',
+            'foto_ranmor.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'stnk' => 'required|array|min:1',
-            'stnk.*' => 'required|mimes:pdf,docx|max:10240',
+            'stnk.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
         ]);
 
         // 2. Pisahkan data Pemilik
@@ -191,21 +191,21 @@ class KendaraanController extends Controller
 
             // Validasi file opsional
             'surat_permohonan' => 'nullable|array',
-            'surat_permohonan.*' => 'required_with:surat_permohonan|mimes:pdf,docx|max:10240',
+            'surat_permohonan.*' => 'required_with:surat_permohonan|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'surat_pernyataan' => 'nullable|array',
-            'surat_pernyataan.*' => 'required_with:surat_pernyataan|mimes:pdf,docx|max:10240',
+            'surat_pernyataan.*' => 'required_with:surat_pernyataan|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'ktp' => 'nullable|array',
-            'ktp.*' => 'required_with:ktp|mimes:pdf,docx,jpg,png|max:10240',
+            'ktp.*' => 'required_with:ktp|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'bpkb' => 'nullable|array',
-            'bpkb.*' => 'required_with:bpkb|mimes:pdf,docx|max:10240',
+            'bpkb.*' => 'required_with:bpkb|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'tbpkp' => 'nullable|array',
-            'tbpkp.*' => 'required_with:tbpkp|mimes:pdf,docx|max:10240',
+            'tbpkp.*' => 'required_with:tbpkp|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'cek_fisik' => 'nullable|array',
-            'cek_fisik.*' => 'required_with:cek_fisik|mimes:pdf,docx|max:10240',
+            'cek_fisik.*' => 'required_with:cek_fisik|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'foto_ranmor' => 'nullable|array',
-            'foto_ranmor.*' => 'required_with:foto_ranmor|image|max:10240',
+            'foto_ranmor.*' => 'required_with:foto_ranmor|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'stnk' => 'nullable|array',
-            'stnk.*' => 'required_with:stnk|mimes:pdf,docx|max:10240',
+            'stnk.*' => 'required_with:stnk|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
         ]);
 
         // 2. Pisahkan & Update data Pemilik

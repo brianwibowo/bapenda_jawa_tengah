@@ -1,6 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-bold mb-0">Daftar Pengajuan</h2>
+        <h2 class="fw-bold mb-0">
+            Daftar Pengajuan
+            Anda{{ Auth::user()->hasRole('wajib_pajak') && Auth::user()->domisiliRegency ? ': ( ' . Auth::user()->domisiliRegency->name . ' )' : '' }}
+        </h2>
     </x-slot>
 
     {{-- Pesan Sukses/Error --}}
@@ -119,7 +122,8 @@
         <div class="card-header bg-white border-bottom">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-folder-open me-2"></i>Daftar Pengajuan
+                    <i class="fas fa-folder-open me-2"></i>Daftar
+                    Pengajuan{{ Auth::user()->hasRole('wajib_pajak') && Auth::user()->domisiliRegency ? ': ' . Auth::user()->domisiliRegency->name : '' }}
                 </h5>
                 <span class="badge bg-primary fs-6">
                     Total: {{ $pengajuans->total() }} pengajuan
@@ -132,6 +136,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="px-4 py-3">Nomor Pengajuan</th>
+                            <th class="px-4 py-3">Cabang / Wilayah</th>
                             <th class="px-4 py-3">Tanggal Masuk</th>
                             <th class="px-4 py-3">Update Terakhir</th>
                             <th class="px-4 py-3 text-center">Status</th>
@@ -143,6 +148,11 @@
                             <tr>
                                 <td class="px-4 py-3">
                                     <strong class="text-primary">{{ $pengajuan->nomor_pengajuan }}</strong>
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ $pengajuan->cabang?->nama ?? '-' }}
+                                    <br>
+                                    <small class="text-muted">{{ $pengajuan->cabang?->wilayah ?? '-' }}</small>
                                 </td>
                                 <td class="px-4 py-3">
                                     <i class="fas fa-calendar-alt text-muted me-2"></i>
@@ -187,7 +197,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="6" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                         <h5>Tidak ada data pengajuan</h5>

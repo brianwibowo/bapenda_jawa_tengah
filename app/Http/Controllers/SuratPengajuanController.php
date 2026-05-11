@@ -22,6 +22,9 @@ class SuratPengajuanController extends Controller
         ['instansi' => 'Polda', 'status' => 'pending']
     ];
 
+    private const TARGET_POLDA = 'polda';
+    private const TARGET_BAPENDA_JR = 'bapenda_jr';
+
     static public function getRegistry($type, $id, $data = null)
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
@@ -81,7 +84,7 @@ class SuratPengajuanController extends Controller
         $footer['reject'] = false; // Default tidak ada tombol tolak
 
         // 3. Logika Tombol Tolak (Muncul jika ada SP yang perlu direview)
-        if ($lastSp && in_array($progress, [1]) && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
+        if ($lastSp && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
              $footer['reject'] = [
                 'label' => 'Tolak',
                 'class' => 'btn-danger',
@@ -102,7 +105,7 @@ class SuratPengajuanController extends Controller
     private static function getAcceptButtonConfig($user, $pengajuan, $lastSp, $progress)
     {
         // Kondisi A: Progres 0 (Awal) - Samsat ajukan ke Polda
-        if (in_array($progress, [0, 2])){
+        if (in_array($progress, [0, 2])) {
             return [
                 'label' => 'Ajukan ke ' . ( $progress ? 'Bapenda & JR' : 'Polda'),
                 'class' => 'btn-primary',
@@ -111,7 +114,7 @@ class SuratPengajuanController extends Controller
         }
 
         // Kondisi B: Menunggu Persetujuan (Polda/Bapenda/JR)
-        if ($lastSp && !$lastSp->isFullyApproved()) {
+        if ($lastSp && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
             return [
                 'label' => 'Setujui Dokumen',
                 'class' => 'btn-success',
@@ -201,7 +204,6 @@ class SuratPengajuanController extends Controller
     public function ajukanPolda(Request $request, $id)
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
-        $suratpengajuan = $pengajuan->getSliceSuratPengajuanLastRejected();
         
         // Validasi: Pastikan pengajuan memiliki kendaraan dengan status "Diajukan"
         if (!$pengajuan->kendaraans->where('status', 'pengajuan')->count()) {
@@ -210,14 +212,9 @@ class SuratPengajuanController extends Controller
             // response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diajukan".'], 400);
         }
 
-        if ($suratpengajuan->contains(function ($sp) {
-            return collect($sp->persetujuan_unit_kerja ?? [])->contains(function ($item) {
-                return strcasecmp($item['instansi'] ?? '', 'Polda') === 0;
-            });
-        })) {
+        if ($this->hasPendingSuratByTarget($pengajuan, self::TARGET_POLDA)) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Pengajuan sudah diajukan ke Polda.');
-            //  response()->json(['message' => 'Pengajuan sudah diajukan ke Polda.'], 400);
+                ->with('error', 'Masih ada Surat Pengajuan ke Polda yang pending. Selesaikan dulu sebelum kirim ulang.');
         }
 
         // Update status kendaraan menjadi "Diajukan ke Polda"
@@ -243,6 +240,8 @@ class SuratPengajuanController extends Controller
             'persetujuan_unit_kerja' => $this->persetujuanPolda
         ]);
 
+        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Polda dibuat', 'Nomor SP: ' . $sp->nomor_sp);
+
 
         return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('success', 'Pengajuan berhasil diajukan ke Polda. Surat Pengajuan telah dibuat.');
@@ -251,7 +250,6 @@ class SuratPengajuanController extends Controller
     public function ajukanBapendaJr(Request $request, $id)
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
-        $suratpengajuan = $pengajuan->getSliceSuratPengajuanLastRejected();
         
         // Validasi: Pastikan pengajuan memiliki kendaraan dengan status "Diproses" ( sudah diverifikasi polda )
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
@@ -260,18 +258,9 @@ class SuratPengajuanController extends Controller
             // response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
         }
 
-        $sudahDiajukanKeBapendaAtauJr = $suratpengajuan->contains(function ($sp) {
-            return collect($sp->persetujuan_unit_kerja ?? [])->contains(function ($item) {
-                $instansi = $item['instansi'] ?? '';
-                return strcasecmp($instansi, 'Bapenda') === 0
-                    || strcasecmp($instansi, 'Jasa Raharja') === 0;
-            });
-        });
-
-        if ($sudahDiajukanKeBapendaAtauJr) {
+        if ($this->hasPendingSuratByTarget($pengajuan, self::TARGET_BAPENDA_JR)) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Pengajuan sudah diajukan ke Bapenda/Jasa Raharja.');
-            //  response()->json(['message' => 'Pengajuan sudah diajukan ke Bapenda/Jasa Raharja.'], 400);
+                ->with('error', 'Masih ada Surat Pengajuan ke Bapenda/Jasa Raharja yang pending. Selesaikan dulu sebelum kirim ulang.');
         }
 
         // Update status kendaraan menjadi "Diajukan ke Bapenda/JR"
@@ -296,6 +285,8 @@ class SuratPengajuanController extends Controller
             'tanggal_surat' => now(),
             'persetujuan_unit_kerja' => $this->persetujuanDefault
         ]);
+
+        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Bapenda/Jasa Raharja dibuat', 'Nomor SP: ' . $sp->nomor_sp);
 
         return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('success', 'Pengajuan berhasil diajukan ke Bapenda/Jasa Raharja. Surat Pengajuan telah dibuat.');
@@ -344,6 +335,12 @@ class SuratPengajuanController extends Controller
         $surat->persetujuan_unit_kerja = $persetujuan;
         $surat->save();
 
+        $this->logSuratAction(
+            $pengajuan,
+            'Surat Pengajuan ditolak oleh ' . Auth::user()->unit_kerja,
+            'Nomor SP: ' . $surat->nomor_sp
+        );
+
         return redirect()->route('admin.pengajuan.show', $surat->pengajuan_id)->with('success', 'Status berhasil diperbarui');
     }
 
@@ -386,6 +383,12 @@ class SuratPengajuanController extends Controller
         $surat->persetujuan_unit_kerja = $persetujuan;
         $surat->save();
 
+        $this->logSuratAction(
+            $pengajuan,
+            'Surat Pengajuan disetujui oleh ' . Auth::user()->unit_kerja,
+            'Nomor SP: ' . $surat->nomor_sp
+        );
+
         if ($surat->fresh()->isFullyApprovedByAll() && $surat->pengajuan->kendaraans()->where('status', 'pengajuan')->count()) {
             $surat->pengajuan->kendaraans()->update(['status' => 'diproses']);
         }
@@ -403,6 +406,44 @@ class SuratPengajuanController extends Controller
             }
         }
         return false; // Jika instansi tidak ditemukan
+    }
+
+    private function hasPendingSuratByTarget(Pengajuan $pengajuan, string $target): bool
+    {
+        $currentSp = $pengajuan->getCurrentSuratPengajuan();
+        if (!$currentSp || $currentSp->isFullyApproved() || $currentSp->isRejected()) {
+            return false;
+        }
+
+        $targetInstansi = match ($target) {
+            self::TARGET_POLDA => ['Polda'],
+            self::TARGET_BAPENDA_JR => ['Bapenda', 'Jasa Raharja'],
+            default => [],
+        };
+
+        return collect($currentSp->persetujuan_unit_kerja ?? [])->contains(function ($item) use ($targetInstansi) {
+            $instansi = $item['instansi'] ?? '';
+            $status = $item['status'] ?? null;
+
+            return in_array($instansi, $targetInstansi, true) && $status === 'pending';
+        });
+    }
+
+    private function logSuratAction(Pengajuan $pengajuan, string $actionLabel, string $notes, $file = null): void
+    {
+        foreach ($pengajuan->kendaraans as $kendaraan) {
+            $logCurrent = KendaraanLog::create([
+                'kendaraan_id' => $kendaraan->id,
+                'user_id' => Auth::id(),
+                'aksi' => $actionLabel,
+                'status_baru' => $kendaraan->status,
+                'tipe' => 'system',
+                'catatan' => $notes,
+            ]);
+            if ($file) {
+                $logCurrent->addMedia($file)->toMediaCollection("lampiran_log");
+            }
+        }
     }
 
 }

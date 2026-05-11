@@ -10,8 +10,8 @@
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 9.5pt;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
             line-height: 1.3;
             color: #000;
             margin: 0;
@@ -56,19 +56,17 @@
             <td class="tc">
                 <img src="{{ public_path('images/Logo-provinsi-jateng-warna.png') }}" style="height:65px;"><br>
                 <div class="header-kop">
-                    PEMERINTAH PROVINSI JAWA TENGAH<br>
-                    BADAN PENGELOLA PENDAPATAN DAERAH PROVINSI JAWA TENGAH
+                    PEMERINTAH PROVINSI JAWA TENGAH<br><br>
                 </div>
-                <hr style="border: 1px solid #000; margin-top: 5px;">
             </td>
         </tr>
     </table>
 
     <div class="title-box">
-        <div class="uc">KEPUTUSAN KEPALA BADAN PENGELOLA PENDAPATAN DAERAH<br>PROVINSI JAWA TENGAH</div>
+        <div class="uc">BADAN PENGELOLA PENDAPATAN DAERAH PROVINSI JAWA TENGAH<br>KEPUTUSAN KEPALA BADAN PENGELOLA PENDAPATAN DAERAH PROVINSI JAWA TENGAH<br>PROVINSI JAWA TENGAH</div>
         <div>NOMOR {{ $nomor_surat_pembebasan ?? '-' }}</div>
         <br>
-        <div class="uc">TENTANG<br>
+        <div class="uc">TENTANG<br><br>
             PEMBEBASAN ATAS POKOK DAN TUNGGAKAN PKB<br>
             SERTA SANKSI ADMINISTRASI PKB UNTUK KENDARAAN BERMOTOR<br>
             DENGAN NOMOR POLISI {{ $data->nrkb ?? '-' }}
@@ -205,27 +203,39 @@
         </tr>
     </table>
 
+    {{-- TTD - tetap di page 1 setelah MEMUTUSKAN --}}
     <table style="width: 100%; margin-top: 25px;">
         <tr>
-            <td style="width: 55%; vertical-align: top;">
-                <div style="font-size: 8pt; line-height: 1.2;">Salinan : Keputusan ini disampaikan kepada Yth:<br>1. Dirlantas Polda Jawa Tengah;<br>2. Inspektur Provinsi Jawa Tengah;<br>3. Kepala BPKAD Provinsi Jawa Tengah;<br>4. Kepala Biro Hukum SETDA Provinsi Jawa Tengah;<br>5. Kepala PT. Jasa Raharja Kantor Wilayah Jawa Tengah;<br>6. Sekretaris Bapenda Prov. Jateng;<br>7. Kepala Bidang Pajak Kendaraan Bermotor, Bapenda Provinsi Jawa Tengah;<br>8. Kepala Bidang Evaluasi dan Pembinaan, Bapenda Provinsi Jawa Tengah;<br>9. Kepala Bidang Pengolahan Data dan Pengembangan Pendapatan Bapenda Provinsi Jawa Tengah;<br>10. Kepala UPPD Kabupaten {{ $tempat_pembuat_surat_regident ?? '-' }};<br>11. Kepala Desa Ganduwetan, Kecamatan Ngadirejo, Kabupaten Temanggung;<br>12. Pertinggal.</div>
-            </td>
-            <td class="tc" style="width: 45%; vertical-align: top;">
+            <td style="width: 35%;"></td>
+            <!-- Tempat & Tanggal -->
+            <td style="width: 65%; vertical-align: top; text-align: left; padding-left: 1px;">
                 Ditetapkan di Semarang<br>
-                Pada Tanggal: {{ $tanggal_sk ?? '-' }}<br>
-                <div class="b uc" style="margin-top: 5px;">
-                    Kepala Badan Pengelola<br>Pendapatan Daerah<br>Provinsi Jawa Tengah
+                Pada Tanggal: {{ $tanggal_sk ?? '-' }}<br><br>
+                <div class="b uc" style="margin-top: 5px; text-align: center;">
+                    Kepala Badan Pengelola Pendapatan Daerah<br>Provinsi Jawa Tengah
                 </div>
                 <div class="stempel-container" style="height: 70px;">
                     <!-- <img src="{{ public_path('images/stempel_bapenda.png') }}" alt=""> -->
                 </div>
                 <br>
-                <div class="b" style="text-decoration: underline;">
+                <div class="b" style="text-align: center;">
                     {{ $nama_direktur ?? 'NADI SANTOSO' }}
                 </div>
             </td>
         </tr>
     </table>
+
+    {{-- Salinan - selalu di page 2 --}}
+    <table style="width: 100%; page-break-before: always;">
+        <tr>
+            <td style="vertical-align: top;">
+                <div style="font-size: 8pt; line-height: 1.2;">Salinan : Keputusan ini disampaikan kepada Yth:<br>1. Dirlantas Polda Jawa Tengah;<br>2. Inspektur Provinsi Jawa Tengah;<br>3. Kepala BPKAD Provinsi Jawa Tengah;<br>4. Kepala Biro Hukum SETDA Provinsi Jawa Tengah;<br>5. Kepala PT. Jasa Raharja Kantor Wilayah Jawa Tengah;<br>6. Sekretaris Bapenda Prov. Jateng;<br>7. Kepala Bidang Pajak Kendaraan Bermotor, Bapenda Provinsi Jawa Tengah;<br>8. Kepala Bidang Evaluasi dan Pembinaan, Bapenda Provinsi Jawa Tengah;<br>9. Kepala Bidang Pengolahan Data dan Pengembangan Pendapatan Bapenda Provinsi Jawa Tengah;<br>10. Kepala UPPD Kabupaten {{ $tempat_pembuat_surat_regident ?? '-' }};<br>11. Kepala Desa Ganduwetan, Kecamatan Ngadirejo, Kabupaten Temanggung;<br>12. Pertinggal.</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Garis Paling Akhir -->
+    <hr style="border: 1px solid #000; margin-top: 5px;">
 
 </body>
 </html>

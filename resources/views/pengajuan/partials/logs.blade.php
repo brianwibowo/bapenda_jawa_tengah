@@ -4,8 +4,57 @@
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
+        {{-- Display SK POLDA PDFs --}}
+        @php
+            $skPoldaPdfs = $pengajuan->getMedia('sk_polda_pdf');
+        @endphp
+        @if($skPoldaPdfs->isNotEmpty())
+            <div class="mb-4">
+                <h5 class="mb-3">Dokumen SK POLDA</h5>
+                <div class="row">
+                    @foreach($skPoldaPdfs as $pdf)
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
+                                    <h6 class="card-title">{{ $pdf->name }}</h6>
+                                    <p class="card-text small text-muted">
+                                        Dibuat: {{ $pdf->created_at->format('d M Y H:i') }}
+                                    </p>
+                                    @php
+                                        // Build a safe URL: if host is localhost or 127.0.0.1, force port 8000
+                                        $originalUrl = $pdf->getUrl();
+                                        $viewUrl = $originalUrl;
+                                        $downloadUrl = $originalUrl;
+                                        $parts = @parse_url($originalUrl);
+                                        if ($parts && isset($parts['host']) && in_array($parts['host'], ['localhost', '127.0.0.1'])) {
+                                            $scheme = isset($parts['scheme']) ? $parts['scheme'] : 'http';
+                                            $host = $parts['host'];
+                                            $port = 8000;
+                                            $path = isset($parts['path']) ? $parts['path'] : '';
+                                            $query = isset($parts['query']) ? ('?'.$parts['query']) : '';
+                                            $fragment = isset($parts['fragment']) ? ('#'.$parts['fragment']) : '';
+                                            $viewUrl = $scheme.'://'.$host.':'.$port.$path.$query.$fragment;
+                                            $downloadUrl = $viewUrl;
+                                        }
+                                    @endphp
+                                    <a href="{{ $viewUrl }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i> Lihat PDF
+                                    </a>
+                                    <a href="{{ $downloadUrl }}" download class="btn btn-sm btn-outline-secondary ms-1">
+                                        <i class="fas fa-download me-1"></i> Unduh
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            <hr>
+        @endif
+
         <div class="mb-3 d-flex justify-content-end align-items-center">
-            <div>
+            <div class="d-flex justify-content-end gap-2 w-100">
                 @if(!empty($admin) && $admin)
                     @php
                     $isAdmin = !empty($admin) && $admin;
@@ -26,10 +75,8 @@
                             $hasSuratAction = false; // Tidak ada aksi surat yang tersedia
                         }
                     }
-                    
-                @endphp
+                    @endphp
 
-                <div class="d-flex justify-content-end gap-2 w-100">
                     {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
                     @if($hasSuratAction)
                         <button class="btn btn-outline-primary" 
@@ -38,16 +85,15 @@
                         </button>
                     @endif
 
-                    <a href="{{ !empty($admin) && $admin ? route('admin.pengajuan.pilih_sk', $pengajuan->id) : route('pengajuan.pilih_sk', $pengajuan->id) }}" class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;">
+                    <a href="{{ route('admin.pengajuan.pilih_sk', $pengajuan->id) }}" class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;">
                         <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
                     </a>
-
-                    {{-- Tombol Buat Aksi (Selalu Ada untuk Log) --}}
-                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
-                    </button>
-                </div>
                 @endif
+
+                {{-- Tombol Buat Aksi (Selalu Ada untuk Log - Admin & Wajib Pajak) --}}
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
+                    <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
+                </button>
             </div>
         </div>
 
@@ -67,10 +113,24 @@
                 </thead>
                 <tbody>
                     @php
-                        $allLogs = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->sortByDesc('created_at');
+                        $allLogs = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->sortByDesc('created_at')->values();
+                        $logPerPage = 7;
+                        $logCurrentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage('log_page');
+                        $logCurrentItems = $allLogs->forPage($logCurrentPage, $logPerPage);
+                        $paginatedLogs = new \Illuminate\Pagination\LengthAwarePaginator(
+                            $logCurrentItems,
+                            $allLogs->count(),
+                            $logPerPage,
+                            $logCurrentPage,
+                            [
+                                'path' => request()->url(),
+                                'pageName' => 'log_page',
+                            ]
+                        );
+                        $paginatedLogs->appends(request()->except('log_page'));
                     @endphp
 
-                    @forelse($allLogs as $log)
+                    @forelse($paginatedLogs as $log)
                         <tr data-kendaraan-id="{{ $log->kendaraan_id }}">
                             <td class="text-nowrap">{{ $log->created_at->timezone('Asia/Jakarta')->format('H:i, d M Y') }}</td>
                             <td><strong>{{ $log->kendaraan->nrkb ?? 'N/A' }}</strong></td>
@@ -83,9 +143,9 @@
                             <td>
                                 @if(in_array($log->tipe, ['komentar', 'admin']))
                                     <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
-                                @elseif($log->status_bar === 'selesai' || $log->tipe === 'system')
+                                @elseif($log->status_baru === 'selesai' || $log->tipe === 'system')
                                     @php
-                                        $status_pascal = str($log->status_bar === 'selesai' ? $log->status_baru : $log->tipe)->studly();
+                                        $status_pascal = str($log->status_baru === 'selesai' ? $log->status_baru : $log->tipe)->studly();
                                     @endphp
                                     <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
                                 @elseif($log->tipe === 'revisi')
@@ -122,6 +182,11 @@
                 </tbody>
             </table>
         </div>
+        @if($paginatedLogs->hasPages())
+            <div class="mt-3">
+                {{ $paginatedLogs->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     </div>
 </div>
 
@@ -142,7 +207,7 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Kendaraan</label>
+                            <label class="form-label">Pilih Kendaraan</label>
                             <select name="kendaraan_id" id="modalKendaraanSelect" class="form-select" required>
                                 @foreach($pengajuan->kendaraans as $kend)
                                     <option value="{{ $kend->id }}">{{ $kend->nrkb }} — {{ $kend->merk_kendaraan }}</option>
@@ -155,8 +220,8 @@
                                 <label class="form-label">Tipe Aksi / Label Status</label>
                                 <select name="tipe" class="form-select" required>
                                     <optgroup label="Hanya Tambah Catatan">
-                                        <option value="catatan_admin">Catatan Internal Admin (Hanya teks log)</option>
-                                        <option value="komentar">Komentar Biasa</option>
+                                        <option value="catatan_admin">Catatan Internal Admin</option>
+                                        <option value="komentar">Komentar</option>
                                         <option value="revisi">Meminta Revisi Dokumen</option>
                                     </optgroup>
                                     <optgroup label="Menandai Perubahan Tindakan (Tidak merubah status asli kendaraan)">
@@ -189,7 +254,7 @@
                             <label class="form-label fw-bold"><i class="fas fa-paperclip me-1"></i> Lampiran Dokumen Tambahan/Revisi</label>
                             <div id="fileInputsContainer">
                                 <div class="input-group mb-2 file-input-row">
-                                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png">
+                                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif">
                                     <button type="button" class="btn btn-outline-danger btn-remove-file"><i class="fas fa-times"></i></button>
                                 </div>
                             </div>
@@ -229,7 +294,7 @@
                 const newRow = document.createElement('div');
                 newRow.className = 'input-group mb-2 file-input-row';
                 newRow.innerHTML = `
-                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png">
+                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif">
                     <button type="button" class="btn btn-outline-danger btn-remove-file"><i class="fas fa-times"></i></button>
                 `;
                 container.appendChild(newRow);

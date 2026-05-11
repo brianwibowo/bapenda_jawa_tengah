@@ -34,23 +34,43 @@
     </div>
 
     <div class="mb-3">
-        <label for="jabatan" class="form-label fw-bold">Jabatan</label>
-        <input id="jabatan" name="jabatan" type="text" class="form-control bg-light"
-            value="{{ old('jabatan', $user->jabatan) }}" readonly>
-        <small class="text-muted">Hubungi admin untuk mengubah jabatan Anda.</small>
+        <label for="no_hp" class="form-label fw-bold">Nomor HP (WhatsApp)</label>
+        <input id="no_hp" name="no_hp" type="text" class="form-control @error('no_hp') is-invalid @enderror"
+            value="{{ old('no_hp', $user->no_hp) }}" required>
+        @error('no_hp')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
     </div>
 
-    <div class="mb-3">
-        <label for="unit_kerja" class="form-label fw-bold">Unit Kerja</label>
-        <input id="unit_kerja" name="unit_kerja" type="text" class="form-control bg-light"
-            value="{{ old('unit_kerja', $user->unit_kerja) }}" readonly>
-        <small class="text-muted">Hubungi admin untuk mengubah lokasi unit kerja Anda.</small>
-    </div>
+    @if($user->hasRole('wajib_pajak'))
+        {{-- Wajib Pajak: tampilkan domisili read-only, sembunyikan jabatan & unit kerja --}}
+        <div class="mb-3">
+            <label class="form-label fw-bold">Domisili (Kab/Kota)</label>
+            <input type="text" class="form-control bg-light" 
+                value="{{ $user->domisiliRegency->name ?? '-' }}" readonly>
+            <small class="text-muted">Hubungi admin jika ingin mengubah data domisili Anda.</small>
+        </div>
+    @else
+        {{-- Non-WP: tampilkan jabatan & unit kerja --}}
+        <div class="mb-3">
+            <label for="jabatan" class="form-label fw-bold">Jabatan</label>
+            <input id="jabatan" name="jabatan" type="text" class="form-control bg-light"
+                value="{{ old('jabatan', $user->jabatan) }}" readonly>
+            <small class="text-muted">Hubungi admin untuk mengubah jabatan Anda.</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="unit_kerja" class="form-label fw-bold">Unit Kerja</label>
+            <input id="unit_kerja" name="unit_kerja" type="text" class="form-control bg-light"
+                value="{{ old('unit_kerja', $user->unit_kerja) }}" readonly>
+            <small class="text-muted">Hubungi admin untuk mengubah lokasi unit kerja Anda.</small>
+        </div>
+    @endif
 
     <div class="mb-4">
         <label for="profile_photo" class="form-label fw-bold">Foto Profil (Opsional)</label>
         <input id="profile_photo" name="profile_photo" type="file"
-            class="form-control @error('profile_photo') is-invalid @enderror" accept="image/*">
+            class="form-control @error('profile_photo') is-invalid @enderror" accept="image/*,.heic,.heif">
         @error('profile_photo')
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror

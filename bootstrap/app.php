@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         
+        // Trust all proxies (Docker network + native Nginx reverse proxy)
+        // This ensures Laravel reads X-Forwarded-Proto and generates correct HTTPS URLs
+        $middleware->trustProxies(at: '*');
+        
         // TAMBAHKAN BLOK KODE INI
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

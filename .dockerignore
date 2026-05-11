@@ -1,0 +1,50 @@
+# ── Version Control ──
+.git
+.gitignore
+.gitattributes
+
+# ── IDE & Editor ──
+.idea
+.vscode
+.fleet
+.nova
+.zed
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php
+.editorconfig
+
+# ── Docker (prevent recursive copy) ──
+docker-compose.yml
+docker-compose.override.yml
+
+# ── CI/CD ──
+.github
+
+# ── Dependencies (installed during build) ──
+node_modules
+vendor
+
+# ── Build artifacts (built during build) ──
+public/build
+public/hot
+
+# ── Development files ──
+tests
+phpunit.xml
+.phpunit.cache
+.phpunit.result.cache
+*.md
+*.txt
+*.log
+.DS_Store
+Thumbs.db
+
+# ── Environment (secrets) ──
+.env
+.env.backup
+.env.production
+
+# ── Storage keys ──
+storage/*.key
+storage/pail

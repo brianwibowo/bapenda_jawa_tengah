@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppNotification;
 use App\Models\Cabang;
 use App\Models\Pengajuan;
 use App\Models\Kendaraan;
 use App\Models\KendaraanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PengajuanController extends Controller
 {
@@ -20,13 +23,20 @@ class PengajuanController extends Controller
         $status = $request->query('status');
         $search = $request->query('search');
         $selectedCabang = $request->query('cabang_id');
+        $user = Auth::user();
+        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
 
         $query = Pengajuan::with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
             ->withCount('kendaraans')
             ->latest('updated_at');
 
-        if (Auth::user()->cabang_id) {
-            $query->where('cabang_id', Auth::user()->cabang_id);
+        if ($isSamsat) {
+            // Samsat wajib terbatas ke cabang/wilayah sendiri.
+            if (!$user->cabang_id) {
+                abort(403, 'Akun Samsat belum ditetapkan ke cabang/wilayah.');
+            }
+
+            $query->where('cabang_id', $user->cabang_id);
         } elseif ($selectedCabang) {
             $query->where('cabang_id', $selectedCabang);
         }
@@ -42,7 +52,9 @@ class PengajuanController extends Controller
                 $q->where('nomor_pengajuan', 'like', "%{$search}%")
                     ->orWhereHas('kendaraans', function ($sq) use ($search) {
                         $sq->where('nrkb', 'like', "%{$search}%")
-                            ->orWhere('nama_pemilik', 'like', "%{$search}%");
+                            ->orWhereHas('pemilik', function ($ownerQuery) use ($search) {
+                                $ownerQuery->where('nama_pemilik', 'like', "%{$search}%");
+                            });
                     });
             });
         }
@@ -50,7 +62,7 @@ class PengajuanController extends Controller
         $branches = Cabang::orderBy('wilayah', 'asc')->get();
         $pengajuans = $query->paginate(10)->withQueryString();
 
-        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang'));
+        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang', 'isSamsat'));
     }
 
     /**
@@ -128,7 +140,7 @@ class PengajuanController extends Controller
             'catatan' => 'nullable|array',
             'catatan.*' => 'nullable|string',
             'lampiran' => 'nullable|array', // Validasi array lampiran
-            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240', // Validasi tiap file
+            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,heic,heif,docx|max:10240', // Validasi tiap file
         ]);
 
         $adminUser = Auth::user();
@@ -230,7 +242,10 @@ class PengajuanController extends Controller
 
     private function authorizeBranch(Pengajuan $pengajuan): void
     {
-        if (Auth::user()->cabang_id && $pengajuan->cabang_id !== Auth::user()->cabang_id) {
+        $user = Auth::user();
+        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+
+        if ($isSamsat && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
             abort(403, 'Akses ditolak: cabang berbeda.');
         }
     }
@@ -240,10 +255,10 @@ class PengajuanController extends Controller
 
         $request->validate([
             'kendaraan_id' => 'required|exists:kendaraans,id',
-            'tipe' => 'required|in:komentar,revisi,catatan_admin',
+            'tipe' => 'required|in:komentar,revisi,catatan_admin,status_pengajuan,status_diproses,status_selesai,status_ditolak',
             'status_baru' => 'nullable|string',
             'catatan' => 'nullable|string|max:1000',
-            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120', // Max 5MB per file
+            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,heic,heif,doc,docx|max:5120',
         ]);
 
         $kendaraan = Kendaraan::findOrFail($request->kendaraan_id);
@@ -253,17 +268,27 @@ class PengajuanController extends Controller
             abort(403, 'Kendaraan tidak valid.');
         }
 
+        // Parse tipe: jika tipe berformat "status_xxx", extract status aslinya
+        $rawTipe = $request->tipe;
+        $resolvedTipe = $rawTipe;
+        $resolvedStatusBaru = $request->status_baru ?? $kendaraan->status;
+
+        if (str_starts_with($rawTipe, 'status_')) {
+            $resolvedStatusBaru = str_replace('status_', '', $rawTipe);
+            $resolvedTipe = 'catatan_admin'; // Normalkan tipe ke catatan_admin
+        }
+
         $adminUser = Auth::user();
-        if ($request->tipe === 'revisi') {
+        if ($resolvedTipe === 'revisi') {
             $aksiText = "Admin {$adminUser->name} meminta revisi dokumen";
-        } elseif ($request->tipe === 'komentar') {
+        } elseif ($resolvedTipe === 'komentar') {
             $aksiText = "Admin {$adminUser->name} menambahkan komentar";
         } else {
             $aksiText = "Admin {$adminUser->name} menambahkan catatan internal";
         }
 
-        if ($request->status_baru) {
-            $aksiText .= " (Terkait Status: " . ucfirst($request->status_baru) . ")";
+        if ($resolvedStatusBaru && $resolvedStatusBaru !== $kendaraan->status) {
+            $aksiText .= " (Terkait Status: " . ucfirst($resolvedStatusBaru) . ")";
         }
 
         // 1. Buat Log
@@ -271,8 +296,8 @@ class PengajuanController extends Controller
             'kendaraan_id' => $kendaraan->id,
             'user_id' => $adminUser->id,
             'aksi' => $aksiText,
-            'tipe' => $request->tipe,
-            'status_baru' => $request->status_baru ?? $kendaraan->status,
+            'tipe' => $resolvedTipe,
+            'status_baru' => $resolvedStatusBaru,
             'catatan' => $request->catatan,
         ]);
 
@@ -285,7 +310,18 @@ class PengajuanController extends Controller
             }
         }
 
-        return back()->with('success', 'Catatan admin berhasil disimpan ke log (Tidak merubah status riil kendaraan).');
+        // 3. Auto-update status kendaraan ke 'diproses' jika Samsat melakukan
+        //    aksi catatan_admin atau revisi dan kendaraan masih berstatus 'pengajuan'.
+        $isSamsat = $adminUser->hasRole('samsat')
+            || strcasecmp((string) $adminUser->unit_kerja, 'Samsat') === 0;
+
+        if ($isSamsat
+            && $kendaraan->status === 'pengajuan'
+            && in_array($resolvedTipe, ['catatan_admin', 'revisi'])) {
+            $kendaraan->update(['status' => 'diproses']);
+        }
+
+        return back()->with('success', 'Catatan admin berhasil disimpan ke log.');
     }
 
     /**
@@ -387,11 +423,154 @@ class PengajuanController extends Controller
 
         // Generate PDF
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_penghapusan_regident', $dataPdf);
-        
-        // Atur ukuran dan orientasi kertas (bisa diset di view CSS juga, tapi ini untuk memastikan)
         $pdf->setPaper('a4', 'portrait');
 
+        $filename   = 'SK_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . Str::uuid() . '.pdf';
+        $storagePath = 'sk/' . $filename;
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+
+        // Catat log
+        $this->logSuratActionByKendaraanId(
+            $pengajuan,
+            $kendaraan->id,
+            'SK Penghapusan Regident berhasil diterbitkan',
+            'Nomor Surat: ' . $request->nomor_surat,
+        );
+
+        // Dispatch WA notification (non-blocking, non-fatal)
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp) {
+            try {
+                SendWhatsAppNotification::dispatch(
+                    pengajuan:    $pengajuan,
+                    kendaraan:    $kendaraan,
+                    skType:       'regident',
+                    pdfUrl:       $pdfUrlAbsolute,
+                    localPdfPath: Storage::disk('public')->path($storagePath),
+                    wpPhone:      $wpUser->no_hp,
+                    wpName:       $wpUser->name,
+                    nrkb:         $kendaraan->nrkb,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident): ' . $e->getMessage());
+            }
+        }
+
         return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
+    }
+
+    /**
+     * Generate PDF Surat Keputusan POLDA (Lampiran Surat Kapolda)
+     */
+    public function generateSkPolda(Request $request)
+    {
+        $request->validate([
+            'pengajuan_id' => 'required|exists:pengajuans,id',
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+            'nomor_surat' => 'required|string',
+            'nama_pembuat' => 'required|string',
+            'tempat' => 'required|string',
+            'tanggal_keluar' => 'required|string',
+            'nama_direktur' => 'required|string',
+            'pangkat_direktur' => 'required|string',
+        ]);
+
+        $pengajuan = Pengajuan::findOrFail($request->pengajuan_id);
+        $this->authorizeBranch($pengajuan);
+
+        // Ambil kendaraan yang dipilih
+        $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
+
+        if (!$kendaraan) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        // Siapkan data untuk PDF
+        $dataPdf = [
+            'kendaraan' => $kendaraan,
+            'data' => (object)[
+                'nrkb' => strtoupper($kendaraan->nrkb ?? '-'),
+                'nama' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
+                'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
+                'jenis_model' => strtoupper(($kendaraan->jenis_kendaraan ?? '-') . '/' . ($kendaraan->model_kendaraan ?? '-')),
+                'merek_tipe' => strtoupper(($kendaraan->merk_kendaraan ?? '-') . '/' . ($kendaraan->tipe_kendaraan ?? '-')),
+                'tahun' => $kendaraan->tahun_pembuatan ?? '-',
+                'isi_silinder' => strtoupper($kendaraan->isi_silinder ?? '-'),
+                'bahan_bakar' => strtoupper($kendaraan->jenis_bahan_bakar ?? '-'),
+                'no_rangka' => strtoupper($kendaraan->nomor_rangka ?? '-'),
+                'no_mesin' => strtoupper($kendaraan->nomor_mesin ?? '-'),
+                'warna' => strtoupper($kendaraan->warna_kendaraan ?? '-'),
+                'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
+            ],
+            'nomor_surat' => $request->nomor_surat,
+            'nama_pembuat' => $request->nama_pembuat,
+            'tempat' => $request->tempat,
+            'tanggal_keluar' => $request->tanggal_keluar,
+            'nama_direktur' => $request->nama_direktur,
+            'pangkat_direktur' => $request->pangkat_direktur,
+        ];
+
+        // Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_polda', $dataPdf);
+        
+        $pdf->setPaper('a4', 'portrait');
+
+        // Save PDF to storage temporarily
+        $pdfContent = $pdf->output();
+        $filename = 'SK_POLDA_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf';
+        $tempPath = storage_path('app/temp/' . $filename);
+        
+        // Ensure temp directory exists
+        if (!file_exists(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+        
+        file_put_contents($tempPath, $pdfContent);
+
+        // Add PDF to pengajuan media
+        $pengajuan->addMedia($tempPath)
+            ->usingName($filename)
+            ->usingFileName($filename)
+            ->toMediaCollection('sk_polda_pdf');
+
+        // Create log entry
+        $kendaraan->logs()->create([
+            'user_id' => auth()->id(),
+            'aksi' => 'SK POLDA berhasil dibuat dan disimpan',
+            'tipe' => 'system',
+            'status_baru' => 'sk_polda_created',
+            'catatan' => 'Nomor Surat: ' . $request->nomor_surat,
+        ]);
+
+        // Note: Media library moves the file, so no need to unlink
+
+        // Ambil URL publik dari media yang baru disimpan
+        $media = $pengajuan->getMedia('sk_polda_pdf')->last();
+        $pdfUrlAbsolute = $media ? $media->getFullUrl() : null;
+        $localPdfPath = $media ? $media->getPath() : null;
+
+        // Dispatch WA notification (non-blocking, non-fatal)
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp && $pdfUrlAbsolute && $localPdfPath) {
+            try {
+                SendWhatsAppNotification::dispatch(
+                    pengajuan:    $pengajuan,
+                    kendaraan:    $kendaraan,
+                    skType:       'polda',
+                    pdfUrl:       $pdfUrlAbsolute,
+                    localPdfPath: $localPdfPath,
+                    wpPhone:      $wpUser->no_hp,
+                    wpName:       $wpUser->name,
+                    nrkb:         $kendaraan->nrkb,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Polda): ' . $e->getMessage());
+            }
+        }
+
+        // Stream the PDF to browser
+        return $pdf->stream($filename);
     }
 
     /**
@@ -414,7 +593,8 @@ class PengajuanController extends Controller
             'tempat_sk' => 'required',
             'tanggal_sk' => 'required',
             'nama_direktur' => 'required',
-            'pangkat_direktur' => 'required',
+            'metode_penanda_tangan' => 'required',
+            'sk_pembebasan_ttd_basah' => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240',
         ]);
 
         $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
@@ -435,7 +615,7 @@ class PengajuanController extends Controller
             'tempat_sk' => strtoupper($request->tempat_sk),
             'tanggal_sk' => strtoupper($request->tanggal_sk),
             'nama_direktur' => strtoupper($request->nama_direktur),
-            'pangkat_direktur' => strtoupper($request->pangkat_direktur),
+            'metode_penanda_tangan' => $request->metode_penanda_tangan,
             'data' => (object)[
                 'nama' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
                 'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
@@ -457,12 +637,102 @@ class PengajuanController extends Controller
                 'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
             ],
         ];
-
-        // return view('pdf.sk_bapenda_pembebasan', $dataPdf);
+        
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
+        $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace('/','_',str_replace(' ', '_', $request->nomor_surat_pembebasan)) . '.pdf';
+        
+        
 
-        return $pdf->stream('SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
+        if (!$request->has('preview')) {
+            if ($request->metode_penanda_tangan === 'ttd_elektronik') {
+                $pdfContent = $pdf->output();
+                $tempPath = storage_path('app/temp/' . $filename);
+                
+                // Ensure temp directory exists
+                if (!file_exists(storage_path('app/temp'))) {
+                    mkdir(storage_path('app/temp'), 0755, true);
+                }
+                
+                file_put_contents($tempPath, $pdfContent);
+            }
+            
+            $log = $this->logSuratActionByKendaraanId(
+                $pengajuan,
+                $kendaraan->id,
+                'SK Pembebasan berhasil dibuat dan ditandatangani',
+                'Nomor Surat: ' . $request->nomor_surat_pembebasan,
+                ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah')) ? $request->file('sk_pembebasan_ttd_basah') : $tempPath
+            );
+
+        }
+
+        if ($request->has('preview')) {
+            return $pdf->download($filename);
+        }
+
+        // Simpan PDF ke storage publik
+        $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+
+
+        // Dispatch WA notification (non-blocking, non-fatal)
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp) {
+            try {
+                SendWhatsAppNotification::dispatch(
+                    pengajuan:    $pengajuan,
+                    kendaraan:    $kendaraan,
+                    skType:       'pembebasan',
+                    pdfUrl:       $pdfUrlAbsolute,
+                    localPdfPath: Storage::disk('public')->path($storagePath),
+                    wpPhone:      $wpUser->no_hp,
+                    wpName:       $wpUser->name,
+                    nrkb:         $kendaraan->nrkb,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
+            }
+        }
+
+        return $pdf->stream($filename);
+    }
+
+    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null): KendaraanLog
+    {
+        $log = KendaraanLog::create([
+            'kendaraan_id' => $kendaraan_id,
+            'user_id' => Auth::id(),
+            'aksi' => $actionLabel,
+            'status_baru' => $pengajuan->kendaraans->find($kendaraan_id)->status,
+            'tipe' => 'system',
+            'catatan' => $notes,
+        ]);
+        if ($file) {
+            $log->addMedia($file)->toMediaCollection("lampiran_log");
+        }
+        return $log;
+    }
+
+    private function logSuratAction(Pengajuan $pengajuan, string $actionLabel, string $notes, $file = null): array
+    {
+        $logArray = [];
+        foreach ($pengajuan->kendaraans as $kendaraan) {
+            $logArray[$kendaraan->id] = KendaraanLog::create([
+                'kendaraan_id' => $kendaraan->id,
+                'user_id' => Auth::id(),
+                'aksi' => $actionLabel,
+                'status_baru' => $kendaraan->status,
+                'tipe' => 'system',
+                'catatan' => $notes,
+            ]);
+            if ($file) {
+                $logArray[$kendaraan->id]->addMedia($file)->toMediaCollection("lampiran_log");
+            }
+        }
+
+        return $logArray;
     }
 
     /**

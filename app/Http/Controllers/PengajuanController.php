@@ -29,6 +29,7 @@ class PengajuanController extends Controller
     {
             $query = Pengajuan::where('user_id', Auth::id())
                 ->with('kendaraans:id,pengajuan_id,status')
+                ->with('cabang:id,nama,wilayah')
                 ->withCount('kendaraans')
                 ->latest();
 
@@ -130,22 +131,21 @@ class PengajuanController extends Controller
 
             // Validasi file (array, max 10MB)
             'surat_permohonan'   => 'required|array|min:1',
-            // all document uploads now accept PDF, DOCX, JPG, PNG
-            'surat_permohonan.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'surat_permohonan.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'surat_pernyataan'   => 'required|array|min:1',
-            'surat_pernyataan.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'surat_pernyataan.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'ktp'   => 'required|array|min:1',
-            'ktp.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'ktp.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'bpkb'   => 'required|array|min:1',
-            'bpkb.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'bpkb.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'tbpkp'   => 'required|array|min:1',
-            'tbpkp.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'tbpkp.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'cek_fisik'   => 'required|array|min:1',
-            'cek_fisik.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'cek_fisik.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'foto_ranmor'   => 'required|array|min:1',
-            'foto_ranmor.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'foto_ranmor.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             'stnk'   => 'required|array|min:1',
-            'stnk.*' => 'required|mimes:pdf,docx,jpg,png|max:10240',
+            'stnk.*' => 'required|mimes:pdf,docx,jpg,jpeg,png,heic,heif|max:10240',
             
             // ID kendaraan untuk update (opsional)
             'kendaraan_id' => 'nullable|exists:kendaraans,id',
@@ -350,7 +350,7 @@ class PengajuanController extends Controller
             'aksi' => 'nullable|string|max:255',
             'status_baru' => 'nullable|in:pengajuan,diproses,selesai,ditolak',
             'catatan' => 'nullable|string',
-            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,png,jpeg,doc,docx|max:5120',
+            'lampiran.*' => 'nullable|file|mimes:pdf,jpg,png,jpeg,heic,heif,doc,docx|max:5120',
         ]);
 
         $kendaraan = $pengajuan->kendaraans->firstWhere('id', $validated['kendaraan_id']);

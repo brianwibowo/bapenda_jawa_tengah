@@ -77,7 +77,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // == ROUTE KHUSUS PENGELOLA RBAC & USER ==
     // ===========================================================
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::middleware(['permission:view_menu_pengguna|view_menu_akses_group|view_menu_hak_akses|view_menu_cabang'])->group(function () {
+        Route::middleware(['permission:view_menu_pengguna|view_menu_pengguna_wp|view_menu_pengguna_stakeholder|view_menu_akses_group|view_menu_hak_akses|view_menu_cabang'])->group(function () {
+            // User management — split WP vs Stakeholder
+            Route::get('users/wajib-pajak', [UserController::class, 'indexWp'])->name('users.wp.index');
+            Route::get('users/stakeholder', [UserController::class, 'indexStakeholder'])->name('users.stakeholder.index');
+            Route::get('users/{user}/edit-wp', [UserController::class, 'editWp'])->name('users.editWp');
+            Route::put('users/{user}/update-wp', [UserController::class, 'updateWp'])->name('users.updateWp');
+
+            // Existing resource routes (create/edit/destroy for stakeholders)
             Route::resource('users', UserController::class);
             Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class)->except(['show', 'edit', 'update']);
             Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
@@ -116,15 +123,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware(['signed']);
     });
 
-    // =================================================================
-    // == ROUTE SHARED (PENULIS & ADMIN) UNTUK KENDARAAN INDIVIDUAL ==
-    // =================================================================
     Route::prefix('kendaraan')->name('kendaraan.')->group(function () {
         Route::get('/{kendaraan}', [KendaraanController::class, 'show'])->name('show');
         Route::get('/{kendaraan}/edit', [KendaraanController::class, 'edit'])->name('edit');
         Route::patch('/{kendaraan}', [KendaraanController::class, 'update'])->name('update');
         Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
     });
+
+    // Generate PDF routes (shared between user and admin)
+    Route::post('/pengajuan/generate-sk-polda', [AdminPengajuanController::class, 'generateSkPolda'])->name('pengajuan.generate_sk_polda');
 
 
     // API untuk mendapatkan tiket akses (UUID/Signature di URL)
@@ -193,4 +200,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->stream('hapus-regident-test.pdf');
     })->name('test.pdf.hapus-regident');
 
+    Route::get('/preview-sk-polda', function () {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_polda', [
+            'data' => (object) [
+                'nrkb' => 'AA 9660 QE',
+                'nama' => 'PEMERINTAH DESA GANDUWETAN',
+                'alamat' => 'JL. JUMO NO 03 KEL NGADIREJO KAB TEMANGGUNG',
+                'jenis_model' => 'SEPEDA MOTOR/RODA TIGA',
+                'merek_tipe' => 'VIAR/V15 RL',
+                'tahun' => '2015',
+                'isi_silinder' => '150 CC',
+                'bahan_bakar' => 'BENSIN',
+                'no_rangka' => 'MGRVR15TAFL207980',
+                'no_mesin' => 'YX161FMG15207805',
+                'warna' => 'BIRU',
+                'no_bpkb' => 'M01679715',
+            ],
+            'nama_direktur' => 'M. PRATAMA, S.I.K., S.H., M.H.',
+            'pangkat_direktur' => 'KOMISARIS BESAR POLISI NRP 68090397',
+        ]);
+        return $pdf->setPaper('a4', 'portrait')->stream('SK_POLDA.pdf');
+    })->name('preview.sk.polda');
 });
