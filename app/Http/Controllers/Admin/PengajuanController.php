@@ -464,4 +464,60 @@ class PengajuanController extends Controller
 
         return $pdf->stream('SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
     }
+
+    /**
+     * Generate PDF SK Penghapusan Regident (Freysia)
+     */
+    public function generateSkPenghapusanRegident(Request $request, Pengajuan $pengajuan)
+    {
+        $this->authorizeBranch($pengajuan);
+
+        $request->validate([
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+            'nomor_surat' => 'required',
+            'sifat' => 'required|string',
+            'lampiran' => 'required|string',
+            'hal' => 'required|string',
+            'provinsi' => 'required|string',
+            'nama_penandatangan' => 'required|string',
+            'jabatan' => 'required|string',
+            'nip' => 'required|string',
+        ]);
+
+        // Ambil data kendaraan berdasarkan pilihan dari form modal
+        $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
+
+        if (!$kendaraan) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        // Gabungkan data dari database dengan inputan form
+        $dataPdf = [
+            // Dari Form Input
+            'nomor_surat' => strtoupper($request->nomor_surat),
+            'sifat' => strtoupper($request->sifat),
+            'lampiran' => strtoupper($request->lampiran),
+            'hal' => strtoupper($request->hal),
+            'provinsi' => strtoupper($request->provinsi),
+            'nama_penandatangan' => strtoupper($request->nama_penandatangan),
+            'jabatan' => strtoupper($request->jabatan),
+            'nip' => strtoupper($request->nip),
+            
+            // Dari Database Kendaraan/Pemilik
+            'nama_pemohon' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
+            'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
+            'nomor_identitas' => strtoupper(optional($kendaraan->pemilik)->nik_pemilik ?? '-'),
+            'nama_resident' => strtoupper($kendaraan->nrkb ?? '-'),
+            'id_resident' => strtoupper($kendaraan->nrkb ?? '-'),
+            'alasan' => 'Permintaan penghapusan data oleh pemilik'
+        ];
+
+        // Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.view_hapus-regident', $dataPdf);
+        
+        // Atur ukuran dan orientasi kertas (bisa diset di view CSS juga, tapi ini untuk memastikan)
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
+    }
 }
