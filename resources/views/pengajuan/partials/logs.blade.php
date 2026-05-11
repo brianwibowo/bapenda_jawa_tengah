@@ -54,7 +54,7 @@
         @endif
 
         <div class="mb-3 d-flex justify-content-end align-items-center">
-            <div>
+            <div class="d-flex justify-content-end gap-2 w-100">
                 @if(!empty($admin) && $admin)
                     @php
                     $isAdmin = !empty($admin) && $admin;
@@ -75,10 +75,8 @@
                             $hasSuratAction = false; // Tidak ada aksi surat yang tersedia
                         }
                     }
-                    
-                @endphp
+                    @endphp
 
-                <div class="d-flex justify-content-end gap-2 w-100">
                     {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
                     @if($hasSuratAction)
                         <button class="btn btn-outline-primary" 
@@ -87,16 +85,15 @@
                         </button>
                     @endif
 
-                    <a href="{{ !empty($admin) && $admin ? route('admin.pengajuan.pilih_sk', $pengajuan->id) : route('pengajuan.pilih_sk', $pengajuan->id) }}" class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;">
+                    <a href="{{ route('admin.pengajuan.pilih_sk', $pengajuan->id) }}" class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;">
                         <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
                     </a>
-
-                    {{-- Tombol Buat Aksi (Selalu Ada untuk Log) --}}
-                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
-                        <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
-                    </button>
-                </div>
                 @endif
+
+                {{-- Tombol Buat Aksi (Selalu Ada untuk Log - Admin & Wajib Pajak) --}}
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
+                    <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
+                </button>
             </div>
         </div>
 
@@ -210,7 +207,7 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Kendaraan</label>
+                            <label class="form-label">Pilih Kendaraan</label>
                             <select name="kendaraan_id" id="modalKendaraanSelect" class="form-select" required>
                                 @foreach($pengajuan->kendaraans as $kend)
                                     <option value="{{ $kend->id }}">{{ $kend->nrkb }} — {{ $kend->merk_kendaraan }}</option>
@@ -223,8 +220,8 @@
                                 <label class="form-label">Tipe Aksi / Label Status</label>
                                 <select name="tipe" class="form-select" required>
                                     <optgroup label="Hanya Tambah Catatan">
-                                        <option value="catatan_admin">Catatan Internal Admin (Hanya teks log)</option>
-                                        <option value="komentar">Komentar Biasa</option>
+                                        <option value="catatan_admin">Catatan Internal Admin</option>
+                                        <option value="komentar">Komentar</option>
                                         <option value="revisi">Meminta Revisi Dokumen</option>
                                     </optgroup>
                                     <optgroup label="Menandai Perubahan Tindakan (Tidak merubah status asli kendaraan)">
@@ -257,7 +254,7 @@
                             <label class="form-label fw-bold"><i class="fas fa-paperclip me-1"></i> Lampiran Dokumen Tambahan/Revisi</label>
                             <div id="fileInputsContainer">
                                 <div class="input-group mb-2 file-input-row">
-                                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png">
+                                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif">
                                     <button type="button" class="btn btn-outline-danger btn-remove-file"><i class="fas fa-times"></i></button>
                                 </div>
                             </div>
@@ -297,7 +294,7 @@
                 const newRow = document.createElement('div');
                 newRow.className = 'input-group mb-2 file-input-row';
                 newRow.innerHTML = `
-                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png">
+                    <input type="file" name="lampiran[]" class="form-control" accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif">
                     <button type="button" class="btn btn-outline-danger btn-remove-file"><i class="fas fa-times"></i></button>
                 `;
                 container.appendChild(newRow);

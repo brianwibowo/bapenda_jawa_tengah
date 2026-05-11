@@ -1,6 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-bold mb-0">Daftar Pengajuan</h2>
+        <h2 class="fw-bold mb-0">
+            Daftar Pengajuan
+            Anda{{ Auth::user()->hasRole('wajib_pajak') && Auth::user()->domisiliRegency ? ': ( ' . Auth::user()->domisiliRegency->name . ' )' : '' }}
+        </h2>
     </x-slot>
 
     {{-- Pesan Sukses/Error --}}
@@ -119,7 +122,8 @@
         <div class="card-header bg-white border-bottom">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-folder-open me-2"></i>Daftar Pengajuan
+                    <i class="fas fa-folder-open me-2"></i>Daftar
+                    Pengajuan{{ Auth::user()->hasRole('wajib_pajak') && Auth::user()->domisiliRegency ? ': ' . Auth::user()->domisiliRegency->name : '' }}
                 </h5>
                 <span class="badge bg-primary fs-6">
                     Total: {{ $pengajuans->total() }} pengajuan

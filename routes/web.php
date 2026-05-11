@@ -76,7 +76,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // == ROUTE KHUSUS PENGELOLA RBAC & USER ==
     // ===========================================================
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::middleware(['permission:view_menu_pengguna|view_menu_akses_group|view_menu_hak_akses|view_menu_cabang'])->group(function () {
+        Route::middleware(['permission:view_menu_pengguna|view_menu_pengguna_wp|view_menu_pengguna_stakeholder|view_menu_akses_group|view_menu_hak_akses|view_menu_cabang'])->group(function () {
+            // User management — split WP vs Stakeholder
+            Route::get('users/wajib-pajak', [UserController::class, 'indexWp'])->name('users.wp.index');
+            Route::get('users/stakeholder', [UserController::class, 'indexStakeholder'])->name('users.stakeholder.index');
+            Route::get('users/{user}/edit-wp', [UserController::class, 'editWp'])->name('users.editWp');
+            Route::put('users/{user}/update-wp', [UserController::class, 'updateWp'])->name('users.updateWp');
+
+            // Existing resource routes (create/edit/destroy for stakeholders)
             Route::resource('users', UserController::class);
             Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class)->except(['show', 'edit', 'update']);
             Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);

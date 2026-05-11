@@ -9,6 +9,7 @@ use Spatie\Permission\Traits\HasRoles; // <-- Ini sudah benar
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Cabang;
+use App\Models\Regency;
 use App\Models\KendaraanLog; // <-- Tambahkan ini untuk jaga-jaga
 
 /**
@@ -62,10 +63,15 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'no_hp',
         'password',
         'unit_kerja', // Ini sudah benar
+        'unit',
         'jabatan',
         'cabang_id',
+        'domisili_regency_id',
+        'taxpayer_statement_accepted_at',
+        'law_compliance_statement_accepted_at',
         'profile_photo_path',
     ];
 
@@ -87,6 +93,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'taxpayer_statement_accepted_at' => 'datetime',
+        'law_compliance_statement_accepted_at' => 'datetime',
     ];
 
     /**
@@ -112,5 +120,10 @@ class User extends Authenticatable
     public function cabang(): BelongsTo
     {
         return $this->belongsTo(Cabang::class);
+    }
+
+    public function domisiliRegency(): BelongsTo
+    {
+        return $this->belongsTo(Regency::class, 'domisili_regency_id', 'id');
     }
 }

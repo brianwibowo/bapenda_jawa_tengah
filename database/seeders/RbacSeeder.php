@@ -58,11 +58,17 @@ class RbacSeeder extends Seeder
             ['name' => 'edit_cabang', 'group_name' => 'Cabang'],
             ['name' => 'delete_cabang', 'group_name' => 'Cabang'],
 
-            // Pengguna (Admin)
+            // Pengguna (Admin) — Legacy
             ['name' => 'view_menu_pengguna', 'group_name' => 'Pengguna'],
             ['name' => 'create_pengguna', 'group_name' => 'Pengguna'],
             ['name' => 'edit_pengguna', 'group_name' => 'Pengguna'],
             ['name' => 'delete_pengguna', 'group_name' => 'Pengguna'],
+
+            // Pengguna WP (Split)
+            ['name' => 'view_menu_pengguna_wp', 'group_name' => 'Pengguna WP'],
+
+            // Pemangku Kepentingan (Split)
+            ['name' => 'view_menu_pengguna_stakeholder', 'group_name' => 'Pemangku Kepentingan'],
         ];
 
         // Bersihkan izin lama untuk menghindari duplikasi kotor saat seeder dijalankan ulang
