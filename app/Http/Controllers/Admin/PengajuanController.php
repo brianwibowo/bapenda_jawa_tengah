@@ -676,18 +676,6 @@ class PengajuanController extends Controller
         Storage::disk('public')->put($storagePath, $pdf->output());
         $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
 
-        // Catat log & lampirkan file TTD basah jika ada
-        $uploadedFile = ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah'))
-            ? $request->file('sk_pembebasan_ttd_basah')
-            : null;
-
-        $this->logSuratActionByKendaraanId(
-            $pengajuan,
-            $kendaraan->id,
-            'SK Pembebasan berhasil diterbitkan',
-            'Nomor Surat: ' . $request->nomor_surat_pembebasan,
-            $uploadedFile,
-        );
 
         // Dispatch WA notification (non-blocking, non-fatal)
         $wpUser = $pengajuan->user;
