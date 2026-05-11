@@ -9,6 +9,7 @@ use App\Models\Kendaraan;
 use App\Models\KendaraanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PengajuanController extends Controller
 {
@@ -559,20 +560,35 @@ class PengajuanController extends Controller
                 'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
             ],
         ];
-        if ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah') && !$request->has('preview')) {
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
+        $pdf->setPaper('a4', 'portrait');
+        $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace('/','_',str_replace(' ', '_', $request->nomor_surat_pembebasan)) . '.pdf';
+        
+        
+
+        if (!$request->has('preview')) {
+            if ($request->metode_penanda_tangan === 'ttd_elektronik') {
+                $pdfContent = $pdf->output();
+                $tempPath = storage_path('app/temp/' . $filename);
+                
+                // Ensure temp directory exists
+                if (!file_exists(storage_path('app/temp'))) {
+                    mkdir(storage_path('app/temp'), 0755, true);
+                }
+                
+                file_put_contents($tempPath, $pdfContent);
+            }
+            
             $log = $this->logSuratActionByKendaraanId(
                 $pengajuan,
                 $kendaraan->id,
                 'SK Pembebasan berhasil dibuat dan ditandatangani',
                 'Nomor Surat: ' . $request->nomor_surat_pembebasan,
-                $request->file('sk_pembebasan_ttd_basah')
+                ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah')) ? $request->file('sk_pembebasan_ttd_basah') : $tempPath
             );
-        }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
-        $pdf->setPaper('a4', 'portrait');
-        $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace(' ', '_', $request->nomor_surat_pembebasan) . '.pdf';
-        
+        }
 
         if ($request->has('preview')) {
             return $pdf->download($filename);
