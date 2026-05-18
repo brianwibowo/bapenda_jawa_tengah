@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardController;
@@ -107,6 +108,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/pengajuan/{pengajuan}/pilih-sk', [AdminPengajuanController::class, 'pilihSk'])->name('pengajuan.pilih_sk');
             Route::post('/pengajuan/{pengajuan}/generate-sk-regident', [AdminPengajuanController::class, 'generateSkRegident'])->name('pengajuan.generate_sk_regident');
             Route::post('/pengajuan/{pengajuan}/generate-sk-pembebasan', [AdminPengajuanController::class, 'generateSkPembebasan'])->name('pengajuan.generate_sk_pembebasan');
+            Route::post('/pengajuan/{pengajuan}/generate-sk-penghapusan-regident', [AdminPengajuanController::class, 'generateSkPenghapusanRegident'])->name('pengajuan.generate_sk_penghapusan_regident');
         });
 
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
@@ -184,6 +186,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
         return $pdf->setPaper('a4', 'portrait')->stream('SK_PENGHAPUSAN_REGIDENT.pdf');
     })->name('preview.sk.regident');
+
+    // Test route for Hapus Regident PDF
+    Route::get('/test-pdf-hapus-regident', function () {
+        $data = [
+            'nomor' => 'HR-001/2026',
+            'nama_pemohon' => 'John Doe',
+            'alamat' => 'Jl. Sudirman No. 123, Semarang',
+            'nomor_identitas' => '1234567890123456',
+            'nama_resident' => 'Jane Smith',
+            'id_resident' => 'RES-2026-001',
+            'alasan' => 'Permintaan penghapusan data oleh pemilik'
+        ];
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.view_hapus-regident', $data)
+            ->setPaper('a4', 'portrait')
+            ->stream('hapus-regident-test.pdf');
+    })->name('test.pdf.hapus-regident');
 
     Route::get('/preview-sk-polda', function () {
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_polda', [

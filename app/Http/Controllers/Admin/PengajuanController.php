@@ -646,9 +646,35 @@ class PengajuanController extends Controller
                 'no_bpkb' => strtoupper($kendaraan->nomor_bpkb ?? '-'),
             ],
         ];
+        
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
-        $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace(' ', '_', $request->nomor_surat_pembebasan) . '.pdf';
+        $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace('/','_',str_replace(' ', '_', $request->nomor_surat_pembebasan)) . '.pdf';
+        
+        
+
+        if (!$request->has('preview')) {
+            if ($request->metode_penanda_tangan === 'ttd_elektronik') {
+                $pdfContent = $pdf->output();
+                $tempPath = storage_path('app/temp/' . $filename);
+                
+                // Ensure temp directory exists
+                if (!file_exists(storage_path('app/temp'))) {
+                    mkdir(storage_path('app/temp'), 0755, true);
+                }
+                
+                file_put_contents($tempPath, $pdfContent);
+            }
+            
+            $log = $this->logSuratActionByKendaraanId(
+                $pengajuan,
+                $kendaraan->id,
+                'SK Pembebasan berhasil dibuat dan ditandatangani',
+                'Nomor Surat: ' . $request->nomor_surat_pembebasan,
+                ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah')) ? $request->file('sk_pembebasan_ttd_basah') : $tempPath
+            );
+
+        }
 
         if ($request->has('preview')) {
             return $pdf->download($filename);
@@ -659,18 +685,6 @@ class PengajuanController extends Controller
         Storage::disk('public')->put($storagePath, $pdf->output());
         $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
 
-        // Catat log & lampirkan file TTD basah jika ada
-        $uploadedFile = ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah'))
-            ? $request->file('sk_pembebasan_ttd_basah')
-            : null;
-
-        $this->logSuratActionByKendaraanId(
-            $pengajuan,
-            $kendaraan->id,
-            'SK Pembebasan berhasil diterbitkan',
-            'Nomor Surat: ' . $request->nomor_surat_pembebasan,
-            $uploadedFile,
-        );
 
         // Dispatch WA notification (non-blocking, non-fatal)
         $wpUser = $pengajuan->user;
@@ -728,5 +742,61 @@ class PengajuanController extends Controller
         }
 
         return $logArray;
+    }
+
+    /**
+     * Generate PDF SK Penghapusan Regident (Freysia)
+     */
+    public function generateSkPenghapusanRegident(Request $request, Pengajuan $pengajuan)
+    {
+        $this->authorizeBranch($pengajuan);
+
+        $request->validate([
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+            'nomor_surat' => 'required',
+            'sifat' => 'required|string',
+            'lampiran' => 'required|string',
+            'hal' => 'required|string',
+            'provinsi' => 'required|string',
+            'nama_penandatangan' => 'required|string',
+            'jabatan' => 'required|string',
+            'nip' => 'required|string',
+        ]);
+
+        // Ambil data kendaraan berdasarkan pilihan dari form modal
+        $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
+
+        if (!$kendaraan) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        // Gabungkan data dari database dengan inputan form
+        $dataPdf = [
+            // Dari Form Input
+            'nomor_surat' => strtoupper($request->nomor_surat),
+            'sifat' => strtoupper($request->sifat),
+            'lampiran' => strtoupper($request->lampiran),
+            'hal' => strtoupper($request->hal),
+            'provinsi' => strtoupper($request->provinsi),
+            'nama_penandatangan' => strtoupper($request->nama_penandatangan),
+            'jabatan' => strtoupper($request->jabatan),
+            'nip' => strtoupper($request->nip),
+            
+            // Dari Database Kendaraan/Pemilik
+            'nama_pemohon' => strtoupper(optional($kendaraan->pemilik)->nama_pemilik ?? '-'),
+            'alamat' => strtoupper(optional($kendaraan->pemilik)->alamat_pemilik ?? '-'),
+            'nomor_identitas' => strtoupper(optional($kendaraan->pemilik)->nik_pemilik ?? '-'),
+            'nama_resident' => strtoupper($kendaraan->nrkb ?? '-'),
+            'id_resident' => strtoupper($kendaraan->nrkb ?? '-'),
+            'alasan' => 'Permintaan penghapusan data oleh pemilik'
+        ];
+
+        // Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.view_hapus-regident', $dataPdf);
+        
+        // Atur ukuran dan orientasi kertas (bisa diset di view CSS juga, tapi ini untuk memastikan)
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
     }
 }

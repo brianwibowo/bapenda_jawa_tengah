@@ -53,8 +53,9 @@
                 </button>
             </div>
             <div class="col-md-6 col-lg-4">
-                <button class="btn w-100 py-3 fw-bold text-dark shadow-sm hover-shadow"
-                    style="background-color: #FEC014; border: none; font-size: 14px;">
+                <button type="button" class="btn w-100 py-3 fw-bold text-dark shadow-sm hover-shadow"
+                    style="background-color: #FEC014; border: none; font-size: 14px;"
+                    data-bs-toggle="modal" data-bs-target="#modalSkPenghapusanRegident">
                     <i class="fas fa-file-excel mb-2 fs-3 d-block text-center"></i>
                     SK PENGHAPUSAN REGIDENT (FREYSIA)
                 </button>
@@ -66,4 +67,5 @@
     @include('pengajuan.modals.sk_regident')
     @include('pengajuan.modals.sk_polda')
     @include('pengajuan.modals.sk_bapenda_pembebasan')
+    @include('pengajuan.modals.sk_penghapusan_regident')
 </x-app-layout>
