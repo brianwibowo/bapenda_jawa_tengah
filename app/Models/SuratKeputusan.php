@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 
 /**
@@ -34,13 +34,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereUserId($value)
  * @mixin \Eloquent
  *//*  */
-class SuratKeputusan extends Model
+class SuratKeputusan extends Model implements HasMedia
 {
 
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
-        'pengajuan_id', 'user_id', 'unit_kerja',
+        'pengajuan_id', 'kendaraan_id', 'user_id', 'unit_kerja',
         'nomor_sk', 'perihal', 'isi_putusan', 'tanggal_ditetapkan'
     ];
 
@@ -52,7 +52,12 @@ class SuratKeputusan extends Model
         return $this->belongsTo(Pengajuan::class);
     }
 
+    public function kendaraan() {
+        return $this->belongsTo(Kendaraan::class);
+    }
+
     public function pembuat() {
         return $this->belongsTo(User::class, 'user_id');
     }
+
 }

@@ -61,8 +61,13 @@ class PengajuanController extends Controller
 
         $branches = Cabang::orderBy('wilayah', 'asc')->get();
         $pengajuans = $query->paginate(10)->withQueryString();
+        // Hitung total surat tiap pengajuan
+        $progress = [];
+        foreach ($pengajuans as $pengajuan) {
+            $progress[$pengajuan->id] = $pengajuan->getTotalSurat();
+        }
 
-        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang', 'isSamsat'));
+        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang', 'isSamsat', 'progress'));
     }
 
     /**
@@ -104,6 +109,7 @@ class PengajuanController extends Controller
                 ? collect($lastSp->persetujuan_unit_kerja)->firstWhere('instansi', $user->unit_kerja)
                 : null;
             if ($statusInstansi && $statusInstansi['status'] == 'pending') {
+                error_log("User {$user->name} ({$user->unit_kerja}) dapat merespon SP karena statusnya masih pending.");
                 $permissionSurat['canRespondSP'] = true;
             }
         }

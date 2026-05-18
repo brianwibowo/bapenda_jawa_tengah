@@ -120,6 +120,26 @@ class Kendaraan extends Model implements HasMedia
         return $this->belongsTo(Pemilik::class);
     }
 
+    public function suratKeputusan()
+    {
+        return $this->hasMany(SuratKeputusan::class);
+    }
+
+    public function suratKeputusans()
+    {
+        return $this->suratKeputusan();
+    }
+
+    public function suratPengajuan()
+    {
+        return $this->hasMany(SuratPengajuan::class);
+    }
+
+    public function suratPengajuans()
+    {
+        return $this->suratPengajuan();
+    }
+
     /**
      * Relasi: Satu Kendaraan punya BANYAK Log Histori.
      */

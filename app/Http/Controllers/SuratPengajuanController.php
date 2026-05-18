@@ -6,7 +6,6 @@ use App\Models\SuratPengajuan;
 use App\Models\KendaraanLog;
 use App\Models\Pengajuan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,6 +23,22 @@ class SuratPengajuanController extends Controller
 
     private const TARGET_POLDA = 'polda';
     private const TARGET_BAPENDA_JR = 'bapenda_jr';
+
+    private function userHasRole($user, string $role): bool
+    {
+        return method_exists($user, 'hasRole') && $user->hasRole($role);
+    }
+
+    private function normalizeUnitKerja(?string $unitKerja): string
+    {
+        return match (strtolower(trim((string) $unitKerja))) {
+            'jr', 'jasa raharja', 'jasa_raharja' => 'Jasa Raharja',
+            'bapenda' => 'Bapenda',
+            'polda' => 'Polda',
+            'samsat' => 'Samsat',
+            default => trim((string) $unitKerja),
+        };
+    }
 
     static public function getRegistry($type, $id, $data = null)
     {
@@ -59,8 +74,15 @@ class SuratPengajuanController extends Controller
      */
     private static function determinePermission($user, $progress)
     {
-        if ($user->unit_kerja == 'Polda') return ['create_pdf_pengajuan', 'create_pdf_balasan_samsat', 'create_pdf_pengajuan_bapenda_jr'];
-        else if ($user->unit_kerja == 'Bapenda' || $user->unit_kerja == 'Jasa Raharja') return ['create_pdf_balasan_polda'];
+        $unitKerja = match (strtolower(trim((string) $user->unit_kerja))) {
+            'jr', 'jasa raharja', 'jasa_raharja' => 'Jasa Raharja',
+            'bapenda' => 'Bapenda',
+            'polda' => 'Polda',
+            default => trim((string) $user->unit_kerja),
+        };
+
+        if ($unitKerja == 'Polda') return ['create_pdf_pengajuan', 'create_pdf_balasan_samsat', 'create_pdf_pengajuan_bapenda_jr'];
+        else if ($unitKerja == 'Bapenda' || $unitKerja == 'Jasa Raharja') return ['create_pdf_balasan_polda'];
         if ($progress == 0) return ['create_pdf_pengajuan'];
         return ['create_pdf_pengajuan'];
     }
@@ -160,21 +182,22 @@ class SuratPengajuanController extends Controller
     {
         $user = Auth::user();
         $query = SuratPengajuan::with('pengajuan');
+        $unitKerja = $this->normalizeUnitKerja($user->unit_kerja);
 
         // Filter berdasarkan unit kerja dan role
-        if ($user->hasRole('samsat')) {
+        if ($this->userHasRole($user, 'samsat')) {
             $query->whereHas('pengajuan', function($q) use ($user) {
                 $q->where('unit_kerja', 'Samsat');
             });
-        } elseif ($user->hasRole('polda')) {
+        } elseif ($this->userHasRole($user, 'polda') || $unitKerja === 'Polda') {
             $query->whereHas('pengajuan', function($q) use ($user) {
                 $q->where('unit_kerja', 'Polda');
             });
-        } elseif ($user->hasRole('bapenda')) {
+        } elseif ($this->userHasRole($user, 'bapenda') || $unitKerja === 'Bapenda') {
             $query->whereHas('pengajuan', function($q) use ($user) {
                 $q->where('unit_kerja', 'Bapenda');
             });
-        } elseif ($user->hasRole('jasa_raharja')) {
+        } elseif ($this->userHasRole($user, 'jasa_raharja') || $unitKerja === 'Jasa Raharja') {
             $query->whereHas('pengajuan', function($q) use ($user) {
                 $q->where('unit_kerja', 'Jasa Raharja');
             });
@@ -189,7 +212,7 @@ class SuratPengajuanController extends Controller
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
         $user = Auth::user();
         $progress = $pengajuan->getTotalSurat();
-
+        error_log("Progress Pengajuan ID {$pengajuan->id}: {$progress}, User Unit Kerja: {$user->unit_kerja}");
         if ($user->unit_kerja == 'Samsat') {
             return $this->ajukanPolda($request, $id);
         } else if ($progress == 2 && $user->unit_kerja == 'Polda') {    
@@ -218,6 +241,9 @@ class SuratPengajuanController extends Controller
         }
 
         // Update status kendaraan menjadi "Diajukan ke Polda"
+
+        $spArray = [];
+
         foreach ($pengajuan->kendaraans as $kendaraan) {
             if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
                 // Simpan log perubahan status
@@ -229,18 +255,21 @@ class SuratPengajuanController extends Controller
                     'tipe' => 'system',
                     'catatan' => 'Kendaraan diajukan ke Polda oleh ' . Auth::user()->name,
                 ]);
+
+                $sp = SuratPengajuan::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'kendaraan_id' => $pengajuan->kendaraans->first()->id, // Asumsi satu kendaraan per pengajuan, sesuaikan jika banyak
+                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
+                    'tanggal_surat' => now(),
+                    'persetujuan_unit_kerja' => $this->persetujuanPolda
+                ]);
+
+                $spArray[] = $sp;
             }
         }
 
-        // Simpan data Surat Pengajuan
-        $sp = SuratPengajuan::create([
-            'pengajuan_id' => $pengajuan->id,
-            'nomor_sp' => 'SP-' . strtoupper(uniqid()),
-            'tanggal_surat' => now(),
-            'persetujuan_unit_kerja' => $this->persetujuanPolda
-        ]);
 
-        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Polda dibuat', 'Nomor SP: ' . $sp->nomor_sp);
+        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Polda dibuat', 'Nomor SP: ' . implode(', ', array_map(fn($sp) => $sp->nomor_sp, $spArray)));
 
 
         return redirect()->route('admin.pengajuan.show', $pengajuan)
@@ -263,6 +292,8 @@ class SuratPengajuanController extends Controller
                 ->with('error', 'Masih ada Surat Pengajuan ke Bapenda/Jasa Raharja yang pending. Selesaikan dulu sebelum kirim ulang.');
         }
 
+        $spArray = [];
+
         // Update status kendaraan menjadi "Diajukan ke Bapenda/JR"
         foreach ($pengajuan->kendaraans as $kendaraan) {
             if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
@@ -275,18 +306,20 @@ class SuratPengajuanController extends Controller
                     'tipe' => 'system',
                     'catatan' => 'Kendaraan diajukan ke Bapenda/JR oleh ' . Auth::user()->name,
                 ]);
+
+                $sp = SuratPengajuan::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'kendaraan_id' => $pengajuan->kendaraans->first()->id, // Asumsi satu kendaraan per pengajuan, sesuaikan jika banyak
+                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
+                    'tanggal_surat' => now(),
+                    'persetujuan_unit_kerja' => $this->persetujuanDefault
+                ]);
+
+                $spArray[] = $sp;
             }
         }
 
-        // Simpan data Surat Pengajuan
-        $sp = SuratPengajuan::create([
-            'pengajuan_id' => $pengajuan->id,
-            'nomor_sp' => 'SP-' . strtoupper(uniqid()),
-            'tanggal_surat' => now(),
-            'persetujuan_unit_kerja' => $this->persetujuanDefault
-        ]);
-
-        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Bapenda/Jasa Raharja dibuat', 'Nomor SP: ' . $sp->nomor_sp);
+        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Bapenda/JR dibuat', 'Nomor SP: ' . implode(', ', array_map(fn($sp) => $sp->nomor_sp, $spArray)));
 
         return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('success', 'Pengajuan berhasil diajukan ke Bapenda/Jasa Raharja. Surat Pengajuan telah dibuat.');
@@ -314,10 +347,10 @@ class SuratPengajuanController extends Controller
             ->with('error', 'Surat Pengajuan sudah disetujui semua instansi.');
             //  response()->json(['message' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
         }
-        $instansiUser = Auth::user()->unit_kerja;
+        $instansiUser = $this->normalizeUnitKerja(Auth::user()->unit_kerja);
 
         // Ambil data array saat ini
-        $persetujuan = $surat->persetujuan_unit_kerja;
+        $persetujuan = $surat->persetujuan_unit_kerja ?? [];
 
         // Cari instansi yang sesuai dan ubah statusnya
         foreach ($persetujuan as &$item) {
@@ -365,10 +398,10 @@ class SuratPengajuanController extends Controller
             ->with('error', 'Surat Pengajuan sudah disetujui semua instansi.');
             //  response()->json(['message' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
         }
-        $instansiUser = Auth::user()->unit_kerja; // Misal: bapenda
+        $instansiUser = $this->normalizeUnitKerja(Auth::user()->unit_kerja); // Misal: Bapenda / Jasa Raharja
 
         // Ambil data array saat ini
-        $persetujuan = $surat->persetujuan_unit_kerja;
+        $persetujuan = $surat->persetujuan_unit_kerja ?? [];
 
         // Cari instansi yang sesuai dan ubah statusnya
         foreach ($persetujuan as &$item) {
@@ -399,9 +432,10 @@ class SuratPengajuanController extends Controller
     public function hasPersetujuan(Request $request, $id)
     {
         $sp = SuratPengajuan::findOrFail($id);
+        $unitKerja = $this->normalizeUnitKerja(Auth::user()->unit_kerja);
 
-        foreach ($sp->persetujuan_unit_kerja as $item) {
-            if (Auth::user()->unit_kerja == $item['instansi']) {
+        foreach (($sp->persetujuan_unit_kerja ?? []) as $item) {
+            if (strcasecmp($unitKerja, $item['instansi'] ?? '') === 0) {
                 return true;
             }
         }
