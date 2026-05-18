@@ -67,4 +67,45 @@ class KendaraanLog extends Model implements HasMedia
     {
         return $this->belongsTo(User::class);
     }
+
+    protected static function booted()
+    {
+        static::created(function ($log) {
+            // Load necessary relationships
+            $log->loadMissing('kendaraan.pengajuan.user', 'user.roles');
+
+            $pengajuan = $log->kendaraan->pengajuan ?? null;
+            if (!$pengajuan) return;
+
+            $creator = $log->user;
+            if (!$creator) return;
+
+            // Jika yang membuat log adalah Wajib Pajak
+            if ($creator->hasRole('wajib_pajak')) {
+                // Beritahu Admin (Samsat / Bapenda) di cabang yang sama
+                $admins = \App\Models\User::where('cabang_id', $pengajuan->cabang_id)
+                    ->whereHas('roles', function($q) {
+                        $q->whereIn('name', ['samsat', 'bapenda', 'admin_instansi']);
+                    })->get();
+                
+                foreach ($admins as $admin) {
+                    $admin->notify(new \App\Notifications\LogAktivitasNotification(
+                        $log,
+                        "Wajib Pajak {$creator->name} menambah aktivitas: " . $log->aksi,
+                        route('admin.pengajuan.show', $pengajuan->id)
+                    ));
+                }
+            } else {
+                // Jika yang membuat log adalah Admin/Samsat/Bapenda dll
+                // Beritahu Wajib Pajak (Pemilik Pengajuan)
+                if ($pengajuan->user) {
+                    $pengajuan->user->notify(new \App\Notifications\LogAktivitasNotification(
+                        $log,
+                        "Admin menambahkan aktivitas: " . $log->aksi,
+                        route('pengajuan.show', $pengajuan->id)
+                    ));
+                }
+            }
+        });
+    }
 }

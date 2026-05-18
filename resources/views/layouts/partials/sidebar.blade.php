@@ -2,11 +2,22 @@
     $sidebarColor = 'dark';
     if(Auth::check()) {
         $user = Auth::user();
-        if ($user->hasRole('wajib_pajak')) {
-            $sidebarColor = 'white';
-        } elseif ($user->hasRole('superadmin') || $user->hasRole('admin')) {
+        
+        // Priority checks: Admin roles first
+        if ($user->hasRole('superadmin') || $user->hasRole('admin')) {
             $sidebarColor = 'dark';
+        } elseif ($user->hasRole('samsat')) {
+            $sidebarColor = 'dark2';
+        } elseif ($user->hasRole('bapenda')) {
+            $sidebarColor = 'blue';
+        } elseif ($user->hasRole('jasa_raharja')) {
+            $sidebarColor = 'blue2';
+        } elseif ($user->hasRole('polda')) {
+            $sidebarColor = 'purple';
+        } elseif ($user->hasRole('wajib_pajak')) {
+            $sidebarColor = 'white';
         } else {
+            // Fallback to unit kerja
             $unit = strtolower($user->unit_kerja ?? '');
             if (str_contains($unit, 'bapenda')) {
                 $sidebarColor = 'blue';
@@ -23,9 +34,9 @@
 <div class="sidebar" data-background-color="{{ $sidebarColor }}">
 
     <div class="sidebar-logo">
-        <div class="logo-header" data-background-color="dark">
+        <div class="logo-header" data-background-color="{{ $sidebarColor }}">
             <a href="{{ route('dashboard') }}" class="logo">
-                <img src="{{ asset('kaiadmin/img/kaiadmin/logo_light.svg') }}" alt="navbar brand" class="navbar-brand"
+                <img src="{{ asset('kaiadmin/img/kaiadmin/' . ($sidebarColor === 'white' ? 'logo_dark.svg' : 'logo_light.svg')) }}" alt="navbar brand" class="navbar-brand"
                     height="20" />
             </a>
             <div class="nav-toggle">

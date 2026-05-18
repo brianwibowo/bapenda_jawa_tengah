@@ -379,20 +379,6 @@ class PengajuanController extends Controller
             }
         }
 
-        // Kirim Notifikasi ke Admin (Samsat) di cabang yang sama
-        $admins = \App\Models\User::where('cabang_id', $pengajuan->cabang_id)
-            ->whereHas('roles', function($q) {
-                $q->where('name', 'samsat')->orWhere('name', 'bapenda');
-            })->get();
-
-        foreach ($admins as $admin) {
-            $admin->notify(new \App\Notifications\LogAktivitasNotification(
-                $log,
-                "Wajib Pajak {$user->name} menambahkan " . strtolower($log->aksi),
-                route('admin.pengajuan.show', $pengajuan->id)
-            ));
-        }
-
         return redirect()->route('pengajuan.show', $pengajuan)->with('success', 'Komentar / Lampiran berhasil diunggah.');
     }
 

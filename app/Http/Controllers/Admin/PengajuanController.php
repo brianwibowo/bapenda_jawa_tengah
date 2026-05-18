@@ -321,15 +321,6 @@ class PengajuanController extends Controller
             $kendaraan->update(['status' => 'diproses']);
         }
 
-        // 4. Kirim Notifikasi ke Wajib Pajak (User)
-        if ($pengajuan->user) {
-            $pengajuan->user->notify(new \App\Notifications\LogAktivitasNotification(
-                $log,
-                $aksiText,
-                route('pengajuan.show', $pengajuan->id)
-            ));
-        }
-
         return back()->with('success', 'Catatan admin berhasil disimpan ke log.');
     }
 
