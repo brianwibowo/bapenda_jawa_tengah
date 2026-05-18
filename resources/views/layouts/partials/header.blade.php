@@ -29,29 +29,6 @@
                             <span class="notification" id="notifBadge">{{ Auth::user()->unreadNotifications->count() }}</span>
                         @endif
                     </a>
-                    <style>
-                        .notif-box {
-                            width: 320px !important;
-                            max-width: 100vw;
-                        }
-                        .notif-center a {
-                            display: flex !important;
-                            align-items: flex-start;
-                            padding: 10px 15px !important;
-                        }
-                        .notif-content {
-                            flex: 1;
-                            min-width: 0;
-                            padding-left: 12px;
-                        }
-                        .notif-content .block {
-                            display: block;
-                            white-space: normal !important;
-                            word-wrap: break-word;
-                            line-height: 1.4;
-                            margin-bottom: 4px;
-                        }
-                    </style>
                     <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
                         <li>
                             <div class="dropdown-title">
