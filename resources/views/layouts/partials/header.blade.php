@@ -1,4 +1,5 @@
 {{-- resources/views/layouts/partials/header.blade.php --}}
+<link rel="stylesheet" href="{{ asset('kaiadmin/css/notifications.css') }}">
 <div class="main-header">
     <div class="main-header-logo">
         <div class="logo-header" data-background-color="dark">
@@ -24,16 +25,17 @@
             <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
                 <li class="nav-item topbar-icon dropdown hidden-caret">
                     <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        @php $unreadCount = Auth::user()->unreadNotifications()->count(); @endphp
                         <i class="fa fa-bell"></i>
-                        @if(Auth::user()->unreadNotifications->count() > 0)
-                            <span class="notification" id="notifBadge">{{ Auth::user()->unreadNotifications->count() }}</span>
+                        @if($unreadCount > 0)
+                            <span class="notification" id="notifBadge">{{ $unreadCount }}</span>
                         @endif
                     </a>
                     <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
                         <li>
                             <div class="dropdown-title">
-                                Anda memiliki <span id="notifCountText">{{ Auth::user()->unreadNotifications->count() }}</span> notifikasi baru
-                                @if(Auth::user()->unreadNotifications->count() > 0)
+                                Anda memiliki <span id="notifCountText">{{ $unreadCount }}</span> notifikasi baru
+                                @if($unreadCount > 0)
                                     <a href="#" id="markAsReadBtn" class="float-end small text-primary">Tandai Semua Dibaca</a>
                                 @endif
                             </div>
@@ -42,7 +44,7 @@
                             <div class="notif-scroll scrollbar-outer">
                                 <div class="notif-center">
                                     @forelse(Auth::user()->notifications()->take(5)->get() as $notification)
-                                        <a href="{{ $notification->data['url'] ?? '#' }}" class="{{ $notification->read_at ? '' : 'bg-light' }}">
+                                        <a href="{{ $notification->data['url'] ?? '#' }}" class="single-notif-link {{ $notification->read_at ? '' : 'unread' }}" data-id="{{ $notification->id }}">
                                             <div class="notif-icon notif-primary"> <i class="fa fa-info-circle"></i> </div>
                                             <div class="notif-content">
                                                 <span class="block">
@@ -52,7 +54,10 @@
                                             </div>
                                         </a>
                                     @empty
-                                        <div class="p-3 text-center text-muted">Belum ada notifikasi.</div>
+                                        <div class="notif-empty">
+                                            <i class="fa fa-bell-slash"></i>
+                                            Belum ada notifikasi.
+                                        </div>
                                     @endforelse
                                 </div>
                             </div>
@@ -112,34 +117,10 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const markAsReadBtn = document.getElementById('markAsReadBtn');
-        if (markAsReadBtn) {
-            markAsReadBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                fetch('{{ route("notifications.markAsRead") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const badge = document.getElementById('notifBadge');
-                        if (badge) badge.remove();
-                        const countText = document.getElementById('notifCountText');
-                        if (countText) countText.innerText = '0';
-                        markAsReadBtn.remove();
-                        
-                        // remove bg-light class from all unread items
-                        document.querySelectorAll('.notif-center a.bg-light').forEach(el => {
-                            el.classList.remove('bg-light');
-                        });
-                    }
-                });
-            });
-        }
-    });
+    window.NotificationRoutes = {
+        markAllAsRead: '{{ route("notifications.markAsRead") }}',
+        markSingleAsRead: '{{ url("notifications") }}/:id/mark-as-read',
+        csrfToken: '{{ csrf_token() }}'
+    };
 </script>
+<script src="{{ asset('kaiadmin/js/notifications.js') }}"></script>

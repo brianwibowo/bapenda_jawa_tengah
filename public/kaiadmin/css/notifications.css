@@ -1,0 +1,191 @@
+/* =============================================================================
+   NOTIFICATION DROPDOWN — UI & UX
+   ============================================================================= */
+
+/* Lebar dropdown, pastikan cukup menampilkan teks panjang */
+.notif-box {
+    width: 380px !important;
+    max-width: 95vw;
+    padding: 0 !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+    border-radius: 12px !important;
+    border: none !important;
+    overflow: hidden;
+}
+
+/* Header dropdown notifikasi */
+.notif-box .dropdown-title {
+    padding: 16px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Tombol "Tandai Semua Dibaca" */
+.notif-box .dropdown-title a {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1572e8;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    background: rgba(21, 114, 232, 0.05);
+}
+
+.notif-box .dropdown-title a:hover {
+    background: rgba(21, 114, 232, 0.15);
+    text-decoration: none;
+}
+
+/* Notif Items Container */
+.notif-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Setiap item notifikasi: layout flex agar ikon & teks sejajar rapi */
+.notif-box .notif-center > a {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f9fafb;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    background: #ffffff;
+    position: relative;
+}
+
+.notif-box .notif-center > a:last-child {
+    border-bottom: none;
+}
+
+.notif-box .notif-center > a:hover {
+    background: #f8faff;
+}
+
+/* Item yang belum dibaca: highlight tipis di kiri */
+.notif-box .notif-center > a.unread {
+    background: #f4f8ff;
+}
+
+/* Indikator unread (dot biru) */
+.notif-box .notif-center > a.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #1572e8;
+}
+
+.notif-box .notif-center > a.unread::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background-color: #1572e8;
+    border-radius: 50%;
+}
+
+/* Ikon notifikasi — ukuran tetap agar tidak mempengaruhi layout teks */
+.notif-box .notif-center > a .notif-icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 18px;
+    background: rgba(21, 114, 232, 0.1);
+    color: #1572e8;
+    margin-right: 15px;
+}
+
+/* Area teks — flex:1 agar mengisi sisa ruang dan wrapping berjalan normal */
+.notif-box .notif-content {
+    flex: 1;
+    min-width: 0;
+    padding-right: 20px; /* space for the dot */
+}
+
+/* Teks pesan notifikasi — wrap normal, tidak terpotong */
+.notif-box .notif-content .block {
+    display: block;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+    font-size: 13.5px;
+    color: #4b5563;
+    margin-bottom: 6px;
+    transition: color 0.2s;
+}
+
+.notif-box .notif-center > a.unread .notif-content .block {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+/* Timestamp "x menit yang lalu" */
+.notif-box .notif-content .time {
+    font-size: 11px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* State kosong saat tidak ada notifikasi */
+.notif-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    background: #ffffff;
+}
+
+.notif-empty i {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 12px;
+    color: #e5e7eb;
+}
+
+/* Loading Spinner for Single Notification Click */
+.notif-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.notif-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #1572e8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

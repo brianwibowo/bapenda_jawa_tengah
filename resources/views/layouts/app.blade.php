@@ -23,6 +23,8 @@
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/bootstrap.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/plugins.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/kaiadmin.min.css') }}" />
+    {{-- Custom overrides: sidebar colors per-role & notification UI --}}
+    <link rel="stylesheet" href="{{ asset('kaiadmin/css/bapenda.css') }}" />
 </head>
 
 <body>

@@ -32,57 +32,7 @@
     }
 @endphp
 
-<style>
-    /* Kaiadmin defaults don't support these colors for the main .sidebar, so we inject them manually */
-    .sidebar[data-background-color="blue"] { background: #1572e8 !important; }
-    .sidebar[data-background-color="blue2"] { background: #1269db !important; }
-    .sidebar[data-background-color="purple"] { background: #6861ce !important; }
-
-    /* Adjust text colors for readability on colored backgrounds */
-    .sidebar[data-background-color="blue"] .nav-item a,
-    .sidebar[data-background-color="blue"] .nav-item a p,
-    .sidebar[data-background-color="blue"] .nav-item a i,
-    .sidebar[data-background-color="blue2"] .nav-item a,
-    .sidebar[data-background-color="blue2"] .nav-item a p,
-    .sidebar[data-background-color="blue2"] .nav-item a i,
-    .sidebar[data-background-color="purple"] .nav-item a,
-    .sidebar[data-background-color="purple"] .nav-item a p,
-    .sidebar[data-background-color="purple"] .nav-item a i {
-        color: rgba(255, 255, 255, 0.8) !important;
-    }
-
-    .sidebar[data-background-color="blue"] .nav-item a:hover,
-    .sidebar[data-background-color="blue"] .nav-item a:hover p,
-    .sidebar[data-background-color="blue"] .nav-item a:hover i,
-    .sidebar[data-background-color="blue2"] .nav-item a:hover,
-    .sidebar[data-background-color="blue2"] .nav-item a:hover p,
-    .sidebar[data-background-color="blue2"] .nav-item a:hover i,
-    .sidebar[data-background-color="purple"] .nav-item a:hover,
-    .sidebar[data-background-color="purple"] .nav-item a:hover p,
-    .sidebar[data-background-color="purple"] .nav-item a:hover i {
-        color: #fff !important;
-    }
-
-    .sidebar[data-background-color="blue"] .nav-item.active > a,
-    .sidebar[data-background-color="blue2"] .nav-item.active > a,
-    .sidebar[data-background-color="purple"] .nav-item.active > a {
-        background: rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
-    }
-
-    .sidebar[data-background-color="blue"] .nav-section .text-section,
-    .sidebar[data-background-color="blue2"] .nav-section .text-section,
-    .sidebar[data-background-color="purple"] .nav-section .text-section {
-        color: rgba(255, 255, 255, 0.5) !important;
-    }
-
-    .sidebar[data-background-color="blue"] .logo-header,
-    .sidebar[data-background-color="blue2"] .logo-header,
-    .sidebar[data-background-color="purple"] .logo-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-</style>
-
+{{-- Sidebar CSS di-handle oleh public/kaiadmin/css/bapenda.css --}}
 <div class="sidebar" data-background-color="{{ $sidebarColor }}">
 
     <div class="sidebar-logo">

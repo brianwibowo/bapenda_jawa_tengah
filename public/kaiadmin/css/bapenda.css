@@ -1,0 +1,68 @@
+/* =============================================================================
+   BAPENDA JAWA TENGAH - Custom Stylesheet
+   File ini berisi override CSS kustom yang tidak tersedia di Kaiadmin default.
+   Dibagi menjadi dua bagian utama:
+     1. Sidebar Colors (warna per-role)
+     2. Notification Dropdown (UI & UX) - MOVED TO notifications.css
+   ============================================================================= */
+
+
+/* =============================================================================
+   1. SIDEBAR COLORS — Override untuk warna yang tidak disupport Kaiadmin
+      Kaiadmin default hanya support: dark, dark2, white, grey pada .sidebar
+      Kita tambahkan: blue, blue2, purple
+   ============================================================================= */
+
+/* --- Background sidebar utama --- */
+.sidebar[data-background-color="blue"]   { background: #1572e8 !important; }
+.sidebar[data-background-color="blue2"]  { background: #1269db !important; }
+.sidebar[data-background-color="purple"] { background: #6861ce !important; }
+
+/* --- Teks & ikon nav item --- */
+.sidebar[data-background-color="blue"] .nav-item > a,
+.sidebar[data-background-color="blue"] .nav-item > a p,
+.sidebar[data-background-color="blue"] .nav-item > a i,
+.sidebar[data-background-color="blue2"] .nav-item > a,
+.sidebar[data-background-color="blue2"] .nav-item > a p,
+.sidebar[data-background-color="blue2"] .nav-item > a i,
+.sidebar[data-background-color="purple"] .nav-item > a,
+.sidebar[data-background-color="purple"] .nav-item > a p,
+.sidebar[data-background-color="purple"] .nav-item > a i {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* --- Hover state nav item --- */
+.sidebar[data-background-color="blue"] .nav-item > a:hover,
+.sidebar[data-background-color="blue"] .nav-item > a:hover p,
+.sidebar[data-background-color="blue"] .nav-item > a:hover i,
+.sidebar[data-background-color="blue2"] .nav-item > a:hover,
+.sidebar[data-background-color="blue2"] .nav-item > a:hover p,
+.sidebar[data-background-color="blue2"] .nav-item > a:hover i,
+.sidebar[data-background-color="purple"] .nav-item > a:hover,
+.sidebar[data-background-color="purple"] .nav-item > a:hover p,
+.sidebar[data-background-color="purple"] .nav-item > a:hover i {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- Item aktif (halaman yang sedang dikunjungi) --- */
+.sidebar[data-background-color="blue"] .nav-item.active > a,
+.sidebar[data-background-color="blue2"] .nav-item.active > a,
+.sidebar[data-background-color="purple"] .nav-item.active > a {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+}
+
+/* --- Label section (e.g. "PENGAJUAN", "NAVIGASI") --- */
+.sidebar[data-background-color="blue"] .nav-section .text-section,
+.sidebar[data-background-color="blue2"] .nav-section .text-section,
+.sidebar[data-background-color="purple"] .nav-section .text-section {
+    color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* --- Garis pemisah di bawah logo header --- */
+.sidebar[data-background-color="blue"] .logo-header,
+.sidebar[data-background-color="blue2"] .logo-header,
+.sidebar[data-background-color="purple"] .logo-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}

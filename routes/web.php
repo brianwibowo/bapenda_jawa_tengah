@@ -39,6 +39,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Auth::user()->unreadNotifications->markAsRead();
         return response()->json(['success' => true]);
     })->name('notifications.markAsRead');
+    Route::post('/notifications/{id}/mark-as-read', function ($id) {
+        $notification = Auth::user()->notifications()->find($id);
+        if ($notification) {
+            $notification->markAsRead();
+        }
+        return response()->json(['success' => true]);
+    })->name('notifications.markAsRead.single');
     Route::get('/redirect', [RedirectController::class, 'handle'])->name('redirect.after.login');
 
 
