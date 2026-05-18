@@ -77,6 +77,10 @@ class KendaraanLog extends Model implements HasMedia
             $pengajuan = $log->kendaraan->pengajuan ?? null;
             if (!$pengajuan) return;
 
+            // Touch the pengajuan to update its updated_at timestamp
+            // This ensures "Update Terakhir" reflects the latest log/diskusi
+            $pengajuan->touch();
+
             $creator = $log->user;
             if (!$creator) return;
 
