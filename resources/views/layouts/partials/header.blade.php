@@ -22,6 +22,47 @@
     <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
         <div class="container-fluid">
             <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                    <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-bell"></i>
+                        @if(Auth::user()->unreadNotifications->count() > 0)
+                            <span class="notification" id="notifBadge">{{ Auth::user()->unreadNotifications->count() }}</span>
+                        @endif
+                    </a>
+                    <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
+                        <li>
+                            <div class="dropdown-title">
+                                Anda memiliki <span id="notifCountText">{{ Auth::user()->unreadNotifications->count() }}</span> notifikasi baru
+                                @if(Auth::user()->unreadNotifications->count() > 0)
+                                    <a href="#" id="markAsReadBtn" class="float-end small text-primary">Tandai Semua Dibaca</a>
+                                @endif
+                            </div>
+                        </li>
+                        <li>
+                            <div class="notif-scroll scrollbar-outer">
+                                <div class="notif-center">
+                                    @forelse(Auth::user()->notifications()->take(5)->get() as $notification)
+                                        <a href="{{ $notification->data['url'] ?? '#' }}" class="{{ $notification->read_at ? '' : 'bg-light' }}">
+                                            <div class="notif-icon notif-primary"> <i class="fa fa-info-circle"></i> </div>
+                                            <div class="notif-content">
+                                                <span class="block">
+                                                    {{ $notification->data['message'] ?? 'Aktivitas Baru' }}
+                                                </span>
+                                                <span class="time">{{ $notification->created_at->diffForHumans() }}</span> 
+                                            </div>
+                                        </a>
+                                    @empty
+                                        <div class="p-3 text-center text-muted">Belum ada notifikasi.</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="see-all" href="#">Lihat semua notifikasi<i class="fa fa-angle-right"></i> </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
                         <div class="avatar-sm">
@@ -72,3 +113,36 @@
         </div>
     </nav>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const markAsReadBtn = document.getElementById('markAsReadBtn');
+        if (markAsReadBtn) {
+            markAsReadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                fetch('{{ route("notifications.markAsRead") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const badge = document.getElementById('notifBadge');
+                        if (badge) badge.remove();
+                        const countText = document.getElementById('notifCountText');
+                        if (countText) countText.innerText = '0';
+                        markAsReadBtn.remove();
+                        
+                        // remove bg-light class from all unread items
+                        document.querySelectorAll('.notif-center a.bg-light').forEach(el => {
+                            el.classList.remove('bg-light');
+                        });
+                    }
+                });
+            });
+        }
+    });
+</script>

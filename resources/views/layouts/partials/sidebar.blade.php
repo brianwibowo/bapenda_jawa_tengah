@@ -1,4 +1,26 @@
-<div class="sidebar" data-background-color="dark">
+@php
+    $sidebarColor = 'dark';
+    if(Auth::check()) {
+        $user = Auth::user();
+        if ($user->hasRole('wajib_pajak')) {
+            $sidebarColor = 'white';
+        } elseif ($user->hasRole('superadmin') || $user->hasRole('admin')) {
+            $sidebarColor = 'dark';
+        } else {
+            $unit = strtolower($user->unit_kerja ?? '');
+            if (str_contains($unit, 'bapenda')) {
+                $sidebarColor = 'blue';
+            } elseif (str_contains($unit, 'samsat')) {
+                $sidebarColor = 'dark2';
+            } elseif (str_contains($unit, 'jasa raharja') || str_contains($unit, 'jasa_raharja')) {
+                $sidebarColor = 'blue2';
+            } elseif (str_contains($unit, 'polda')) {
+                $sidebarColor = 'purple';
+            }
+        }
+    }
+@endphp
+<div class="sidebar" data-background-color="{{ $sidebarColor }}">
 
     <div class="sidebar-logo">
         <div class="logo-header" data-background-color="dark">

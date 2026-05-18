@@ -360,7 +360,7 @@ class PengajuanController extends Controller
 
         $user = Auth::user();
 
-        $log = \App\Models\KendaraanLog::create([
+        $log = KendaraanLog::create([
             'kendaraan_id' => $kendaraan->id,
             'user_id' => $user->id,
             'tipe' => $validated['tipe'],
@@ -377,6 +377,20 @@ class PengajuanController extends Controller
                     $log->addMedia($f)->toMediaCollection('lampiran_log');
                 }
             }
+        }
+
+        // Kirim Notifikasi ke Admin (Samsat) di cabang yang sama
+        $admins = \App\Models\User::where('cabang_id', $pengajuan->cabang_id)
+            ->whereHas('roles', function($q) {
+                $q->where('name', 'samsat')->orWhere('name', 'bapenda');
+            })->get();
+
+        foreach ($admins as $admin) {
+            $admin->notify(new \App\Notifications\LogAktivitasNotification(
+                $log,
+                "Wajib Pajak {$user->name} menambahkan " . strtolower($log->aksi),
+                route('admin.pengajuan.show', $pengajuan->id)
+            ));
         }
 
         return redirect()->route('pengajuan.show', $pengajuan)->with('success', 'Komentar / Lampiran berhasil diunggah.');
@@ -414,7 +428,7 @@ class PengajuanController extends Controller
             abort(403);
         }
 
-        $log = \App\Models\KendaraanLog::with(['user', 'kendaraan', 'media'])->findOrFail($logId);
+        $log = KendaraanLog::with(['user', 'kendaraan', 'media'])->findOrFail($logId);
         
         // Pastikan log milik bundel pengajuan ini
         if ($log->kendaraan->pengajuan_id !== $pengajuan->id) {

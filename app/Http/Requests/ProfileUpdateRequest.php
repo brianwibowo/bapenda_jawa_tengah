@@ -28,7 +28,7 @@ class ProfileUpdateRequest extends FormRequest
             'no_hp' => ['required', 'string', 'max:20'],
             'jabatan' => ['nullable', 'string', 'max:255'],
             'unit_kerja' => ['nullable', 'string', 'max:255'],
-            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,heic,heif', 'max:2048'],
+            'profile_photo' => ['nullable', 'mimes:jpeg,png,jpg,gif,heic,heif', 'max:2048'],
         ];
     }
 }
