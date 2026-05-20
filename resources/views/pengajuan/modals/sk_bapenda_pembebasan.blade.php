@@ -144,6 +144,13 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
        const form = document.querySelector('#modalSkPembebasan form');
+
+       form.addEventListener('submit', function(e) {
+           setTimeout(() => {
+               window.location.href = '{{ route("admin.pengajuan.show", $pengajuan->id) }}';
+           }, 300);
+       });
+
        const metodePenandaTangan = document.getElementById('metode_penanda_tangan');
        const formContainer = document.getElementById('formSkPembebasanContainer');
        const previewContainer = document.getElementById('previewSkPembebasanContainer');

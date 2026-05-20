@@ -86,6 +86,13 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
        const form = document.querySelector('#modalSkPolda form');
+
+       form.addEventListener('submit', function(e) {
+           setTimeout(() => {
+               window.location.href = '{{ route("admin.pengajuan.show", $pengajuan->id) }}';
+           }, 300);
+       });
+
        const formContainer = document.getElementById('formSkPoldaContainer');
        const previewContainer = document.getElementById('previewSkPoldaContainer');
        const footerForm = document.getElementById('footerFormSkPolda');

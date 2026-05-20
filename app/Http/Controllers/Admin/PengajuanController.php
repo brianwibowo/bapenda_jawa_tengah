@@ -426,34 +426,37 @@ class PengajuanController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         $filename   = 'SK_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . Str::uuid() . '.pdf';
-        $storagePath = 'sk/' . $filename;
-        Storage::disk('public')->put($storagePath, $pdf->output());
-        $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+        
+        if (!$request->has('preview')) {
+            $storagePath = 'sk/' . $filename;
+            Storage::disk('public')->put($storagePath, $pdf->output());
+            $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
 
-        // Catat log
-        $this->logSuratActionByKendaraanId(
-            $pengajuan,
-            $kendaraan->id,
-            'SK Penghapusan Regident berhasil diterbitkan',
-            'Nomor Surat: ' . $request->nomor_surat,
-        );
+            // Catat log
+            $this->logSuratActionByKendaraanId(
+                $pengajuan,
+                $kendaraan->id,
+                'SK Penghapusan Regident berhasil diterbitkan',
+                'Nomor Surat: ' . $request->nomor_surat,
+            );
 
-        // Dispatch WA notification (non-blocking, non-fatal)
-        $wpUser = $pengajuan->user;
-        if ($wpUser && $wpUser->no_hp) {
-            try {
-                SendWhatsAppNotification::dispatch(
-                    pengajuan:    $pengajuan,
-                    kendaraan:    $kendaraan,
-                    skType:       'regident',
-                    pdfUrl:       $pdfUrlAbsolute,
-                    localPdfPath: Storage::disk('public')->path($storagePath),
-                    wpPhone:      $wpUser->no_hp,
-                    wpName:       $wpUser->name,
-                    nrkb:         $kendaraan->nrkb,
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident): ' . $e->getMessage());
+            // Dispatch WA notification (non-blocking, non-fatal)
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp) {
+                try {
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan:    $pengajuan,
+                        kendaraan:    $kendaraan,
+                        skType:       'regident',
+                        pdfUrl:       $pdfUrlAbsolute,
+                        localPdfPath: Storage::disk('public')->path($storagePath),
+                        wpPhone:      $wpUser->no_hp,
+                        wpName:       $wpUser->name,
+                        nrkb:         $kendaraan->nrkb,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident): ' . $e->getMessage());
+                }
             }
         }
 
@@ -516,56 +519,59 @@ class PengajuanController extends Controller
         
         $pdf->setPaper('a4', 'portrait');
 
-        // Save PDF to storage temporarily
-        $pdfContent = $pdf->output();
         $filename = 'SK_POLDA_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf';
-        $tempPath = storage_path('app/temp/' . $filename);
-        
-        // Ensure temp directory exists
-        if (!file_exists(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0755, true);
-        }
-        
-        file_put_contents($tempPath, $pdfContent);
 
-        // Add PDF to pengajuan media
-        $pengajuan->addMedia($tempPath)
-            ->usingName($filename)
-            ->usingFileName($filename)
-            ->toMediaCollection('sk_polda_pdf');
+        if (!$request->has('preview')) {
+            // Save PDF to storage temporarily
+            $pdfContent = $pdf->output();
+            $tempPath = storage_path('app/temp/' . $filename);
+            
+            // Ensure temp directory exists
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
+            }
+            
+            file_put_contents($tempPath, $pdfContent);
 
-        // Create log entry
-        $kendaraan->logs()->create([
-            'user_id' => auth()->id(),
-            'aksi' => 'SK POLDA berhasil dibuat dan disimpan',
-            'tipe' => 'system',
-            'status_baru' => 'sk_polda_created',
-            'catatan' => 'Nomor Surat: ' . $request->nomor_surat,
-        ]);
+            // Add PDF to pengajuan media
+            $pengajuan->addMedia($tempPath)
+                ->usingName($filename)
+                ->usingFileName($filename)
+                ->toMediaCollection('sk_polda_pdf');
 
-        // Note: Media library moves the file, so no need to unlink
+            // Create log entry
+            $kendaraan->logs()->create([
+                'user_id' => auth()->id(),
+                'aksi' => 'SK POLDA berhasil dibuat dan disimpan',
+                'tipe' => 'system',
+                'status_baru' => 'sk_polda_created',
+                'catatan' => 'Nomor Surat: ' . $request->nomor_surat,
+            ]);
 
-        // Ambil URL publik dari media yang baru disimpan
-        $media = $pengajuan->getMedia('sk_polda_pdf')->last();
-        $pdfUrlAbsolute = $media ? $media->getFullUrl() : null;
-        $localPdfPath = $media ? $media->getPath() : null;
+            // Note: Media library moves the file, so no need to unlink
 
-        // Dispatch WA notification (non-blocking, non-fatal)
-        $wpUser = $pengajuan->user;
-        if ($wpUser && $wpUser->no_hp && $pdfUrlAbsolute && $localPdfPath) {
-            try {
-                SendWhatsAppNotification::dispatch(
-                    pengajuan:    $pengajuan,
-                    kendaraan:    $kendaraan,
-                    skType:       'polda',
-                    pdfUrl:       $pdfUrlAbsolute,
-                    localPdfPath: $localPdfPath,
-                    wpPhone:      $wpUser->no_hp,
-                    wpName:       $wpUser->name,
-                    nrkb:         $kendaraan->nrkb,
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Polda): ' . $e->getMessage());
+            // Ambil URL publik dari media yang baru disimpan
+            $media = $pengajuan->getMedia('sk_polda_pdf')->last();
+            $pdfUrlAbsolute = $media ? $media->getFullUrl() : null;
+            $localPdfPath = $media ? $media->getPath() : null;
+
+            // Dispatch WA notification (non-blocking, non-fatal)
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp && $pdfUrlAbsolute && $localPdfPath) {
+                try {
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan:    $pengajuan,
+                        kendaraan:    $kendaraan,
+                        skType:       'polda',
+                        pdfUrl:       $pdfUrlAbsolute,
+                        localPdfPath: $localPdfPath,
+                        wpPhone:      $wpUser->no_hp,
+                        wpName:       $wpUser->name,
+                        nrkb:         $kendaraan->nrkb,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Polda): ' . $e->getMessage());
+                }
             }
         }
 
@@ -644,38 +650,35 @@ class PengajuanController extends Controller
         
         
 
-        if (!$request->has('preview')) {
-            if ($request->metode_penanda_tangan === 'ttd_elektronik') {
-                $pdfContent = $pdf->output();
-                $tempPath = storage_path('app/temp/' . $filename);
-                
-                // Ensure temp directory exists
-                if (!file_exists(storage_path('app/temp'))) {
-                    mkdir(storage_path('app/temp'), 0755, true);
-                }
-                
-                file_put_contents($tempPath, $pdfContent);
-            }
-            
-            $log = $this->logSuratActionByKendaraanId(
-                $pengajuan,
-                $kendaraan->id,
-                'SK Pembebasan berhasil dibuat dan ditandatangani',
-                'Nomor Surat: ' . $request->nomor_surat_pembebasan,
-                ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah')) ? $request->file('sk_pembebasan_ttd_basah') : $tempPath
-            );
-
-        }
-
         if ($request->has('preview')) {
             return $pdf->download($filename);
         }
+
+        $tempPath = null;
+        if ($request->metode_penanda_tangan === 'ttd_elektronik') {
+            $pdfContent = $pdf->output();
+            $tempPath = storage_path('app/temp/' . $filename);
+            
+            // Ensure temp directory exists
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
+            }
+            
+            file_put_contents($tempPath, $pdfContent);
+        }
+        
+        $log = $this->logSuratActionByKendaraanId(
+            $pengajuan,
+            $kendaraan->id,
+            'SK Pembebasan berhasil dibuat dan ditandatangani',
+            'Nomor Surat: ' . $request->nomor_surat_pembebasan,
+            ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah')) ? $request->file('sk_pembebasan_ttd_basah') : $tempPath
+        );
 
         // Simpan PDF ke storage publik
         $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
         Storage::disk('public')->put($storagePath, $pdf->output());
         $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
-
 
         // Dispatch WA notification (non-blocking, non-fatal)
         $wpUser = $pengajuan->user;

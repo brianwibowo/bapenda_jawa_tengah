@@ -29,6 +29,30 @@
                 $sidebarColor = 'purple';
             }
         }
+
+        $roleDisplayName = 'Pengguna';
+        $roleInitials = 'US';
+        $roleMap = [
+            'superadmin'    => ['name' => 'Super Admin',  'initials' => 'SA'],
+            'admin'         => ['name' => 'Admin',        'initials' => 'AD'],
+            'samsat'        => ['name' => 'Samsat',       'initials' => 'SS'],
+            'bapenda'       => ['name' => 'Bapenda',      'initials' => 'BP'],
+            'jasa_raharja'  => ['name' => 'Jasa Raharja', 'initials' => 'JR'],
+            'polda'         => ['name' => 'Polda',        'initials' => 'PD'],
+            'wajib_pajak'   => ['name' => 'Wajib Pajak',  'initials' => 'WP'],
+        ];
+        foreach ($roleMap as $roleKey => $meta) {
+            if ($user->hasRole($roleKey)) {
+                $roleDisplayName = $meta['name'];
+                $roleInitials = $meta['initials'];
+                break;
+            }
+        }
+        $userName = $user->name;
+    } else {
+        $roleDisplayName = 'Pengguna';
+        $roleInitials = 'US';
+        $userName = '';
     }
 @endphp
 
@@ -37,9 +61,12 @@
 
     <div class="sidebar-logo">
         <div class="logo-header" data-background-color="{{ $sidebarColor }}">
-            <a href="{{ route('dashboard') }}" class="logo">
-                <img src="{{ asset('kaiadmin/img/kaiadmin/' . ($sidebarColor === 'white' ? 'logo_dark.svg' : 'logo_light.svg')) }}" alt="navbar brand" class="navbar-brand"
-                    height="20" />
+            <a href="{{ route('dashboard') }}" class="logo brand-identity">
+                <div class="brand-avatar">{{ $roleInitials }}</div>
+                <div class="brand-text">
+                    <div class="brand-role">{{ $roleDisplayName }}</div>
+                    <div class="brand-user">{{ $userName }}</div>
+                </div>
             </a>
             <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar">

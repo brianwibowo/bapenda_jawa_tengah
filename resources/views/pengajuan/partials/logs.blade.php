@@ -128,6 +128,8 @@
                             ]
                         );
                         $paginatedLogs->appends(request()->except('log_page'));
+                    @php
+                        $kendaraanIndexMap = $pengajuan->kendaraans->values()->pluck('id')->flip()->map(fn($i) => $i + 1);
                     @endphp
 
                     @forelse($paginatedLogs as $log)
@@ -158,6 +160,10 @@
                                     <span class="badge bg-danger px-3 py-2">Ditolak / Dikembalikan</span>
                                 @else
                                     <span class="badge bg-light text-dark px-3 py-2">{{ ucfirst($log->tipe) }}</span>
+                                @endif
+
+                                @if(isset($kendaraanIndexMap[$log->kendaraan_id]))
+                                    <span class="badge bg-dark bg-opacity-75 px-3 py-2 ms-1">Kendaraan {{ $kendaraanIndexMap[$log->kendaraan_id] }}</span>
                                 @endif
                             </td>
                             <td>{{ $log->user->name ?? 'N/A' }} @if($log->user && $log->user->unit_kerja) <br><small class="text-muted">{{ $log->user->unit_kerja }}</small>@endif</td>

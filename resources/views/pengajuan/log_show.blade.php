@@ -7,6 +7,8 @@
             $backUrl = route('pengajuan.show', $pengajuan);
             $titlePrefix = '';
         }
+        $kendaraanIndexMap = $pengajuan->kendaraans->values()->pluck('id')->flip()->map(fn($i) => $i + 1);
+        $kendNum = $kendaraanIndexMap[$log->kendaraan_id] ?? null;
     @endphp
 
     <x-slot name="header">
@@ -78,6 +80,15 @@
                                     @endif
                                 </td>
                             </tr>
+                            @if($kendNum)
+                            <tr>
+                                <td class="text-muted">Kendaraan</td>
+                                <td class="fw-semibold">
+                                    <span class="badge bg-dark bg-opacity-75 px-3 py-2">Kendaraan {{ $kendNum }}</span>
+                                    <span class="ms-2 text-dark">{{ $log->kendaraan->nrkb ?? 'N/A' }}</span>
+                                </td>
+                            </tr>
+                            @endif
                             <tr>
                                 <td class="text-muted">Ringkasan Log</td>
                                 <td class="fw-bold text-dark">{{ $log->aksi }}</td>

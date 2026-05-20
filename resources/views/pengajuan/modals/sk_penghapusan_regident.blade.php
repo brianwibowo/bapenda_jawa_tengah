@@ -83,4 +83,14 @@
             </form>
         </div>
     </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('#modalSkPenghapusanRegident form');
+        form.addEventListener('submit', function(e) {
+            setTimeout(() => {
+                window.location.href = '{{ route("admin.pengajuan.show", $pengajuan->id) }}';
+            }, 300);
+        });
+    });
+    </script>
 </div>
