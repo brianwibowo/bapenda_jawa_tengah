@@ -128,7 +128,6 @@
                             ]
                         );
                         $paginatedLogs->appends(request()->except('log_page'));
-                    @php
                         $kendaraanIndexMap = $pengajuan->kendaraans->values()->pluck('id')->flip()->map(fn($i) => $i + 1);
                     @endphp
 
