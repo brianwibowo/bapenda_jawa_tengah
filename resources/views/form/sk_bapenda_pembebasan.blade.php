@@ -115,7 +115,7 @@
                     <option value="ttd_basah">TTD Basah</option>
                 </select>
             </div>
-            <div class="col-md-6 mb-3" style="display:none;" id="sk_pembebasan_ttd_basah_container">
+            <!-- <div class="col-md-6 mb-3" style="display:none;" id="sk_pembebasan_ttd_basah_container">
                 <label class="form-label fw-bold">Upload SK (Setelah TTD Basah)</label>
                 <div class="file-container" data-field="sk_pembebasan_ttd_basah"
                      data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
@@ -126,7 +126,7 @@
                         <small class="text-muted file-preview"></small>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
         <div class="row">
             <div class="col-md-6 mb-3" style="display:none;" id="preview_pdf_container">
@@ -144,8 +144,7 @@
     </div>
 </form>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
+<script data-form-script>
     const metodePenandaTangan = document.getElementById('metode_penanda_tangan');
     if (metodePenandaTangan) {
         metodePenandaTangan.addEventListener('change', function () {
@@ -161,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 ttdBasahContainer.style.display = 'none';
                 if (ttdBasahInput) ttdBasahInput.required = false;
             }
-        });
+    });
     }
 
     const btnPreviewPDF = document.getElementById('btnPreviewPDF');
@@ -197,5 +196,4 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
-});
 </script>

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('surat_pengajuans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pengajuan_id')->constrained('pengajuans')->onDelete('cascade');
-            $table->foreignId('kendaraan_id')->constrained('kendaraans')->onDelete('cascade');  
             $table->string('nomor_sp')->unique(); // Contoh: SP/2026/001
             $table->date('tanggal_surat');
             

@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 
 class SuratKeputusanController extends Controller
 {
@@ -235,7 +236,7 @@ class SuratKeputusanController extends Controller
             $localPdfPath = Storage::disk('public')->path($storagePath);
 
             // Catat log untuk setiap kendaraan
-            $this->logSuratActionByKendaraanId(
+            $log = $this->logSuratActionByKendaraanId(
                 $pengajuan,
                 $k->id,
                 'SK Penghapusan Regident berhasil diterbitkan',
@@ -245,6 +246,11 @@ class SuratKeputusanController extends Controller
 
             $arrayResult[$k->id]['pdf_url'] = $pdfUrlAbsolute;
             $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
+            $arrayResult[$k->id]['log_id'] = $log->id;
+        }
+
+        if ($request->has('preview')) {
+            return response()->json(['message' => 'Preview SK Pembebasan', 'data' => $arrayResult]);
         }
 
         if ($request->kendaraan_id === 'all') {
@@ -315,7 +321,6 @@ class SuratKeputusanController extends Controller
             'tanggal_sk' => 'required',
             'nama_direktur' => 'required',
             'metode_penanda_tangan' => 'required',
-            'sk_pembebasan_ttd_basah' => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240',
         ]);
 
         // Ambil data kendaraan berdasarkan pilihan dari form modal
@@ -374,13 +379,19 @@ class SuratKeputusanController extends Controller
                 'local_pdf_path' => null,
             ];
 
+            $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $k->nrkb) . '_' . str_replace('/','_',str_replace(' ', '_', $request->nomor_surat_pembebasan)) . '.pdf';
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
             $pdf->setPaper('a4', 'portrait');
-            $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $k->nrkb) . '_' . str_replace('/','_',str_replace(' ', '_', $request->nomor_surat_pembebasan)) . '.pdf';
             $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
-            Storage::disk('public')->put($storagePath, $pdf->output());
-            $pdfUrlAbsolute = asset('storage/' . $storagePath);
-            $localPdfPath = Storage::disk('public')->path($storagePath);
+            $ttd_basah = $request->metode_penanda_tangan == 'ttd_basah';
+            if (!$ttd_basah) {
+                Storage::disk('public')->put($storagePath, $pdf->output());
+                $pdfUrlAbsolute = asset('storage/' . $storagePath);
+                $localPdfPath = Storage::disk('public')->path($storagePath);    
+            } else {
+                $pdfUrlAbsolute = null;
+                $localPdfPath = null;
+            }
 
             if (!$request->has('preview')) {
                 $log = $this->logSuratActionByKendaraanId(
@@ -388,8 +399,9 @@ class SuratKeputusanController extends Controller
                     $k->id,
                     'SK Pembebasan berhasil dibuat dan ditandatangani',
                     'Nomor Surat: ' . $request->nomor_surat_pembebasan,
-                    ($request->metode_penanda_tangan === 'ttd_basah' && $request->hasFile('sk_pembebasan_ttd_basah')) ? $request->file('sk_pembebasan_ttd_basah') : Storage::disk('public')->path($storagePath)
+                    !$ttd_basah ? Storage::disk('public')->path($storagePath) : null
                 );
+                $arrayResult[$k->id]['log_id'] = $log->id;
             }
 
             // Simpan URL dan path ke array result
@@ -397,8 +409,8 @@ class SuratKeputusanController extends Controller
             $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
         }
         
-        if ($request->has('preview')) {
-            return $pdf->download($filename);
+        if ($request->has('preview' || ($request->metode_penanda_tangan == 'ttd_basah' && !$request->hasFile('sk_pembebasan_ttd_basah')))) {
+            return response()->json(['message' => 'Preview SK Pembebasan', 'data' => $arrayResult]);
         }
 
         // Dispatch WA notification (non-blocking, non-fatal)
@@ -477,6 +489,7 @@ class SuratKeputusanController extends Controller
 
         // Cek untuk unit_kerja user sekarang, apakah sudah ada SK yang diajukan untuk unit kerja tersebut
         if ($suratKeputusan->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))->isNotEmpty()) {
+
                 // Map suratKeputusan with unit_kerja
             $skUnitKerja = $suratKeputusan->pluck('unit_kerja')->toArray();
             return redirect()->route('admin.pengajuan.show', $pengajuan)
@@ -485,21 +498,22 @@ class SuratKeputusanController extends Controller
         }
         
         $data = [];
+
         switch ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
             case 'Polda':
                 $unitKerja = 'Polda';
                 $data = $this->generateSkRegident($request, $pengajuan);
-                error_log("Data SK Regident: " . json_encode($data));   
+
                 break;
             case 'Bapenda':
                 $unitKerja = 'Bapenda';
                 $data = $this->generateSkBapenda($request, $pengajuan);
-                error_log("Data SK Bapenda");
+
                 break;
             case 'JR':
                 $unitKerja = 'JR';
                 // $data = $this->generateSkJR($request, $pengajuan);
-                // error_log("Data SK JR: " . json_encode($data));
+
                 break;
             default:
                 $unitKerja = 'Unit Kerja Lain';
@@ -508,6 +522,12 @@ class SuratKeputusanController extends Controller
         }
 
         $baseLogTime = now(); // Waktu dasar untuk log, agar semua log yang terkait memiliki timestamp yang konsisten
+
+        if ($request->has('preview')){
+            return response()->json(['message' => 'Preview Surat Keputusan', 'data' => Arr::map($data, function($item, $key) {
+                return $item['pdf_url'] ?? null;
+            })]);
+        }
 
         // Loop setiap data hasil switch dengan kendaraan
         foreach ($kendaraan as $k) {
@@ -524,8 +544,8 @@ class SuratKeputusanController extends Controller
                 'updated_at' => $baseLogTime,
             ]);
 
-            if (!empty($data[$k->id]['local_pdf_path'])) {
-                $sk->addMedia($data[$k->id]['local_pdf_path'])->preservingOriginal()->toMediaCollection("lampiran");
+            if (isset($data[$k->id]['log_id'])) {
+                KendaraanLog::where('id', $data[$k->id]['log_id'])->update(['sk_id' => $sk->id]);
             }
 
             $totalSkByUnitKerja = $k->suratKeputusans()
@@ -555,16 +575,46 @@ class SuratKeputusanController extends Controller
 
     }
 
-    private function uploadPdfToMedia(Request $request, Pengajuan $pengajuan): String
+    public function uploadFileToMedia(Request $request)
     {
-        // Validasi multiple file, untuk case jumlah kendaraan > 1 pada pengajuan
-        // Jika jumlah kendaraan == 1, maka bisa menggunakan addMedia dari generateSkRegident dan generateSkBapenda
-        // Jika jumlah kendaraan > 1, maka perlu validasi tambahan untuk membedakan file berdasarkan kendaraan_id
+        // Bentuk Post form data
+        // {kendaraan_id: int, file: file}, data bisa > 1
         
-        return ;
+        // validate data
+        $request->validate([
+            'sk_id' => 'required|integer',
+            'log_id' => 'required|integer',
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png,heic,heif,docx|max:10240',
+        ]);
+
+        $user = Auth::user();
+        $suratkeputusan = SuratKeputusan::findOrFail($request->sk_id);
+        $log = KendaraanLog::findOrFail($request->log_id);
+        
+        if ($suratkeputusan->pdf_url) {
+            return redirect()->route('admin.pengajuan.show', $suratkeputusan->pengajuan_id)
+                ->with('error', 'File PDF sudah ada di media library.');
+        }
+
+        $filename = $request->file->getClientOriginalName();
+        $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
+        Storage::disk('public')->put($storagePath, $request->file('file')->get());
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+        
+        // Alter table for localPdfPath and pdf_url
+        $suratkeputusan->update([
+            'local_pdf_path' => $pdfUrlAbsolute,
+            'pdf_url' => $pdfUrlAbsolute,
+        ]);
+        
+        $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection("lampiran_log");
+
+        return redirect()->route('admin.pengajuan.show', $suratkeputusan->pengajuan_id)
+            ->with('success', 'File PDF berhasil diupload.');
     }
 
-    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null): KendaraanLog
+    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null, int $sk_id = null): KendaraanLog
     {
         $log = KendaraanLog::create([
             'kendaraan_id' => $kendaraan_id,
@@ -573,6 +623,7 @@ class SuratKeputusanController extends Controller
             'status_baru' => $pengajuan->kendaraans->find($kendaraan_id)->status,
             'tipe' => 'system',
             'catatan' => $notes,
+            'sk_id' => $sk_id,
         ]);
         if ($file) {
             $log->addMedia($file)->preservingOriginal()->toMediaCollection("lampiran_log");
@@ -591,9 +642,11 @@ class SuratKeputusanController extends Controller
                 'status_baru' => $kendaraan->status,
                 'tipe' => 'system',
                 'catatan' => $notes,
+                'sk_id' => null,
+                'sp_id' => null,
             ]);
             if ($file) {
-                $logArray[$kendaraan->id]->addMedia($file)->toMediaCollection("lampiran_log");
+                $logArray[$kendaraan->id]->addMedia($file)->preservingOriginal()->toMediaCollection("lampiran_log");
             }
         }
 

@@ -121,6 +121,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pengajuan/buat-sk/{id}', [SKController::class, 'ajukan'])
             ->name('pengajuan.buat_sk')
             ->middleware(['signed']);
+
+        Route::post('/pengajuan/sk/upload-media', [SKController::class, 'uploadFileToMedia'])
+            ->name('pengajuan.sk.upload_media');
+        
+        Route::post('/pengajuan/sp/upload-media', [SPController::class, 'uploadFileToMedia'])
+            ->name('pengajuan.sp.upload_media');
     });
 
     Route::prefix('kendaraan')->name('kendaraan.')->group(function () {

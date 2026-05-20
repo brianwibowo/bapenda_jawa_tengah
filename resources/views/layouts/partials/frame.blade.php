@@ -140,10 +140,11 @@
         fetch(accessUrl)
         .then(r => r.text())
         .then(html => {
-            const parser      = new DOMParser();
-            const doc         = parser.parseFromString(html, 'text/html');
-            const bodyContent = doc.querySelector('[data-frame-body]');
-            const iframe       = document.getElementById('iframe');
+            const parser        = new DOMParser();
+            const doc           = parser.parseFromString(html, 'text/html');
+            const bodyContent   = doc.querySelector('[data-frame-body]');
+            const scriptContent = doc.querySelectorAll('[data-form-script]');
+            const iframe        = document.getElementById('iframe');
 
             if (!bodyContent) {
                 $('#Loading').hide();
@@ -174,6 +175,14 @@
                 document.body.appendChild(s);
                 old.remove();
             });
+
+            // Re-run any additional scripts marked with data-frame-script
+            scriptContent.forEach(old => {
+                const s = document.createElement('script');
+                if (old.src) s.src = old.src; else s.textContent = old.textContent;
+                document.body.appendChild(s);
+                old.remove();
+            }); 
 
             // Footer: Batal + Ajukan
             $('.modal-footer').html(`
@@ -241,6 +250,7 @@
                             if (result.message) alert(result.message);
                             // Reset state agar bisa dibuka ulang
                             _frameState.rendered = false;
+                            window.location.reload();
                         }
                     })
                     .catch(err => {

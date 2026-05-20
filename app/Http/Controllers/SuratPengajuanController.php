@@ -8,6 +8,7 @@ use App\Models\Pengajuan;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SuratPengajuanController extends Controller
 {
@@ -212,7 +213,6 @@ class SuratPengajuanController extends Controller
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
         $user = Auth::user();
         $progress = $pengajuan->getTotalSurat();
-        error_log("Progress Pengajuan ID {$pengajuan->id}: {$progress}, User Unit Kerja: {$user->unit_kerja}");
         if ($user->unit_kerja == 'Samsat') {
             return $this->ajukanPolda($request, $id);
         } else if ($progress == 2 && $user->unit_kerja == 'Polda') {    
@@ -246,6 +246,14 @@ class SuratPengajuanController extends Controller
 
         foreach ($pengajuan->kendaraans as $kendaraan) {
             if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
+                $sp = SuratPengajuan::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'kendaraan_id' => $kendaraan->id,
+                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
+                    'tanggal_surat' => now(),
+                    'persetujuan_unit_kerja' => $this->persetujuanPolda
+                ]);
+
                 // Simpan log perubahan status
                 KendaraanLog::create([
                     'kendaraan_id' => $kendaraan->id,
@@ -254,14 +262,7 @@ class SuratPengajuanController extends Controller
                     'status_baru' => $kendaraan->status,
                     'tipe' => 'system',
                     'catatan' => 'Kendaraan diajukan ke Polda oleh ' . Auth::user()->name,
-                ]);
-
-                $sp = SuratPengajuan::create([
-                    'pengajuan_id' => $pengajuan->id,
-                    'kendaraan_id' => $pengajuan->kendaraans->first()->id, // Asumsi satu kendaraan per pengajuan, sesuaikan jika banyak
-                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
-                    'tanggal_surat' => now(),
-                    'persetujuan_unit_kerja' => $this->persetujuanPolda
+                    'sp_id' => $sp->id,
                 ]);
 
                 $spArray[] = $sp;
@@ -297,6 +298,14 @@ class SuratPengajuanController extends Controller
         // Update status kendaraan menjadi "Diajukan ke Bapenda/JR"
         foreach ($pengajuan->kendaraans as $kendaraan) {
             if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
+                $sp = SuratPengajuan::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'kendaraan_id' => $kendaraan->id,
+                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
+                    'tanggal_surat' => now(),
+                    'persetujuan_unit_kerja' => $this->persetujuanDefault
+                ]);
+
                 // Simpan log perubahan status
                 KendaraanLog::create([
                     'kendaraan_id' => $kendaraan->id,
@@ -305,14 +314,7 @@ class SuratPengajuanController extends Controller
                     'status_baru' => $kendaraan->status,
                     'tipe' => 'system',
                     'catatan' => 'Kendaraan diajukan ke Bapenda/JR oleh ' . Auth::user()->name,
-                ]);
-
-                $sp = SuratPengajuan::create([
-                    'pengajuan_id' => $pengajuan->id,
-                    'kendaraan_id' => $pengajuan->kendaraans->first()->id, // Asumsi satu kendaraan per pengajuan, sesuaikan jika banyak
-                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
-                    'tanggal_surat' => now(),
-                    'persetujuan_unit_kerja' => $this->persetujuanDefault
+                    'sp_id' => $sp->id,
                 ]);
 
                 $spArray[] = $sp;
@@ -473,11 +475,45 @@ class SuratPengajuanController extends Controller
                 'status_baru' => $kendaraan->status,
                 'tipe' => 'system',
                 'catatan' => $notes,
+                'sp_id' => (isset($file) && is_int($file)) ? $file : null, // Mengakali $file = $sp_id di parameter jika bukan file
             ]);
-            if ($file) {
+            if ($file && !is_int($file)) {
                 $logCurrent->addMedia($file)->toMediaCollection("lampiran_log");
             }
         }
+    }
+
+    public function uploadFileToMedia(Request $request)
+    {
+        $request->validate([
+            'sp_id' => 'required|integer',
+            'log_id' => 'required|integer',
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png,heic,heif,docx|max:10240',
+        ]);
+
+        $suratpengajuan = SuratPengajuan::findOrFail($request->sp_id);
+        $log = KendaraanLog::findOrFail($request->log_id);
+        
+        if ($suratpengajuan->pdf_url) {
+            return redirect()->route('admin.pengajuan.show', $suratpengajuan->pengajuan_id)
+                ->with('error', 'File PDF sudah ada di media library.');
+        }
+
+        $filename = $request->file->getClientOriginalName();
+        $storagePath    = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+        Storage::disk('public')->put($storagePath, $request->file('file')->get());
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+        
+        $suratpengajuan->update([
+            'local_pdf_path' => $pdfUrlAbsolute,
+            'pdf_url' => $pdfUrlAbsolute,
+        ]);
+        
+        $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection("lampiran_log");
+
+        return redirect()->route('admin.pengajuan.show', $suratpengajuan->pengajuan_id)
+            ->with('success', 'File PDF berhasil diupload.');
     }
 
 }

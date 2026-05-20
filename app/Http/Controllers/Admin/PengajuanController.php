@@ -8,6 +8,9 @@ use App\Models\Cabang;
 use App\Models\Pengajuan;
 use App\Models\Kendaraan;
 use App\Models\KendaraanLog;
+use App\Models\SuratKeputusan;
+use App\Models\SuratPengajuan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -109,7 +112,6 @@ class PengajuanController extends Controller
                 ? collect($lastSp->persetujuan_unit_kerja)->firstWhere('instansi', $user->unit_kerja)
                 : null;
             if ($statusInstansi && $statusInstansi['status'] == 'pending') {
-                error_log("User {$user->name} ({$user->unit_kerja}) dapat merespon SP karena statusnya masih pending.");
                 $permissionSurat['canRespondSP'] = true;
             }
         }
@@ -122,12 +124,37 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSK'] = true;
         }
 
+        $isUpload = [
+            "sk" => [],
+            "sp" => []
+        ];
+
+        foreach($pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->values() as $log){
+            $user_log = User::find($log->user_id);
+            if ((!$log->sk_id && !$log->sp_id) || ($user_log && !($user_log->unit_kerja == $user->unit_kerja))) continue;
+
+            if ($log->sk_id) {
+                $sk = SuratKeputusan::findOrFail($log->sk_id);
+                if (!$sk->local_pdf_path) {
+                    $isUpload['sk'][$log->sk_id] = true;
+                }
+            }
+            if ($log->sp_id) {
+                $sp = SuratPengajuan::findOrFail($log->sp_id);
+                if (!$sp->local_pdf_path) {
+                    $isUpload['sp'][$log->sp_id] = true;
+                }
+            }
+            
+        }
+
         return view('admin.pengajuan.show', compact(
             'pengajuan',
             'suratkeputusan',
             'suratpengajuan',
             'progress',
-            'permissionSurat'
+            'permissionSurat',
+            'isUpload'
         ));
     }
 

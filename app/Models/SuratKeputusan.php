@@ -34,14 +34,14 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SuratKeputusan whereUserId($value)
  * @mixin \Eloquent
  *//*  */
-class SuratKeputusan extends Model implements HasMedia
+class SuratKeputusan extends Model
 {
 
-    use HasFactory, InteractsWithMedia;
+    use HasFactory;
 
     protected $fillable = [
         'pengajuan_id', 'kendaraan_id', 'user_id', 'unit_kerja',
-        'nomor_sk', 'perihal', 'isi_putusan', 'tanggal_ditetapkan'
+        'nomor_sk', 'local_pdf_path', 'pdf_url', 'tanggal_ditetapkan'
     ];
 
     protected $casts = [

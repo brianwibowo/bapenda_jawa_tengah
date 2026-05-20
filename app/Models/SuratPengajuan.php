@@ -33,7 +33,6 @@ class SuratPengajuan extends Model
 
     protected $fillable = [
         'pengajuan_id',
-        'kendaraan_id',
         'nomor_sp',
         'tanggal_surat',
         'persetujuan_unit_kerja',
