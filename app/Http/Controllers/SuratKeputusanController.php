@@ -130,13 +130,10 @@ class SuratKeputusanController extends Controller
         $config = $registries[$type] ?? abort(404);
 
         if ((int) $step < 3 && isset($config['polda2bapenda&jr'])) {
-            error_log("polda2bapenda&jr");
             $config = $config['polda2bapenda&jr'];
         } elseif ((int) $step < 4 && isset($config['bapenda'])) {
-            error_log("bapenda");
             $config = $config['bapenda'];
         } else {
-            error_log("Default");
             $config = $config['default'];
         }
         $config['filename'] = $data ? ($config['prefix'] ?? '') . $data->nomor_sk : 'DOKUMEN_SK';
@@ -530,30 +527,25 @@ class SuratKeputusanController extends Controller
             ],
         ]);
         $pengajuan = Pengajuan::with('kendaraans')->findOrFail($pengajuan_id);
-        error_log("Test 1");
         $kendaraan = $request->kendaraan_id === 'all' 
         ? $pengajuan->kendaraans 
         : $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->get();
 
-        error_log("Test 2");
         if ($kendaraan->isEmpty()) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
                 ->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
-        error_log("Test 3");
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
             //  response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
         }
 
-        error_log("Test 4");
         $suratKeputusan = $pengajuan->suratKeputusans;
 
         // Cek untuk unit_kerja user sekarang, apakah sudah ada SK yang diajukan untuk unit kerja tersebut
         if ($request->kendaraan_id !== 'all' && $suratKeputusan->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))->isNotEmpty()) {
-            error_log("Test 5");
                 // Map suratKeputusan with unit_kerja
             $skUnitKerja = $suratKeputusan->pluck('unit_kerja')->toArray();
             return redirect()->route('admin.pengajuan.show', $pengajuan)
@@ -563,17 +555,14 @@ class SuratKeputusanController extends Controller
         
         $data = [];
 
-        error_log('Preparing SK');
         switch ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
             case 'Polda':
                 $unitKerja = 'Polda';
                 $data = $this->generateSkRegident($request, $pengajuan);
-                error_log('Generate SK Regident');
                 break;
             case 'Bapenda':
                 $unitKerja = 'Bapenda';
                 $data = $this->generateSkBapenda($request, $pengajuan);
-                error_log('Generate SK Bapenda');
                 break;
             case 'JR':
                 $unitKerja = 'JR';
@@ -598,7 +587,6 @@ class SuratKeputusanController extends Controller
                 })
             ]);
         }
-        error_log('Generate SK');
         // Loop setiap data hasil switch dengan kendaraan
         foreach ($kendaraan as $k) {
             $sk = SuratKeputusan::create([
