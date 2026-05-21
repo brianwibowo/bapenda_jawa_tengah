@@ -13,8 +13,8 @@ class AppServiceProvider extends ServiceProvider
     }
     public function boot(): void
     {
-        // Force HTTPS in production (behind reverse proxy with SSL)
-        if (config('app.env') === 'production') {
+        // Force HTTPS only when it is explicitly enabled or in production.
+        if (config('app.env') === 'production' || filter_var(env('FORCE_HTTPS', false), FILTER_VALIDATE_BOOL)) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
