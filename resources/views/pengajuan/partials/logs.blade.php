@@ -4,26 +4,35 @@
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
-        {{-- Display SK POLDA PDFs --}}
+        {{-- Display SK & SP PDFs --}}
         @php
-            $skPoldaPdfs = $pengajuan->getMedia('sk_polda_pdf');
+            <!-- Pluck created_at and pdf_url -->
+            $sk_pluck_pdf = $pengajuan->suratKeputusan->pluck('pdf_url','created_at')->filter()->unique();
+            $sp_pluck_pdf = $pengajuan->suratTugas->pluck('pdf_url','created_at')->filter()->unique();
+
+            <!-- Merge both Surat -->
+             $all_pdf_url = $sk_pluck_pdf->merge($sp_pluck_pdf)->unique();
         @endphp
-        @if($skPoldaPdfs->isNotEmpty())
+        @if($all_pdf_url->isNotEmpty())
             <div class="mb-4">
-                <h5 class="mb-3">Dokumen SK POLDA</h5>
+                <h5 class="mb-3">Dokumen</h5>
                 <div class="row">
-                    @foreach($skPoldaPdfs as $pdf)
+                    @foreach($all_pdf_url as $pdf)
                         <div class="col-md-6 col-lg-4 mb-3">
                             <div class="card border">
                                 <div class="card-body text-center">
                                     <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
-                                    <h6 class="card-title">{{ $pdf->name }}</h6>
+                                    <!-- Title trim '/' and pick the last two string -->
+                                    @php
+                                        $name = end(explode('/',$pdf->pdf_url));
+                                    @endphp
+                                    <h6 class="card-title">{{ $name }}</h6>
                                     <p class="card-text small text-muted">
                                         Dibuat: {{ $pdf->created_at->format('d M Y H:i') }}
                                     </p>
                                     @php
                                         // Build a safe URL: if host is localhost or 127.0.0.1, force port 8000
-                                        $originalUrl = $pdf->getUrl();
+                                        $originalUrl = $pdf->pdf_url;
                                         $viewUrl = $originalUrl;
                                         $downloadUrl = $originalUrl;
                                         $parts = @parse_url($originalUrl);
