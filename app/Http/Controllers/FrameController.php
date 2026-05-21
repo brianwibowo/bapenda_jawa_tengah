@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengajuan;
+use App\Models\SuratKeputusan;
+use App\Models\SuratPengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Barryvdh\DomPDF\Facade\Pdf;

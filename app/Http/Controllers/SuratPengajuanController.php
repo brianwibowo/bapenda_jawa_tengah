@@ -264,6 +264,9 @@ class SuratPengajuanController extends Controller
         if ($type == 'pdf') {
             $sp = SuratPengajuan::with('pengajuan.kendaraans.pemilik')->findOrFail($id);
             $config = SuratPengajuanController::getRegistry($type, $sp->pengajuan_id, $sp);
+            $pengajuan = $sp->pengajuan;
+            $kendaraans = $pengajuan->kendaraans;
+            $pemilik = optional($kendaraans->first())->pemilik;
 
             if ($sp->local_pdf_path) {
                 $path = $sp->local_pdf_path;
