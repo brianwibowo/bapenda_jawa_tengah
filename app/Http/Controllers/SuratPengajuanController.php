@@ -37,7 +37,7 @@ class SuratPengajuanController extends Controller
 
         $registries = [
             'pdf' => [
-                'view' => 'pdf.view_sp',
+                'view' => 'pdf.view_pengajuan',
                 'prefix' => 'SP-',
                 'permission' => 'view_dokumen_surat_pengajuan',
             ],
@@ -143,8 +143,16 @@ class SuratPengajuanController extends Controller
         if ($type == 'pdf') {
             $sp = SuratPengajuan::with('pengajuan.kendaraans.pemilik')->findOrFail($id);
             $config = SuratPengajuanController::getRegistry($type, $sp->pengajuan_id, $sp);
+            $pengajuan = $sp->pengajuan;
+            $kendaraans = $pengajuan->kendaraans;
+            $pemilik = optional($kendaraans->first())->pemilik;
 
-            return Pdf::loadView($config['view'], ['sp' => $sp])
+            return Pdf::loadView($config['view'], [
+                'sp' => $sp,
+                'pengajuan' => $pengajuan,
+                'kendaraans' => $kendaraans,
+                'pemilik' => $pemilik,
+            ])
                 ->setPaper('a4', 'portrait')
                 ->stream($config['filename'] . '.pdf');
         }

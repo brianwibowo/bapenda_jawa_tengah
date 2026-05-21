@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengajuan;
+use App\Models\SuratKeputusan;
+use App\Models\SuratPengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -14,13 +16,24 @@ class FrameController extends Controller
     public function requestAccess(Request $request, $type, $category, $id)
     {
         $user = Auth::user();
-        $config = $type == 'sk' ? SKController::getRegistry($category, $id) : SPController::getRegistry($category, $id);
 
-        
+        if ($type === 'sk' && $category === 'pdf') {
+            $sk = SuratKeputusan::findOrFail($id);
+            $config = SKController::getRegistry($category, $sk->pengajuan_id, $sk);
+        } elseif ($type === 'sp' && $category === 'pdf') {
+            $sp = SuratPengajuan::findOrFail($id);
+            $config = SPController::getRegistry($category, $sp->pengajuan_id, $sp);
+        } elseif ($type === 'sk') {
+            $config = SKController::getRegistry($category, $id);
+        } else {
+            $config = SPController::getRegistry($category, $id);
+        }
+
         // 1. Cek Permission dari RBAC Spatie secara dinamis sesuai kategori
-        if (!$user->canAny($config['permission'])) {
+        $permissions = is_array($config['permission']) ? $config['permission'] : [$config['permission']];
+        if (!$user->canAny($permissions)) {
             return response()->json(['error' => 'Anda tidak memiliki izin akses untuk kategori ini.'], 403);
-        } 
+        }
             
         if ($config['footer'] ?? false) {
             foreach ($config['footer'] as $key => $action) {

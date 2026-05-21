@@ -77,11 +77,30 @@
                     }
                     @endphp
 
+                    @php
+                        $currentSp = $pengajuan->getCurrentSuratPengajuan();
+                        $currentSk = $pengajuan->suratKeputusans->last();
+                    @endphp
+
                     {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
                     @if($hasSuratAction)
                         <button class="btn btn-outline-primary" 
                                 onclick="openSecureFrame('{{ $type }}', 'form', {{ $pengajuan->id }})">
                             <i class="fas fa-file-signature me-1"></i> {{ $label }}
+                        </button>
+                    @endif
+
+                    @if($currentSp)
+                        <button class="btn btn-outline-secondary"
+                                onclick="openSecureFrame('sp', 'pdf', {{ $currentSp->id }})">
+                            <i class="fas fa-file-pdf me-1"></i> Lihat PDF SP
+                        </button>
+                    @endif
+
+                    @if($currentSk)
+                        <button class="btn btn-outline-secondary"
+                                onclick="openSecureFrame('sk', 'pdf', {{ $currentSk->id }})">
+                            <i class="fas fa-file-pdf me-1"></i> Lihat PDF SK
                         </button>
                     @endif
 
