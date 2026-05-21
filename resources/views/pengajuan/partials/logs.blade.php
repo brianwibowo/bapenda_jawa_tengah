@@ -6,47 +6,42 @@
     <div class="card-body">
         {{-- Display SK & SP PDFs --}}
         @php
-            <!-- Pluck created_at and pdf_url -->
-            $sk_pluck_pdf = $pengajuan->suratKeputusan->pluck('pdf_url','created_at')->filter()->unique();
-            $sp_pluck_pdf = $pengajuan->suratTugas->pluck('pdf_url','created_at')->filter()->unique();
-
-            <!-- Merge both Surat -->
-             $all_pdf_url = $sk_pluck_pdf->merge($sp_pluck_pdf)->unique();
+            // Kumpulkan semua dokumen PDF dari SK dan SP yang memiliki pdf_url
+            // Gunakan ?? collect() agar aman jika relasi belum di-load atau null
+            $sk_docs = ($pengajuan->suratKeputusan ?? collect())->filter(fn($sk) => !empty($sk->pdf_url));
+            $sp_docs = ($pengajuan->suratPengajuan ?? collect())->filter(fn($sp) => !empty($sp->pdf_url));
+            $all_docs = $sk_docs->merge($sp_docs)->sortByDesc('created_at');
         @endphp
-        @if($all_pdf_url->isNotEmpty())
+        @if($all_docs->isNotEmpty())
             <div class="mb-4">
                 <h5 class="mb-3">Dokumen</h5>
                 <div class="row">
-                    @foreach($all_pdf_url as $pdf)
+                    @foreach($all_docs as $doc)
                         <div class="col-md-6 col-lg-4 mb-3">
                             <div class="card border">
                                 <div class="card-body text-center">
                                     <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
-                                    <!-- Title trim '/' and pick the last two string -->
                                     @php
-                                        $name = end(explode('/',$pdf->pdf_url));
-                                    @endphp
-                                    <h6 class="card-title">{{ $name }}</h6>
-                                    <p class="card-text small text-muted">
-                                        Dibuat: {{ $pdf->created_at->format('d M Y H:i') }}
-                                    </p>
-                                    @php
-                                        // Build a safe URL: if host is localhost or 127.0.0.1, force port 8000
-                                        $originalUrl = $pdf->pdf_url;
-                                        $viewUrl = $originalUrl;
-                                        $downloadUrl = $originalUrl;
-                                        $parts = @parse_url($originalUrl);
+                                        $docPdfUrl = $doc->pdf_url;
+                                        // Ambil nama file dari URL
+                                        $name = basename($docPdfUrl);
+                                        $viewUrl = $docPdfUrl;
+                                        $downloadUrl = $docPdfUrl;
+                                        // Build safe URL: if localhost/127.0.0.1, force port 8000
+                                        $parts = @parse_url($docPdfUrl);
                                         if ($parts && isset($parts['host']) && in_array($parts['host'], ['localhost', '127.0.0.1'])) {
-                                            $scheme = isset($parts['scheme']) ? $parts['scheme'] : 'http';
-                                            $host = $parts['host'];
-                                            $port = 8000;
-                                            $path = isset($parts['path']) ? $parts['path'] : '';
-                                            $query = isset($parts['query']) ? ('?'.$parts['query']) : '';
-                                            $fragment = isset($parts['fragment']) ? ('#'.$parts['fragment']) : '';
-                                            $viewUrl = $scheme.'://'.$host.':'.$port.$path.$query.$fragment;
+                                            $scheme = $parts['scheme'] ?? 'http';
+                                            $path = $parts['path'] ?? '';
+                                            $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
+                                            $fragment = isset($parts['fragment']) ? ('#' . $parts['fragment']) : '';
+                                            $viewUrl = $scheme . '://' . $parts['host'] . ':8000' . $path . $query . $fragment;
                                             $downloadUrl = $viewUrl;
                                         }
                                     @endphp
+                                    <h6 class="card-title text-truncate" title="{{ $name }}">{{ $name }}</h6>
+                                    <p class="card-text small text-muted">
+                                        Dibuat: {{ $doc->created_at->format('d M Y H:i') }}
+                                    </p>
                                     <a href="{{ $viewUrl }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-eye me-1"></i> Lihat PDF
                                     </a>
@@ -71,17 +66,17 @@
                     $type = '';
                     $label = '';
                     if ($hasSuratAction) {
-                        if ($permissionSurat['canAjukanSP']) {
+                        if (!empty($permissionSurat['canAjukanSP'])) {
                             $type = 'sp';
                             $label = 'Buat Pengajuan ke ' . (Auth::user()->unit_kerja == 'Samsat' ? 'Polda' : 'Bapenda/Jasa Raharja');
-                        } elseif ($permissionSurat['canRespondSP']) {
+                        } elseif (!empty($permissionSurat['canRespondSP'])) {
                             $type = 'sp';
                             $label = 'Review & Balas SP';
-                        } elseif ($permissionSurat['canAjukanSK']) {
+                        } elseif (!empty($permissionSurat['canAjukanSK'])) {
                             $type = 'sk';
                             $label = 'Terbitkan Surat Keputusan';
                         } else {
-                            $hasSuratAction = false; // Tidak ada aksi surat yang tersedia
+                            $hasSuratAction = false;
                         }
                     }
                     @endphp
@@ -185,7 +180,7 @@
                                         <i class="fas fa-eye me-1"></i> Detail
                                     </a>
                                 @endif
-                                @if (($log->sk_id && isset($isUpload['sk'][$log->sk_id])) || ($log->sp_id && isset($isUpload['sp'][$log->sp_id])))
+                                @if (isset($isUpload) && (($log->sk_id && isset($isUpload['sk'][$log->sk_id])) || ($log->sp_id && isset($isUpload['sp'][$log->sp_id]))))
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#upload{{ $log->sk_id ? 'SK' : 'SP' }}Modal" data-log-id="{{ $log->id }}" data-surat-id="{{ $log->sk_id ?? $log->sp_id }}">
                                         <i class="fas fa-file-contract me-1"></i>Upload
                                     </button>
