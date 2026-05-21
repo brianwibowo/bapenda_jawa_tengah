@@ -122,11 +122,16 @@
                             @if($medias->count() > 0)
                                 <div class="row g-4">
                                     @foreach($medias as $m)
+                                        @php
+                                            $mediaUrl = $m->disk === 'public'
+                                                ? '/storage/' . ltrim($m->getPathRelativeToRoot(), '/')
+                                                : $m->getUrl();
+                                        @endphp
                                         <div class="col-md-6 col-md-4">
                                             <div class="card h-100 border-0 shadow-sm attachment-card">
-                                                @if(Str::startsWith($m->mime_type, 'image/'))
+                                                @if(\Illuminate\Support\Str::startsWith($m->mime_type, 'image/'))
                                                     <div class="position-relative bg-light">
-                                                        <img src="{{ $m->getUrl() }}" class="card-img-top object-fit-cover"
+                                                        <img src="{{ $mediaUrl }}" class="card-img-top object-fit-cover"
                                                             alt="Lampiran Gambar"
                                                             style="height: 160px; border-bottom: 3px solid #f8f9fa;">
                                                         <span
@@ -135,11 +140,11 @@
                                                 @else
                                                     <div class="card-img-top bg-light d-flex flex-column align-items-center justify-content-center text-secondary position-relative"
                                                         style="height: 160px; border-bottom: 3px solid #e9ecef;">
-                                                        @if(Str::contains($m->mime_type, 'pdf'))
+                                                        @if(\Illuminate\Support\Str::contains($m->mime_type, 'pdf'))
                                                             <i class="far fa-file-pdf text-danger mb-2" style="font-size: 4rem;"></i>
                                                             <span
                                                                 class="position-absolute top-0 end-0 badge bg-danger m-2 shadow-sm rounded-pill px-3">PDF</span>
-                                                        @elseif(Str::contains($m->mime_type, 'word'))
+                                                        @elseif(\Illuminate\Support\Str::contains($m->mime_type, 'word'))
                                                             <i class="far fa-file-word text-primary mb-2" style="font-size: 4rem;"></i>
                                                             <span
                                                                 class="position-absolute top-0 end-0 badge bg-primary m-2 shadow-sm rounded-pill px-3">DOCX</span>
@@ -157,7 +162,7 @@
                                                     <p class="card-text small text-muted mb-3"><i class="fas fa-hdd me-1"></i>
                                                         {{ round($m->size / 1024, 1) }} KB</p>
                                                     <div class="mt-auto">
-                                                        <a href="{{ $m->getUrl() }}" target="_blank"
+                                                        <a href="{{ $mediaUrl }}" target="_blank"
                                                             class="btn btn-sm btn-outline-primary w-100 stretched-link fw-bold btn-download">
                                                             <i class="fas fa-external-link-alt me-1"></i> Buka / Unduh File
                                                         </a>

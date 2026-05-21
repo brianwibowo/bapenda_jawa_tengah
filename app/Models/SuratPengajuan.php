@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -34,17 +32,26 @@ class SuratPengajuan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'pengajuan_id', 'nomor_sp', 'tanggal_surat', 
-        'persetujuan_unit_kerja', 'catatan_instansi'
+        'pengajuan_id',
+        'nomor_sp',
+        'tanggal_surat',
+        'persetujuan_unit_kerja',
+        'local_pdf_path',
+        'pdf_url',
+        'catatan_instansi',
     ];
 
     protected $casts = [
         'persetujuan_unit_kerja' => 'array',
-        'tanggal_surat' => 'date'
+        'tanggal_surat' => 'date',
     ];
 
     public function pengajuan() {
         return $this->belongsTo(Pengajuan::class);
+    }
+
+    public function kendaraan() {
+        return $this->belongsTo(Kendaraan::class);
     }
 
     public function isFullyApproved()

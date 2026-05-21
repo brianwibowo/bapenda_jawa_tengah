@@ -176,6 +176,11 @@
                                         <i class="fas fa-eye me-1"></i> Detail
                                     </a>
                                 @endif
+                                @if (($log->sk_id && isset($isUpload['sk'][$log->sk_id])) || ($log->sp_id && isset($isUpload['sp'][$log->sp_id])))
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#upload{{ $log->sk_id ? 'SK' : 'SP' }}Modal" data-log-id="{{ $log->id }}" data-surat-id="{{ $log->sk_id ?? $log->sp_id }}">
+                                        <i class="fas fa-file-contract me-1"></i>Upload
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -279,9 +284,65 @@
     </div>
 </div>
 
+<!-- Modal Upload SK -->
+<div class="modal fade" id="uploadSKModal" tabindex="-1" aria-labelledby="uploadSKModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.pengajuan.sk.upload_media') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadSKModalLabel">Upload File Surat Keputusan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="log_id" id="skLogIdInput">
+                    <input type="hidden" name="sk_id" id="skIdInput">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih File (PDF/Image, Max 10MB)</label>
+                        <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Upload SP -->
+<div class="modal fade" id="uploadSPModal" tabindex="-1" aria-labelledby="uploadSPModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.pengajuan.sp.upload_media') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadSPModalLabel">Upload File Surat Pengajuan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="log_id" id="spLogIdInput">
+                    <input type="hidden" name="sp_id" id="spIdInput">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih File (PDF/Image, Max 10MB)</label>
+                        <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Prefill modal kendaraan select when "Buat Aksi" from a row is clicked
     document.addEventListener('DOMContentLoaded', function () {
+        // Prefill modal kendaraan select when "Buat Aksi" from a row is clicked
         document.querySelectorAll('.btn-open-log-modal').forEach(btn => {
             btn.addEventListener('click', function () {
                 const kendId = this.getAttribute('data-kendaraan-id');
@@ -289,6 +350,30 @@
                 if (sel && kendId) sel.value = kendId;
             });
         });
+        
+        // Populate SK Upload Modal
+        const uploadSKModal = document.getElementById('uploadSKModal');
+        if (uploadSKModal) {
+            uploadSKModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const logId = button.getAttribute('data-log-id');
+                const suratId = button.getAttribute('data-surat-id');
+                uploadSKModal.querySelector('#skLogIdInput').value = logId;
+                uploadSKModal.querySelector('#skIdInput').value = suratId;
+            });
+        }
+
+        // Populate SP Upload Modal
+        const uploadSPModal = document.getElementById('uploadSPModal');
+        if (uploadSPModal) {
+            uploadSPModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const logId = button.getAttribute('data-log-id');
+                const suratId = button.getAttribute('data-surat-id');
+                uploadSPModal.querySelector('#spLogIdInput').value = logId;
+                uploadSPModal.querySelector('#spIdInput').value = suratId;
+            });
+        }
         
         // Dynamic Multiple File Input Logic
         const btnAddFile = document.getElementById('btnAddFile');

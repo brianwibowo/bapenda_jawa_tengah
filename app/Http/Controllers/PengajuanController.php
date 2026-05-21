@@ -8,7 +8,6 @@ use App\Models\Kendaraan;
 use App\Models\Pemilik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Arr;
 
 class PengajuanController extends Controller
