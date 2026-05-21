@@ -1,17 +1,17 @@
 <div class="modal fade" id="ViewerModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" style="max-width: 90%; height: 95vh;">
-        <div class="modal-content" style="height: 100%;">
-            <div class="modal-header">
+    <div class="modal-dialog modal-lg" style="max-width: 90%; height: 95vh; margin: auto;">
+        <div class="modal-content" style="height: 100%; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
                 <h5 class="modal-title" id="ModalTitle">Preview Dokumen</h5>
                 <button type="button" class="close" data-dismiss="modal" onclick="(function(){$('#ViewerModal').modal('hide');})()"><span>&times;</span></button>
             </div>
-            <div class="modal-body p-0">
+            <div class="modal-body p-0" style="flex: 1 1 auto; overflow-y: auto; min-height: 0;">
                 <div id="Loading" class="text-center p-5">
                     <i class="fas fa-spinner fa-spin fa-3x"></i><br>Memverifikasi Akses...
                 </div>
                 <iframe id="iframe" src="" frameborder="0" style="width:100%; height:100%; display:none;"></iframe>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="flex-shrink: 0;">
             </div>
         </div>
     </div>
@@ -81,7 +81,7 @@
         modalBody.innerHTML = '';
         modalBody.style.overflowY = '';
         modalBody.style.maxHeight = '';
-        modalBody.style.padding   = '';
+        modalBody.style.padding   = '0';
         
         const loading = document.createElement('div');
         loading.id = 'Loading';
@@ -156,7 +156,7 @@
             const modalBody = document.querySelector('#ViewerModal .modal-body');
             modalBody.innerHTML   = '';
             modalBody.style.overflowY = 'auto';
-            modalBody.style.maxHeight = '70vh';
+            modalBody.style.maxHeight = '';
             modalBody.style.padding   = '1.5rem';
 
             const form = doc.getElementById('frameForm');

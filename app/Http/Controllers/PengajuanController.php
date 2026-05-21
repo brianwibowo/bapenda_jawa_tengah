@@ -359,7 +359,7 @@ class PengajuanController extends Controller
 
         $user = Auth::user();
 
-        $log = \App\Models\KendaraanLog::create([
+        $log = KendaraanLog::create([
             'kendaraan_id' => $kendaraan->id,
             'user_id' => $user->id,
             'tipe' => $validated['tipe'],
@@ -413,7 +413,7 @@ class PengajuanController extends Controller
             abort(403);
         }
 
-        $log = \App\Models\KendaraanLog::with(['user', 'kendaraan', 'media'])->findOrFail($logId);
+        $log = KendaraanLog::with(['user', 'kendaraan', 'media'])->findOrFail($logId);
         
         // Pastikan log milik bundel pengajuan ini
         if ($log->kendaraan->pengajuan_id !== $pengajuan->id) {

@@ -1,4 +1,113 @@
 <x-guest-layout>
+    <div class="reg-wrap">
+        {{-- Header --}}
+        <div class="reg-header text-center">
+            <span class="reg-header__badge">Pendaftaran</span>
+            <h3>Daftar Akun Wajib Pajak</h3>
+            <p>Lengkapi data untuk membuat akun baru</p>
+        </div>
+
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
+
+            {{-- Nama Lengkap --}}
+            <div class="reg-field">
+                <label for="name">Nama Lengkap</label>
+                <input id="name" class="form-control @error('name') is-invalid @enderror" type="text" name="name"
+                    value="{{ old('name') }}" placeholder="Nama sesuai identitas" required autofocus
+                    autocomplete="name">
+                @error('name')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Email --}}
+            <div class="reg-field">
+                <label for="email">Alamat Email</label>
+                <input id="email" class="form-control @error('email') is-invalid @enderror" type="email" name="email"
+                    value="{{ old('email') }}" placeholder="nama@email.com" required autocomplete="username">
+                @error('email')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Nomor HP (WhatsApp) --}}
+            <div class="reg-field">
+                <label for="no_hp">Nomor HP (WhatsApp)</label>
+                <input id="no_hp" class="form-control @error('no_hp') is-invalid @enderror" type="text" name="no_hp"
+                    value="{{ old('no_hp') }}" placeholder="081234567890" required>
+                @error('no_hp')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Domisili --}}
+            <div class="reg-field">
+                <label for="domisili_regency_id">Domisili (Kab/Kota Jawa Tengah)</label>
+                <select id="domisili_regency_id" name="domisili_regency_id"
+                    class="form-select @error('domisili_regency_id') is-invalid @enderror" required>
+                    <option value="">— Pilih Domisili —</option>
+                    @foreach($regencies as $regency)
+                    <option value="{{ $regency->id }}" @selected(old('domisili_regency_id')===$regency->id)>
+                        {{ $regency->name }}
+                    </option>
+                    @endforeach
+                </select>
+                @error('domisili_regency_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Password --}}
+            <div class="reg-field">
+                <label for="password">Password</label>
+                <input id="password" class="form-control @error('password') is-invalid @enderror" type="password"
+                    name="password" placeholder="Minimal 8 karakter" required autocomplete="new-password">
+                @error('password')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Konfirmasi Password --}}
+            <div class="reg-field" style="margin-bottom: 1.25rem;">
+                <label for="password_confirmation">Konfirmasi Password</label>
+                <input id="password_confirmation"
+                    class="form-control @error('password_confirmation') is-invalid @enderror" type="password"
+                    name="password_confirmation" placeholder="Ketik ulang password" required
+                    autocomplete="new-password">
+                <span id="pw-hint" class="pw-hint"></span>
+                @error('password_confirmation')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Terms and Conditions --}}
+            <div class="reg-check" style="margin-bottom: 1.25rem;">
+                <input class="@error('terms_law') is-invalid @enderror" type="checkbox" value="1" id="terms_law"
+                    name="terms_law" @checked(old('terms_law'))>
+                <div>
+                    <label for="terms_law">
+                        Saya bersedia mengikuti ketentuan perundang-undangan yang berlaku.
+                    </label>
+                    @error('terms_law')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <hr class="reg-sep">
+            {{-- Footer --}}
+            <div class="reg-footer">
+                <a href="{{ route('login') }}" class="reg-footer__login">
+                    Sudah punya akun? Masuk
+                </a>
+                <button type="submit" class="btn-register">
+                    Daftar Sekarang
+                </button>
+            </div>
+
+        </form>
+    </div>
 
     <style>
         :root {
@@ -192,127 +301,18 @@
         }
     </style>
 
-    <div class="reg-wrap">
-
-        {{-- Header --}}
-        <div class="reg-header text-center">
-            <span class="reg-header__badge">Pendaftaran</span>
-            <h3>Daftar Akun Wajib Pajak</h3>
-            <p>Lengkapi data untuk membuat akun baru</p>
-        </div>
-
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
-
-            {{-- Nama Lengkap --}}
-            <div class="reg-field">
-                <label for="name">Nama Lengkap</label>
-                <input id="name" class="form-control @error('name') is-invalid @enderror" type="text" name="name"
-                    value="{{ old('name') }}" placeholder="Nama sesuai identitas" required autofocus
-                    autocomplete="name">
-                @error('name')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            {{-- Email --}}
-            <div class="reg-field">
-                <label for="email">Alamat Email</label>
-                <input id="email" class="form-control @error('email') is-invalid @enderror" type="email" name="email"
-                    value="{{ old('email') }}" placeholder="nama@email.com" required autocomplete="username">
-                @error('email')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            {{-- Nomor HP (WhatsApp) --}}
-            <div class="reg-field">
-                <label for="no_hp">Nomor HP (WhatsApp)</label>
-                <input id="no_hp" class="form-control @error('no_hp') is-invalid @enderror" type="text" name="no_hp"
-                    value="{{ old('no_hp') }}" placeholder="081234567890" required>
-                @error('no_hp')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            {{-- Domisili --}}
-            <div class="reg-field">
-                <label for="domisili_regency_id">Domisili (Kab/Kota Jawa Tengah)</label>
-                <select id="domisili_regency_id" name="domisili_regency_id"
-                    class="form-select @error('domisili_regency_id') is-invalid @enderror" required>
-                    <option value="">— Pilih Domisili —</option>
-                    @foreach($regencies as $regency)
-                        <option value="{{ $regency->id }}" @selected(old('domisili_regency_id') === $regency->id)>
-                            {{ $regency->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('domisili_regency_id')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            {{-- Password --}}
-            <div class="reg-field">
-                <label for="password">Password</label>
-                <input id="password" class="form-control @error('password') is-invalid @enderror" type="password"
-                    name="password" placeholder="Minimal 8 karakter" required autocomplete="new-password">
-                @error('password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            {{-- Konfirmasi Password --}}
-            <div class="reg-field" style="margin-bottom: 1.25rem;">
-                <label for="password_confirmation">Konfirmasi Password</label>
-                <input id="password_confirmation"
-                    class="form-control @error('password_confirmation') is-invalid @enderror" type="password"
-                    name="password_confirmation" placeholder="Ketik ulang password" required
-                    autocomplete="new-password">
-                <span id="pw-hint" class="pw-hint"></span>
-                @error('password_confirmation')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-
-
-            <div class="reg-check" style="margin-bottom: 1.25rem;">
-                <input class="@error('terms_law') is-invalid @enderror" type="checkbox" value="1" id="terms_law"
-                    name="terms_law" @checked(old('terms_law'))>
-                <div>
-                    <label for="terms_law">
-                        Saya bersedia mengikuti ketentuan perundang-undangan yang berlaku.
-                    </label>
-                    @error('terms_law')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
-            <hr class="reg-sep">
-
-            {{-- Footer --}}
-            <div class="reg-footer">
-                <a href="{{ route('login') }}" class="reg-footer__login">
-                    Sudah punya akun? Masuk
-                </a>
-                <button type="submit" class="btn-register">
-                    Daftar Sekarang
-                </button>
-            </div>
-
-        </form>
-    </div>
-
     <script>
-        (function () {
+        (function() {
             const pw = document.getElementById('password');
             const conf = document.getElementById('password_confirmation');
             const hint = document.getElementById('pw-hint');
 
             function check() {
-                if (!conf.value) { hint.textContent = ''; hint.className = 'pw-hint'; return; }
+                if (!conf.value) {
+                    hint.textContent = '';
+                    hint.className = 'pw-hint';
+                    return;
+                }
                 const match = pw.value === conf.value;
                 hint.textContent = match ? '✓ Password sesuai.' : '✗ Password belum sesuai.';
                 hint.className = 'pw-hint ' + (match ? 'match' : 'nomatch');
@@ -322,5 +322,4 @@
             conf.addEventListener('input', check);
         })();
     </script>
-
 </x-guest-layout>

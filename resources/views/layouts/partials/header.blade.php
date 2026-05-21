@@ -1,4 +1,5 @@
 {{-- resources/views/layouts/partials/header.blade.php --}}
+<link rel="stylesheet" href="{{ asset('kaiadmin/css/notifications.css') }}">
 <div class="main-header">
     <div class="main-header-logo">
         <div class="logo-header" data-background-color="dark">
@@ -22,6 +23,48 @@
     <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
         <div class="container-fluid">
             <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                <li class="nav-item topbar-icon dropdown hidden-caret">
+                    <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        @php $unreadCount = Auth::user()->unreadNotifications()->count(); @endphp
+                        <i class="fa fa-bell"></i>
+                        @if($unreadCount > 0)
+                            <span class="notification" id="notifBadge">{{ $unreadCount }}</span>
+                        @endif
+                    </a>
+                    <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
+                        <li>
+                            <div class="dropdown-title">
+                                Anda memiliki <span id="notifCountText">{{ $unreadCount }}</span> notifikasi baru
+                                @if($unreadCount > 0)
+                                    <a href="#" id="markAsReadBtn" class="float-end small text-primary">Tandai Semua Dibaca</a>
+                                @endif
+                            </div>
+                        </li>
+                        <li>
+                            <div class="notif-scroll scrollbar-outer">
+                                <div class="notif-center">
+                                    @forelse(Auth::user()->notifications()->take(5)->get() as $notification)
+                                        <a href="{{ $notification->data['url'] ?? '#' }}" class="single-notif-link {{ $notification->read_at ? '' : 'unread' }}" data-id="{{ $notification->id }}">
+                                            <div class="notif-icon notif-primary"> <i class="fa fa-info-circle"></i> </div>
+                                            <div class="notif-content">
+                                                <span class="block">
+                                                    {{ $notification->data['message'] ?? 'Aktivitas Baru' }}
+                                                </span>
+                                                <span class="time">{{ $notification->created_at->diffForHumans() }}</span> 
+                                            </div>
+                                        </a>
+                                    @empty
+                                        <div class="notif-empty">
+                                            <i class="fa fa-bell-slash"></i>
+                                            Belum ada notifikasi.
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
                         <div class="avatar-sm">
@@ -72,3 +115,12 @@
         </div>
     </nav>
 </div>
+
+<script>
+    window.NotificationRoutes = {
+        markAllAsRead: '{{ route("notifications.markAsRead") }}',
+        markSingleAsRead: '{{ url("notifications") }}/:id/mark-as-read',
+        csrfToken: '{{ csrf_token() }}'
+    };
+</script>
+<script src="{{ asset('kaiadmin/js/notifications.js') }}"></script>
