@@ -112,6 +112,8 @@ class PengajuanController extends Controller
 
         $lastSp = $pengajuan->getCurrentSuratPengajuan();
 
+        error_log('Progress : ' . $progress);
+
         // Jika progres masih awal (0) dan belum ada SP
         if ($progress == 0 && $suratpengajuan->isEmpty() && $user->unit_kerja == 'Samsat') {
             $permissionSurat['canAjukanSP'] = true;
@@ -166,7 +168,7 @@ class PengajuanController extends Controller
                 ->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))
                 ->first();
 
-                if (!$exisitingSkIds) {
+                if (!$exisitingSkIds && $progress >= 6) {
                     $permissionSurat['canAjukanSK'] = true;
                 }
             }

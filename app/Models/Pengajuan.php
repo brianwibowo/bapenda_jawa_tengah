@@ -221,7 +221,7 @@ class Pengajuan extends Model implements HasMedia
 
         if ($totalsurat == 0 && ($suratpengajuan->isEmpty() || ($suratpengajuan->count() == 1 && $suratpengajuan->first()->isRejected()))) {
             $step = 0; // Progres 0: Belum ada SP atau SP pertama ditolak
-        } elseif ($totalsurat < 2 && $this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Polda')) {
+        } elseif ($totalsurat < 2) {
             $step = 1; // Progres 1: Pengajuan ke Polda
         } elseif ($totalsurat < 7) {
             $step = 2; // Progres 2: Polda ke Bapenda/JR & Balasan dari Bapenda/JR

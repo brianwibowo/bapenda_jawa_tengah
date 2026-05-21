@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\SendWhatsAppNotification;
+use Illuminate\Support\Arr;
 
 class SuratPengajuanController extends Controller
 {
@@ -53,18 +55,114 @@ class SuratPengajuanController extends Controller
 
         $registries = [
             'pdf' => [
-                'view' => 'pdf.view_sp',
-                'prefix' => 'SP-',
-                'permission' => 'view_dokumen_surat_pengajuan',
+                'default' => [
+                    'view' => 'pdf.view_sp',
+                    'mode' => 'iframe',
+                    'prefix' => 'SP-',
+                    'permission' => 'view_dokumen_surat_pengajuan',
+                    'footer' => [
+                        'accept' => false,
+                        'reject' => false,
+                        'back' => false,
+                    ]
+                ],
+                'polda' => [
+                    'view' => 'pdf.sp_polda2bapendaNjr',
+                    'mode' => 'iframe',
+                    'prefix' => 'SP-POLDA-',
+                    'permission' => 'view_dokumen_surat_pengajuan',
+                    'footer' => [
+                        'accept' => false,
+                        'reject' => false,
+                        'back' => false,
+                    ]
+                ],
+                'bapenda' => [
+                    'view' => 'pdf.sp_balasan_bapenda',
+                    'mode' => 'iframe',
+                    'prefix' => 'SP-BALASAN-BAPENDA-',
+                    'permission' => 'view_dokumen_surat_pengajuan',
+                    'footer' => [
+                        'accept' => false,
+                        'reject' => false,
+                        'back' => false,
+                    ]
+                ]
             ],
             'form' => [
-                'view' => 'form.create_sp',
-                'permission' => self::determinePermission($user, $progress),
-                'footer' => self::buildFooter($user, $pengajuan, $lastSp, $progress)
+                'default' => [
+                    'view' => 'form.create_sp',
+                    'mode' => 'modal',
+                    'permission' => self::determinePermission($user, $progress),
+                    'footer' => self::buildFooter($user, $pengajuan, $lastSp, $progress)
+                ],
+                'polda' => [
+                    'view' => 'form.sp_polda',
+                    'mode' => 'modal',
+                    'role' => ['polda'],
+                    'permission' => ['create_pdf_pengajuan_bapenda_jr'],
+                    'footer' => [
+                        'accept' => [
+                            'label' => 'Setujui',
+                            'class' => 'btn-success',
+                            'route' => [
+                                'name' => 'admin.pengajuan.ajukan',
+                                'middleware' => 'signed'
+                            ]
+                        ],
+                        'reject' => false,
+                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
+                    ]
+                ],
+                'bapenda' => [
+                    'view' => 'form.sp_penghapusan_regident_bapenda',
+                    'mode' => 'modal',
+                    'role' => ['bapenda', 'jasa_raharja'],
+                    'permission' => ['create_pdf_balasan_polda'],
+                    'footer' => [
+                        'accept' => [
+                            'label' => 'Setujui',
+                            'class' => 'btn-success',
+                            'route' => [
+                                'name' => 'admin.pengajuan.ajukan',
+                                'middleware' => 'signed'
+                            ]
+                        ],
+                        'reject' => false,
+                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
+                    ]
+                ]
             ]
         ];
 
         $config = $registries[$type] ?? abort(404);
+
+        if ($type === 'pdf' && $data instanceof SuratPengajuan) {
+            $path = $data->local_pdf_path ?? $data->pdf_url ?? '';
+            if (str_contains(strtoupper($path), 'SP_POLDA') || str_contains(strtoupper($path), 'SP-POLDA')) {
+                $config = $config['polda'];
+            } elseif (str_contains(strtoupper($path), 'SP_BALASAN_BAPENDA') || str_contains(strtoupper($path), 'SP-BALASAN-BAPENDA')) {
+                $config = $config['bapenda'];
+            } else {
+                $config = $config['default'];
+            }
+        } else {
+            $unitKerja = $user ? match (strtolower(trim((string) $user->unit_kerja))) {
+                'jr', 'jasa raharja', 'jasa_raharja' => 'Jasa Raharja',
+                'bapenda' => 'Bapenda',
+                'polda' => 'Polda',
+                default => trim((string) $user->unit_kerja),
+            } : '';
+
+            if ($unitKerja == 'Polda' && isset($config['polda'])) {
+                $config = $config['polda'];
+            } elseif (($unitKerja == 'Bapenda' || $unitKerja == 'Jasa Raharja') && isset($config['bapenda'])) {
+                $config = $config['bapenda'];
+            } else {
+                $config = $config['default'];
+            }
+        }
+
         $config['filename'] = $data ? ($config['prefix'] ?? '') . $data->nomor_sp : 'DOKUMEN_SP';
         
         return $config;
@@ -167,6 +265,24 @@ class SuratPengajuanController extends Controller
             $sp = SuratPengajuan::with('pengajuan.kendaraans.pemilik')->findOrFail($id);
             $config = SuratPengajuanController::getRegistry($type, $sp->pengajuan_id, $sp);
 
+            if ($sp->local_pdf_path) {
+                $path = $sp->local_pdf_path;
+                if (file_exists($path)) {
+                    return response()->file($path, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $config['filename'] . '.pdf"'
+                    ]);
+                }
+                $relativePath = str_replace([asset('storage/'), url('storage/'), asset('storage'), url('storage')], '', $path);
+                $relativePath = ltrim($relativePath, '/');
+                if (Storage::disk('public')->exists($relativePath)) {
+                    return response()->file(Storage::disk('public')->path($relativePath), [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $config['filename'] . '.pdf"'
+                    ]);
+                }
+            }
+
             return Pdf::loadView($config['view'], ['sp' => $sp])
                 ->setPaper('a4', 'portrait')
                 ->stream($config['filename'] . '.pdf');
@@ -208,123 +324,307 @@ class SuratPengajuanController extends Controller
         return view('admin.surat.view_pengajuan', compact('suratPengajuans'));
     }
 
+    public function generateSPDefault(Request $request, Pengajuan $pengajuan)
+    {
+        $request->validate([
+            'catatan' => 'required|string',
+        ]);
+
+        $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
+
+        if ($kendaraans->isEmpty()) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        $dataPdf = [
+            'kendaraans' => $kendaraans,
+            'catatan' => $request->catatan,
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdf.view_sp', $dataPdf)->setPaper('a4', 'portrait');
+
+        if ($request->has('preview')) {
+            $previewDir = 'sp/preview';
+            $prefix = Auth::id() . '_default_';
+            // Delete old preview files matching this pattern to optimize storage space
+            $existingFiles = Storage::disk('public')->files($previewDir);
+            foreach ($existingFiles as $file) {
+                if (str_starts_with(basename($file), $prefix)) {
+                    Storage::disk('public')->delete($file);
+                }
+            }
+            $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+        } else {
+            $filename = 'SP_DEFAULT_' . time() . '.pdf';
+            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+        }
+
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+
+        return [
+            'pdf_url' => $pdfUrlAbsolute,
+            'local_pdf_path' => $localPdfPath,
+        ];
+    }
+
+    /**
+     * Generate PDF Surat Pengajuan POLDA untuk Bapenda dan JR
+     */
+    public function generateSPPolda2BapendaNJR(Request $request, Pengajuan $pengajuan)
+    {
+        $request->validate([
+            'nomor_surat' => 'required|string',
+            'nama_pembuat' => 'required|string',
+            'tempat' => 'required|string',
+            'tanggal_keluar' => 'required|string',
+            'nama_direktur' => 'required|string',
+            'pangkat_direktur' => 'required|string',
+        ]);
+
+        $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
+
+        if ($kendaraans->isEmpty()) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        $dataPdf = [
+            'kendaraans' => $kendaraans,
+            'nomor_surat' => $request->nomor_surat,
+            'nama_pembuat' => $request->nama_pembuat,
+            'tempat' => $request->tempat,
+            'tanggal_keluar' => $request->tanggal_keluar,
+            'nama_direktur' => $request->nama_direktur,
+            'pangkat_direktur' => $request->pangkat_direktur,
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdf.sp_polda2bapendaNjr', $dataPdf)->setPaper('a4', 'portrait');
+
+        if ($request->has('preview')) {
+            $previewDir = 'sp/preview';
+            $prefix = Auth::id() . '_sp_polda_';
+            // Delete old preview files matching this pattern to optimize storage space
+            $existingFiles = Storage::disk('public')->files($previewDir);
+            foreach ($existingFiles as $file) {
+                if (str_starts_with(basename($file), $prefix)) {
+                    Storage::disk('public')->delete($file);
+                }
+            }
+            $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+        } else {
+            $filename = 'SP_POLDA_' . time() . '.pdf';
+            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+        }
+
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+
+        if (!$request->has('preview')) {
+            // Dispatch WA notification
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp) {
+                $nrkbString = $kendaraans->count() === 1 
+                    ? $kendaraans->first()->nrkb 
+                    : $kendaraans->pluck('nrkb')->implode(', ');
+                try {
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan:    $pengajuan,
+                        kendaraan:    $kendaraans->first(),
+                        skType:       'polda',
+                        pdfUrl:       $pdfUrlAbsolute,
+                        localPdfPath: $localPdfPath,
+                        wpPhone:      $wpUser->no_hp,
+                        wpName:       $wpUser->name,
+                        nrkb:         $nrkbString,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Polda): ' . $e->getMessage());
+                }
+            }
+        }
+
+        return [
+            'pdf_url' => $pdfUrlAbsolute,
+            'local_pdf_path' => $localPdfPath,
+        ];
+    }
+
+    /**
+     * Generate PDF SP Penghapusan Regident (Freysia)
+     */
+    public function generateSPPenghapusanRegident(Request $request, Pengajuan $pengajuan)
+    {
+        $request->validate([
+            'nomor_surat' => 'required',
+            'sifat' => 'required|string',
+            'lampiran' => 'required|string',
+            'hal' => 'required|string',
+            'provinsi' => 'required|string',
+            'nama_penandatangan' => 'required|string',
+            'jabatan' => 'required|string',
+            'nip' => 'required|string',
+        ]);
+
+        $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
+
+        if ($kendaraans->isEmpty()) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        $dataPdf = [
+            'kendaraans' => $kendaraans,
+            // Dari Form Input
+            'nomor_surat' => strtoupper($request->nomor_surat),
+            'sifat' => strtoupper($request->sifat),
+            'lampiran' => strtoupper($request->lampiran),
+            'hal' => strtoupper($request->hal),
+            'provinsi' => strtoupper($request->provinsi),
+            'nama_penandatangan' => strtoupper($request->nama_penandatangan),
+            'jabatan' => strtoupper($request->jabatan),
+            'nip' => strtoupper($request->nip),
+            'tanggal_keluar' => \Carbon\Carbon::now()->translatedFormat('d F Y'),
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdf.sp_balasan_bapenda', $dataPdf)->setPaper('a4', 'portrait');
+
+        if ($request->has('preview')) {
+            $previewDir = 'sp/preview';
+            $prefix = Auth::id() . '_sp_balasan_';
+            // Delete old preview files matching this pattern to optimize storage space
+            $existingFiles = Storage::disk('public')->files($previewDir);
+            foreach ($existingFiles as $file) {
+                if (str_starts_with(basename($file), $prefix)) {
+                    Storage::disk('public')->delete($file);
+                }
+            }
+            $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+        } else {
+            $filename = 'SP_BALASAN_BAPENDA_' . time() . '.pdf';
+            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+        }
+
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+
+        if (!$request->has('preview')) {
+            // Dispatch WA notification
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp) {
+                $nrkbString = $kendaraans->count() === 1 
+                    ? $kendaraans->first()->nrkb 
+                    : $kendaraans->pluck('nrkb')->implode(', ');
+                try {
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan:    $pengajuan,
+                        kendaraan:    $kendaraans->first(),
+                        skType:       'sk_penghapusan_regident_freysia',
+                        pdfUrl:       $pdfUrlAbsolute,
+                        localPdfPath: $localPdfPath,
+                        wpPhone:      $wpUser->no_hp,
+                        wpName:       $wpUser->name,
+                        nrkb:         $nrkbString,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Balasan Bapenda): ' . $e->getMessage());
+                }
+            }
+        }
+
+        return [
+            'pdf_url' => $pdfUrlAbsolute,
+            'local_pdf_path' => $localPdfPath,
+        ];
+    }
+
     public function ajukan(Request $request, $id)
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
         $user = Auth::user();
-        $progress = $pengajuan->getTotalSurat();
-        if ($user->unit_kerja == 'Samsat') {
-            return $this->ajukanPolda($request, $id);
-        } else if ($progress == 2 && $user->unit_kerja == 'Polda') {    
-            return $this->ajukanBapendaJr($request, $id);
+        $this->authorizeBranch($pengajuan);
+
+        $kendaraans = $pengajuan->kendaraans;
+
+        if ($kendaraans->isEmpty()) {
+            return response()->json(['error' => 'Data kendaraan tidak ditemukan pada pengajuan ini.'], 404);
+        }
+
+        $unitKerja = $this->normalizeUnitKerja($user->unit_kerja);
+        $data = [];
+
+        if ($unitKerja == "Samsat") {
+            // Dummy default data
+            $data = $this->generateSPDefault($request, $pengajuan);
+        } elseif ($unitKerja == 'Polda') {
+            $data = $this->generateSPPolda2BapendaNJR($request, $pengajuan);
         } else {
-            return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Aksi tidak valid untuk status pengajuan saat ini.');
-            // response()->json(['message' => 'Unauthorized'], 403);
-        }
-    }
-
-    public function ajukanPolda(Request $request, $id)
-    {
-        $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
-        
-        // Validasi: Pastikan pengajuan memiliki kendaraan dengan status "Diajukan"
-        if (!$pengajuan->kendaraans->where('status', 'pengajuan')->count()) {
-            return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diajukan".'); 
-            // response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diajukan".'], 400);
+            return response()->json(['error' => 'Aksi tidak valid untuk unit kerja saat ini.'], 403);
         }
 
-        if ($this->hasPendingSuratByTarget($pengajuan, self::TARGET_POLDA)) {
-            return redirect()->route('admin.pengajuan.show', $pengajuan)
-                ->with('error', 'Masih ada Surat Pengajuan ke Polda yang pending. Selesaikan dulu sebelum kirim ulang.');
+        if ($request->has('preview')) {
+            return response()->json([
+                'message' => 'Preview Surat Pengajuan',
+                'data' => [
+                    'pdf_url' => $data['pdf_url'] ?? null,
+                ]
+            ]);
         }
 
-        // Update status kendaraan menjadi "Diajukan ke Polda"
+        // Final Submission Flow
+        $baseLogTime = now();
 
-        $spArray = [];
+        if ($unitKerja == 'Polda') {
+            $sp = SuratPengajuan::create([
+                'pengajuan_id' => $pengajuan->id,
+                'nomor_sp' => 'SP-' . strtoupper(uniqid()),
+                'tanggal_surat' => now(),
+                'persetujuan_unit_kerja' => $this->persetujuanDefault,
+                'pdf_url' => $data['pdf_url'] ?? null,
+                'local_pdf_path' => $data['local_pdf_path'] ?? null,
+                'created_at' => $baseLogTime,
+                'updated_at' => $baseLogTime,
+            ]);
 
-        foreach ($pengajuan->kendaraans as $kendaraan) {
-            if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
-                $sp = SuratPengajuan::create([
-                    'pengajuan_id' => $pengajuan->id,
-                    'kendaraan_id' => $kendaraan->id,
-                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
-                    'tanggal_surat' => now(),
-                    'persetujuan_unit_kerja' => $this->persetujuanPolda
-                ]);
+            foreach ($kendaraans as $k) {
+                $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $k->id,
+                    'SP Polda berhasil diterbitkan',
+                    'Nomor Surat: ' . $request->nomor_surat,
+                    $data['local_pdf_path'] ?? null,
+                    $sp->id
+                );
+            }
+        } else {
+            $sp = SuratPengajuan::create([
+                'pengajuan_id' => $pengajuan->id,
+                'nomor_sp' => 'SP-' . strtoupper(uniqid()),
+                'tanggal_surat' => now(),
+                'persetujuan_unit_kerja' => $this->persetujuanPolda,
+                'pdf_url' => $data['pdf_url'] ?? null,
+                'local_pdf_path' => $data['local_pdf_path'] ?? null,
+                'created_at' => $baseLogTime,
+                'updated_at' => $baseLogTime,
+            ]);
 
-                // Simpan log perubahan status
-                KendaraanLog::create([
-                    'kendaraan_id' => $kendaraan->id,
-                    'user_id' => Auth::id(),
-                    'aksi' => 'Surat Pengajuan',
-                    'status_baru' => $kendaraan->status,
-                    'tipe' => 'system',
-                    'catatan' => 'Kendaraan diajukan ke Polda oleh ' . Auth::user()->name,
-                    'sp_id' => $sp->id,
-                ]);
-
-                $spArray[] = $sp;
+            foreach ($kendaraans as $k) {
+                $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $k->id,
+                    'Surat Pengajuan berhasil dibuat',
+                    'Catatan: ' . $request->catatan,
+                    $data['local_pdf_path'] ?? null,
+                    $sp->id
+                );
             }
         }
 
-
-        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Polda dibuat', 'Nomor SP: ' . implode(', ', array_map(fn($sp) => $sp->nomor_sp, $spArray)));
-
-
-        return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('success', 'Pengajuan berhasil diajukan ke Polda. Surat Pengajuan telah dibuat.');
-    }
-
-    public function ajukanBapendaJr(Request $request, $id)
-    {
-        $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
-        
-        // Validasi: Pastikan pengajuan memiliki kendaraan dengan status "Diproses" ( sudah diverifikasi polda )
-        if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
-            return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
-            // response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
-        }
-
-        if ($this->hasPendingSuratByTarget($pengajuan, self::TARGET_BAPENDA_JR)) {
-            return redirect()->route('admin.pengajuan.show', $pengajuan)
-                ->with('error', 'Masih ada Surat Pengajuan ke Bapenda/Jasa Raharja yang pending. Selesaikan dulu sebelum kirim ulang.');
-        }
-
-        $spArray = [];
-
-        // Update status kendaraan menjadi "Diajukan ke Bapenda/JR"
-        foreach ($pengajuan->kendaraans as $kendaraan) {
-            if (in_array($kendaraan->status, ['pengajuan', 'diproses'])) {
-                $sp = SuratPengajuan::create([
-                    'pengajuan_id' => $pengajuan->id,
-                    'kendaraan_id' => $kendaraan->id,
-                    'nomor_sp' => 'SP-' . strtoupper(uniqid()),
-                    'tanggal_surat' => now(),
-                    'persetujuan_unit_kerja' => $this->persetujuanDefault
-                ]);
-
-                // Simpan log perubahan status
-                KendaraanLog::create([
-                    'kendaraan_id' => $kendaraan->id,
-                    'user_id' => Auth::id(),
-                    'aksi' => 'Surat Pengajuan',
-                    'status_baru' => $kendaraan->status,
-                    'tipe' => 'system',
-                    'catatan' => 'Kendaraan diajukan ke Bapenda/JR oleh ' . Auth::user()->name,
-                    'sp_id' => $sp->id,
-                ]);
-
-                $spArray[] = $sp;
-            }
-        }
-
-        $this->logSuratAction($pengajuan, 'Surat Pengajuan ke Bapenda/JR dibuat', 'Nomor SP: ' . implode(', ', array_map(fn($sp) => $sp->nomor_sp, $spArray)));
-
-        return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('success', 'Pengajuan berhasil diajukan ke Bapenda/Jasa Raharja. Surat Pengajuan telah dibuat.');
+        return response()->json(['message' => 'Surat Pengajuan berhasil diajukan.', 'data' => $data]);
     }
 
     public function tolak(Request $request, SuratPengajuan $surat)
@@ -373,7 +673,8 @@ class SuratPengajuanController extends Controller
         $this->logSuratAction(
             $pengajuan,
             'Surat Pengajuan ditolak oleh ' . Auth::user()->unit_kerja,
-            'Nomor SP: ' . $surat->nomor_sp
+            'Nomor SP: ' . $surat->nomor_sp,
+            $surat->id
         );
 
         return redirect()->route('admin.pengajuan.show', $surat->pengajuan_id)->with('success', 'Status berhasil diperbarui');
@@ -383,26 +684,96 @@ class SuratPengajuanController extends Controller
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($surat->pengajuan_id);
         if (!$request->user()->hasAnyPermission(['create_pdf_pengajuan', 'create_pdf_pengajuan_bapenda_jr', 'create_pdf_balasan_polda'])) {
-            return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Unauthorized');
-            //  response()->json(['message' => 'Unauthorized'], 403);
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            return redirect()->route('admin.pengajuan.show', $pengajuan)->with('error', 'Unauthorized');
         }
 
         $currentSp = $pengajuan->getCurrentSuratPengajuan();
         if (!$currentSp || $currentSp->id !== $surat->id) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json(['error' => 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.'], 400);
+            }
             return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('error', 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.');
-            //  response()->json(['message' => 'Aksi hanya dapat dilakukan pada Surat Pengajuan aktif.'], 400);
         }
 
         if ($surat->isFullyApprovedByAll()) {
-             return redirect()->route('admin.pengajuan.show', $pengajuan)
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json(['error' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
+            }
+            return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('error', 'Surat Pengajuan sudah disetujui semua instansi.');
-            //  response()->json(['message' => 'Surat Pengajuan sudah disetujui semua instansi.'], 400);
         }
+
         $instansiUser = $this->normalizeUnitKerja(Auth::user()->unit_kerja); // Misal: Bapenda / Jasa Raharja
 
-        // Ambil data array saat ini
+        // ── KELOMPOK AJAX / PREVIEW FLOW (Untuk submit dari dynamic modal) ──
+        if ($request->ajax() || $request->expectsJson() || $request->has('preview')) {
+            $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
+
+            if ($request->has('preview')) {
+                return response()->json([
+                    'message' => 'Preview Surat Pengajuan',
+                    'data' => [
+                        'pdf_url' => $data['pdf_url'] ?? null,
+                    ]
+                ]);
+            }
+
+            // Ambil data array saat ini
+            $persetujuan = $surat->persetujuan_unit_kerja ?? [];
+            $baseLogTime = now();
+
+            // Cari instansi yang sesuai dan ubah statusnya
+            foreach ($persetujuan as &$item) {
+                if (strcasecmp($item['instansi'] ?? '', $instansiUser) === 0 && ($item['status'] ?? null) == 'pending') {
+                    $item['status'] = 'approved';
+                    $item['user_id'] = Auth::id();
+                    $item['updated_at'] = $baseLogTime;
+                }
+            }
+
+            // Simpan kembali
+            $surat->local_pdf_path = $data['local_pdf_path'] ?? null;
+            $surat->pdf_url = $data['pdf_url'] ?? null;
+            $surat->persetujuan_unit_kerja = $persetujuan;
+            $surat->save();
+
+            foreach ($pengajuan->kendaraans as $k) {
+                $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $k->id,
+                    'SK Penghapusan Regident (Freysia) berhasil diterbitkan',
+                    'Nomor Surat: ' . $request->nomor_surat,
+                    $data['local_pdf_path'] ?? null,
+                    $surat->id
+                );
+            }
+
+            // If fully approved, change vehicle status to diproses
+            if ($surat->fresh()->isFullyApprovedByAll()) {
+                foreach ($pengajuan->kendaraans as $k) {
+                    $k->update(['status' => 'diproses']);
+                    $logDiterima = $this->logSuratActionByKendaraanId(
+                        $pengajuan,
+                        $k->id,
+                        'Surat Pengajuan Diterima oleh Semua Instansi',
+                        'Status kendaraan diperbarui ke Diproses.',
+                        null,
+                        $surat->id
+                    );
+                    $logDiterima->created_at = $baseLogTime->copy()->addSecond();
+                    $logDiterima->updated_at = $baseLogTime->copy()->addSecond();
+                    $logDiterima->save();
+                }
+            }
+
+            return response()->json(['message' => 'Surat Pengajuan berhasil disetujui.', 'data' => $data]);
+        }
+
+        // ── KELOMPOK REDIRECT FLOW (NON-AJAX / FALLBACK) ──
         $persetujuan = $surat->persetujuan_unit_kerja ?? [];
 
         // Cari instansi yang sesuai dan ubah statusnya
@@ -421,7 +792,8 @@ class SuratPengajuanController extends Controller
         $this->logSuratAction(
             $pengajuan,
             'Surat Pengajuan disetujui oleh ' . Auth::user()->unit_kerja,
-            'Nomor SP: ' . $surat->nomor_sp
+            'Nomor SP: ' . $surat->nomor_sp,
+            $surat->id
         );
 
         if ($surat->fresh()->isFullyApprovedByAll() && $surat->pengajuan->kendaraans()->where('status', 'pengajuan')->count()) {
@@ -514,6 +886,33 @@ class SuratPengajuanController extends Controller
 
         return redirect()->route('admin.pengajuan.show', $suratpengajuan->pengajuan_id)
             ->with('success', 'File PDF berhasil diupload.');
+    }
+
+    private function authorizeBranch(Pengajuan $pengajuan): void
+    {
+        $user = Auth::user();
+        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+
+        if ($isSamsat && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
+            abort(403, 'Akses ditolak: cabang berbeda.');
+        }
+    }
+
+    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null, int $sp_id = null): KendaraanLog
+    {
+        $log = KendaraanLog::create([
+            'kendaraan_id' => $kendaraan_id,
+            'user_id' => Auth::id(),
+            'aksi' => $actionLabel,
+            'status_baru' => $pengajuan->kendaraans->find($kendaraan_id)->status,
+            'tipe' => 'system',
+            'catatan' => $notes,
+            'sp_id' => $sp_id,
+        ]);
+        if ($file) {
+            $log->addMedia($file)->preservingOriginal()->toMediaCollection("lampiran_log");
+        }
+        return $log;
     }
 
 }

@@ -253,8 +253,14 @@
                             console.log('[Frame] Preview result:', result);
                             let pdfUrl = null;
                             if (result.data) {
-                                const firstKey = Object.keys(result.data)[0];
-                                if (firstKey) pdfUrl = result.data[firstKey].pdf_url || result.data[firstKey];
+                                if (result.data.pdf_url) {
+                                    pdfUrl = result.data.pdf_url;
+                                } else {
+                                    const firstKey = Object.keys(result.data)[0];
+                                    if (firstKey && result.data[firstKey]) {
+                                        pdfUrl = result.data[firstKey].pdf_url || result.data[firstKey];
+                                    }
+                                }
                             }
 
                             if (pdfUrl) {
@@ -329,11 +335,17 @@
                     .then(result => {
                         console.log('[Frame] Submit result:', result);
 
-                        // ── Ambil pdf_url dari kendaraan pertama dalam result.data ──
+                        // ── Ambil pdf_url dari result.data atau kendaraan pertama ──
                         let pdfUrl = null;
                         if (result.data) {
-                            const firstKey = Object.keys(result.data)[0];
-                            if (firstKey) pdfUrl = result.data[firstKey].pdf_url || null;
+                            if (result.data.pdf_url) {
+                                pdfUrl = result.data.pdf_url;
+                            } else {
+                                const firstKey = Object.keys(result.data)[0];
+                                if (firstKey && result.data[firstKey]) {
+                                    pdfUrl = result.data[firstKey].pdf_url || null;
+                                }
+                            }
                         }
 
                         if (pdfUrl) {
