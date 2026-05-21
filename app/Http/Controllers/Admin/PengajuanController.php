@@ -18,6 +18,17 @@ use Illuminate\Support\Str;
 
 class PengajuanController extends Controller
 {
+
+    private function normalizeUnitKerja(?string $unitKerja): string
+    {
+        return match (strtolower(trim((string) $unitKerja))) {
+            'jr', 'jasa raharja', 'jasa_raharja' => 'JR',
+            'bapenda' => 'Bapenda',
+            'polda' => 'Polda',
+            'samsat' => 'Samsat',
+            default => trim((string) $unitKerja),
+        };
+    }
     /**
      * Level 1: Menampilkan daftar BUNDEL pengajuan
      */
@@ -129,6 +140,7 @@ class PengajuanController extends Controller
             "sp" => []
         ];
 
+        
         foreach($pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->values() as $log){
             $user_log = User::find($log->user_id);
             if ((!$log->sk_id && !$log->sp_id) || ($user_log && !($user_log->unit_kerja == $user->unit_kerja))) continue;
@@ -143,12 +155,24 @@ class PengajuanController extends Controller
                 $sp = SuratPengajuan::findOrFail($log->sp_id);
                 if (!$sp->local_pdf_path) {
                     $isUpload['sp'][$log->sp_id] = true;
+                    }
+                }
+                
+            }
+                    
+            foreach($pengajuan->kendaraans as $kendaraan){
+                // Existing current Unit Kerja, untuk permissionSurat
+                $exisitingSkIds = $kendaraan->suratKeputusans()
+                ->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))
+                ->first();
+
+                if (!$exisitingSkIds) {
+                    $permissionSurat['canAjukanSK'] = true;
                 }
             }
-            
-        }
 
-        return view('admin.pengajuan.show', compact(
+
+            return view('admin.pengajuan.show', compact(
             'pengajuan',
             'suratkeputusan',
             'suratpengajuan',

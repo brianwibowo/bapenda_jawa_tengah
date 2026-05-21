@@ -16,7 +16,7 @@ use Illuminate\Support\Arr;
 class SuratKeputusanController extends Controller
 {
 
-    private function normalizeUnitKerja(?string $unitKerja): string
+    public static function normalizeUnitKerja(?string $unitKerja): string
     {
         return match (strtolower(trim((string) $unitKerja))) {
             'jr', 'jasa raharja', 'jasa_raharja' => 'JR',
@@ -130,10 +130,13 @@ class SuratKeputusanController extends Controller
         $config = $registries[$type] ?? abort(404);
 
         if ((int) $step < 3 && isset($config['polda2bapenda&jr'])) {
+            error_log("polda2bapenda&jr");
             $config = $config['polda2bapenda&jr'];
         } elseif ((int) $step < 4 && isset($config['bapenda'])) {
+            error_log("bapenda");
             $config = $config['bapenda'];
         } else {
+            error_log("Default");
             $config = $config['default'];
         }
         $config['filename'] = $data ? ($config['prefix'] ?? '') . $data->nomor_sk : 'DOKUMEN_SK';
@@ -142,20 +145,27 @@ class SuratKeputusanController extends Controller
 
     static public function render(Request $request, $type, $id)
     {
-        $pengajuan = Pengajuan::with(['kendaraans', 'suratKeputusans'])->findOrFail($id);
+        $pengajuan = Pengajuan::with(['kendaraans.suratKeputusans', 'suratKeputusans'])->findOrFail($id);
         if ($type == 'pdf') {
             $sk = SuratKeputusan::with('pengajuan.kendaraans.pemilik')->findOrFail($id);
             $config = SuratKeputusanController::getRegistry($type, $sk->pengajuan_id, $sk);
-
             return Pdf::loadView($config['view'], ['sk' => $sk])
                 ->setPaper('a4', 'portrait')
                 ->stream($config['filename'] . '.pdf');
         }
-
         $sk = $pengajuan->suratKeputusans->last();
         $config = SuratKeputusanController::getRegistry($type, $pengajuan->id, $sk);
 
-        return view($config['view'], ['sk' => $sk, 'pengajuan' => $pengajuan]);
+        $normalizedUnitKerja = '';
+        if (Auth::check()) {
+            $normalizedUnitKerja = self::normalizeUnitKerja(Auth::user()->unit_kerja);
+        }
+
+        return view($config['view'], [
+            'sk' => $sk, 
+            'pengajuan' => $pengajuan,
+            'normalizedUnitKerja' => $normalizedUnitKerja
+        ]);
     }
 
     public function generateSkRegident(Request $request, Pengajuan $pengajuan)
@@ -201,7 +211,6 @@ class SuratKeputusanController extends Controller
                 'tanggal_keluar' => strtoupper($request->tanggal_keluar),
                 'nama_direktur' => strtoupper($request->nama_direktur),
                 'pangkat_direktur' => strtoupper($request->pangkat_direktur),
-                
                 // Dari Database Kendaraan/Pemilik
                 'data' => (object)[
                     'nama' => strtoupper(optional($k->pemilik)->nama_pemilik ?? '-'),
@@ -225,71 +234,98 @@ class SuratKeputusanController extends Controller
                 ]
             ];
 
-            $arrayResult[$k->id] = $dataPdf;
+            $arrayResult[$k->id] = [
+                'data' => $dataPdf,
+                'pdf_url' => null,
+                'local_pdf_path' => null,
+            ];
+            
+            //Cek Kendaraan id ini apakah sudah punya SK Pembebasan dari Polda, jika sudah maka skip proses pembuatan PDF dan log untuk kendaraan ini, tapi tetap simpan data PDF kosong dan URL null di array result agar konsisten dengan kendaraan lain yang diproses
+            if (!$request->has('preview')) {
+                $existingSkBapenda = $k->suratKeputusans()->where('unit_kerja', 'Polda')->first();
+                if ($existingSkBapenda) {
+                    $arrayResult[$k->id]['pdf_url'] = $existingSkBapenda->pdf_url;
+                    $arrayResult[$k->id]['local_pdf_path'] = $existingSkBapenda->local_pdf_path;
+                    continue; // Skip pembuatan PDF dan log untuk kendaraan ini
+                }
+            }
 
             // Generate PDF untuk setiap kendaraan
             $pdf = Pdf::loadView('pdf.sk_penghapusan_regident', $dataPdf)->setPaper('a4', 'portrait');
-            $filename   = 'SK_REGIDENT_' . str_replace(' ', '_', $k->nrkb) . '_' . Str::uuid() . '.pdf';
-            $storagePath = 'sk/' . $filename;
+            if ($request->has('preview')) {
+                $previewDir = 'sk/preview';
+                $prefix = Auth::id() . '_' . $k->id . '_regident_';
+                // Delete old preview files matching this pattern to optimize storage space
+                $existingFiles = Storage::disk('public')->files($previewDir);
+                foreach ($existingFiles as $file) {
+                    if (str_starts_with(basename($file), $prefix)) {
+                        Storage::disk('public')->delete($file);
+                    }
+                }
+                $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+            } else {
+                $filename   = 'SK_REGIDENT_' . str_replace('/', '_', $dataPdf['nomor_surat']) . '_' . str_replace(' ', '_', $k->nrkb) . '.pdf';
+                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+            }
             Storage::disk('public')->put($storagePath, $pdf->output());
             $pdfUrlAbsolute = asset('storage/' . $storagePath);
-            $localPdfPath = Storage::disk('public')->path($storagePath);
+            $localPdfPath = Storage::disk('public')->path($storagePath);           
 
-            // Catat log untuk setiap kendaraan
-            $log = $this->logSuratActionByKendaraanId(
-                $pengajuan,
-                $k->id,
-                'SK Penghapusan Regident berhasil diterbitkan',
-                'Nomor Surat: ' . $request->nomor_surat,
-                storage_path('app/public/' . $storagePath)
-            );
+            // Catat log untuk setiap kendaraan jika bukan preview
+            if (!$request->has('preview')) {
+                $log = $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $k->id,
+                    'SK Penghapusan Regident berhasil diterbitkan',
+                    'Nomor Surat: ' . $request->nomor_surat,
+                    storage_path('app/public/' . $storagePath)
+                );
+                $arrayResult[$k->id]['log_id'] = $log->id;
+            }
 
             $arrayResult[$k->id]['pdf_url'] = $pdfUrlAbsolute;
             $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
-            $arrayResult[$k->id]['log_id'] = $log->id;
         }
 
-        if ($request->has('preview')) {
-            return response()->json(['message' => 'Preview SK Pembebasan', 'data' => $arrayResult]);
-        }
-
-        if ($request->kendaraan_id === 'all') {
-            // Dispatch WA notification untuk semua kendaraan (non-blocking, non-fatal)
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    null, // Karena ini untuk semua kendaraan, kita bisa kirim null atau array kendaraan
-                        skType:       'regident',
-                        pdfUrl:       null, // Bisa dikirim null atau array URL PDF jika ingin mengirim per kendaraan
-                        localPdfPath: null, // Bisa dikirim null atau array path PDF jika ingin mengirim per kendaraan
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         null, // Karena ini untuk semua kendaraan, kita bisa kirim null atau array NRKB jika ingin mengirim per kendaraan
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident - All): ' . $e->getMessage());
+        if (!isset($request->preview)) {
+            if ($request->kendaraan_id === 'all') {
+                // Dispatch WA notification untuk semua kendaraan (non-blocking, non-fatal)
+                $wpUser = $pengajuan->user;
+                if ($wpUser && $wpUser->no_hp) {
+                    try {
+                        SendWhatsAppNotification::dispatch(
+                            pengajuan:    $pengajuan,
+                            kendaraan:    null, // Karena ini untuk semua kendaraan, kita bisa kirim null atau array kendaraan
+                            skType:       'regident',
+                            pdfUrl:       null, // Bisa dikirim null atau array URL PDF jika ingin mengirim per kendaraan
+                            localPdfPath: null, // Bisa dikirim null atau array path PDF jika ingin mengirim per kendaraan
+                            wpPhone:      $wpUser->no_hp,
+                            wpName:       $wpUser->name,
+                            nrkb:         null, // Karena ini untuk semua kendaraan, kita bisa kirim null atau array NRKB jika ingin mengirim per kendaraan
+                        );
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident - All): ' . $e->getMessage());
+                    }
                 }
-            }
-        } else {
-            // Dispatch WA notification untuk single kendaraan (non-blocking, non-fatal)
-            $k = $kendaraan->first(); // Karena ini hanya untuk satu kendaraan
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    $k,
-                        skType:       'regident',
-                        pdfUrl:       $arrayResult[$k->id]['pdf_url'] ?? null,
-                        localPdfPath: $arrayResult[$k->id]['local_pdf_path'] ?? null,
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         $k->nrkb,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident - Single): ' . $e->getMessage());
+            } else {
+                // Dispatch WA notification untuk single kendaraan (non-blocking, non-fatal)
+                $k = $kendaraan->first(); // Karena ini hanya untuk satu kendaraan
+                $wpUser = $pengajuan->user;
+                if ($wpUser && $wpUser->no_hp) {
+                    try {
+                        SendWhatsAppNotification::dispatch(
+                            pengajuan:    $pengajuan,
+                            kendaraan:    $k,
+                            skType:       'regident',
+                            pdfUrl:       $arrayResult[$k->id]['pdf_url'] ?? null,
+                            localPdfPath: $arrayResult[$k->id]['local_pdf_path'] ?? null,
+                            wpPhone:      $wpUser->no_hp,
+                            wpName:       $wpUser->name,
+                            nrkb:         $k->nrkb,
+                        );
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident - Single): ' . $e->getMessage());
+                    }
                 }
             }
         }
@@ -372,19 +408,46 @@ class SuratKeputusanController extends Controller
                 ],
             ];
 
+            
+            
             // Simpan data PDF dan URL absolute-nya per kendaraan
             $arrayResult[$k->id] = [
                 'data_pdf' => $dataPdf,
                 'pdf_url' => null,
                 'local_pdf_path' => null,
-            ];
+                ];
+                
+            //Cek Kendaraan id ini apakah sudah punya SK Pembebasan dari Bapenda, jika sudah maka skip proses pembuatan PDF dan log untuk kendaraan ini, tapi tetap simpan data PDF kosong dan URL null di array result agar konsisten dengan kendaraan lain yang diproses
+            if (!$request->has('preview')) {
+                $existingSkBapenda = $k->suratKeputusans()->where('unit_kerja', 'Bapenda')->first();
+                if ($existingSkBapenda) {
+                    $arrayResult[$k->id]['pdf_url'] = $existingSkBapenda->pdf_url;
+                    $arrayResult[$k->id]['local_pdf_path'] = $existingSkBapenda->local_pdf_path;
+                    continue; // Skip pembuatan PDF dan log untuk kendaraan ini
+                }
+            }
 
-            $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $k->nrkb) . '_' . str_replace('/','_',str_replace(' ', '_', $request->nomor_surat_pembebasan)) . '.pdf';
+
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
             $pdf->setPaper('a4', 'portrait');
-            $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
+            if ($request->has('preview')) {
+                $previewDir = 'sk/preview';
+                $prefix = Auth::id() . '_' . $k->id . '_pembebasan_';
+                // Delete old preview files matching this pattern to optimize storage space
+                $existingFiles = Storage::disk('public')->files($previewDir);
+                foreach ($existingFiles as $file) {
+                    if (str_starts_with(basename($file), $prefix)) {
+                        Storage::disk('public')->delete($file);
+                    }
+                }
+                $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+            } else {
+                $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $k->nrkb) . '_' . str_replace('/', '_', $dataPdf['nomor_surat_pembebasan']) . '.pdf';
+                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+            }
+            
             $ttd_basah = $request->metode_penanda_tangan == 'ttd_basah';
-            if (!$ttd_basah) {
+            if (!$ttd_basah || $request->has('preview')) {
                 Storage::disk('public')->put($storagePath, $pdf->output());
                 $pdfUrlAbsolute = asset('storage/' . $storagePath);
                 $localPdfPath = Storage::disk('public')->path($storagePath);    
@@ -409,46 +472,44 @@ class SuratKeputusanController extends Controller
             $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
         }
         
-        if ($request->has('preview' || ($request->metode_penanda_tangan == 'ttd_basah' && !$request->hasFile('sk_pembebasan_ttd_basah')))) {
-            return response()->json(['message' => 'Preview SK Pembebasan', 'data' => $arrayResult]);
-        }
-
-        // Dispatch WA notification (non-blocking, non-fatal)
-        $wpUser = $pengajuan->user;
-        if ($request->kendaraan_id === 'all') {
-            if ($wpUser && $wpUser->no_hp) {
-                // Dispatch WA notification untuk semua kendaraan (non-blocking, non-fatal)
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    null,
-                        skType:       'pembebasan',
-                        pdfUrl:       null,
-                        localPdfPath: null,
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         null,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
+        if (!isset($request->preview)) {
+            // Dispatch WA notification (non-blocking, non-fatal)
+            $wpUser = $pengajuan->user;
+            if ($request->kendaraan_id === 'all') {
+                if ($wpUser && $wpUser->no_hp) {
+                        // Dispatch WA notification untuk semua kendaraan (non-blocking, non-fatal)
+                    try {
+                        SendWhatsAppNotification::dispatch(
+                            pengajuan:    $pengajuan,
+                            kendaraan:    null,
+                            skType:       'pembebasan',
+                            pdfUrl:       null,
+                            localPdfPath: null,
+                            wpPhone:      $wpUser->no_hp,
+                            wpName:       $wpUser->name,
+                            nrkb:         null,
+                        );
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
+                    }
                 }
-            }
-        }else {
-            $k = $kendaraan->first();
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    $k,
-                        skType:       'pembebasan',
-                        pdfUrl:       $arrayResult[$k->id]['pdf_url'],
-                        localPdfPath: $arrayResult[$k->id]['local_pdf_path'],
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         $k->nrkb,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
+            }else {
+                $k = $kendaraan->first();
+                if ($wpUser && $wpUser->no_hp) {
+                    try {
+                        SendWhatsAppNotification::dispatch(
+                            pengajuan:    $pengajuan,
+                            kendaraan:    $k,
+                            skType:       'pembebasan',
+                            pdfUrl:       $arrayResult[$k->id]['pdf_url'],
+                            localPdfPath: $arrayResult[$k->id]['local_pdf_path'],
+                            wpPhone:      $wpUser->no_hp,
+                            wpName:       $wpUser->name,
+                            nrkb:         $k->nrkb,
+                        );
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
+                    }
                 }
             }
         }
@@ -469,27 +530,30 @@ class SuratKeputusanController extends Controller
             ],
         ]);
         $pengajuan = Pengajuan::with('kendaraans')->findOrFail($pengajuan_id);
-
+        error_log("Test 1");
         $kendaraan = $request->kendaraan_id === 'all' 
         ? $pengajuan->kendaraans 
         : $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->get();
 
+        error_log("Test 2");
         if ($kendaraan->isEmpty()) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
                 ->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
+        error_log("Test 3");
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
             ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
             //  response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
         }
 
+        error_log("Test 4");
         $suratKeputusan = $pengajuan->suratKeputusans;
 
         // Cek untuk unit_kerja user sekarang, apakah sudah ada SK yang diajukan untuk unit kerja tersebut
-        if ($suratKeputusan->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))->isNotEmpty()) {
-
+        if ($request->kendaraan_id !== 'all' && $suratKeputusan->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))->isNotEmpty()) {
+            error_log("Test 5");
                 // Map suratKeputusan with unit_kerja
             $skUnitKerja = $suratKeputusan->pluck('unit_kerja')->toArray();
             return redirect()->route('admin.pengajuan.show', $pengajuan)
@@ -499,16 +563,17 @@ class SuratKeputusanController extends Controller
         
         $data = [];
 
+        error_log('Preparing SK');
         switch ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
             case 'Polda':
                 $unitKerja = 'Polda';
                 $data = $this->generateSkRegident($request, $pengajuan);
-
+                error_log('Generate SK Regident');
                 break;
             case 'Bapenda':
                 $unitKerja = 'Bapenda';
                 $data = $this->generateSkBapenda($request, $pengajuan);
-
+                error_log('Generate SK Bapenda');
                 break;
             case 'JR':
                 $unitKerja = 'JR';
@@ -523,12 +588,17 @@ class SuratKeputusanController extends Controller
 
         $baseLogTime = now(); // Waktu dasar untuk log, agar semua log yang terkait memiliki timestamp yang konsisten
 
-        if ($request->has('preview')){
-            return response()->json(['message' => 'Preview Surat Keputusan', 'data' => Arr::map($data, function($item, $key) {
-                return $item['pdf_url'] ?? null;
-            })]);
+        if ($request->has('preview')) {
+            return response()->json([
+                'message' => 'Preview Surat Keputusan',
+                'data' => Arr::map($data, function($item) {
+                    return [
+                        'pdf_url' => $item['pdf_url'] ?? null,
+                    ];
+                })
+            ]);
         }
-
+        error_log('Generate SK');
         // Loop setiap data hasil switch dengan kendaraan
         foreach ($kendaraan as $k) {
             $sk = SuratKeputusan::create([
@@ -537,8 +607,8 @@ class SuratKeputusanController extends Controller
                 'user_id' => Auth::id(),
                 'unit_kerja' => $unitKerja,
                 'nomor_sk' => 'SK-' . strtoupper(uniqid()),
-                'local_pdf_path' => $data[$k->id]['local_pdf_path'] ?? null,
-                'pdf_url' => $data[$k->id]['pdf_url'] ?? null,
+                'local_pdf_path' => !isset($request->preview) && isset($data[$k->id]['local_pdf_path']) ? $data[$k->id]['local_pdf_path'] : null,
+                'pdf_url' => !isset($request->preview) && isset($data[$k->id]['pdf_url']) ? $data[$k->id]['pdf_url'] : null,
                 'tanggal_ditetapkan' => now(),
                 'created_at' => $baseLogTime,
                 'updated_at' => $baseLogTime,

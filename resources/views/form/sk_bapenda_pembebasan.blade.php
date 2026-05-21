@@ -8,8 +8,7 @@
 
 <form id="frameForm"
       action="{{ route('admin.pengajuan.buat_sk', $pengajuan->id) }}"
-      method="POST"
-      enctype="multipart/form-data">
+      method="POST">
     @csrf
 
     {{-- ===== BODY FORM ===== --}}
@@ -22,7 +21,11 @@
                     <label class="form-label fw-bold">Pilih Kendaraan</label>
                     <select class="form-select" name="kendaraan_id" required>
                         <option value="">-- Pilih Kendaraan (NRKB) --</option>
+                        <option value="all">Semua Kendaraan</option>
                         @foreach($pengajuan->kendaraans as $k)
+                            @if ($k->suratKeputusans->where('unit_kerja', $normalizedUnitKerja)->count() > 0)
+                                @continue
+                            @endif
                             <option value="{{ $k->id }}">{{ $k->nrkb }} - {{ $k->merk_kendaraan }}</option>
                         @endforeach
                     </select>
@@ -118,168 +121,8 @@
                         <option value="ttd_basah">TTD Basah</option>
                     </select>
                 </div>
-                <div class="col-md-6 mb-3" style="display:none;" id="sk_pembebasan_ttd_basah_container">
-                    <label class="form-label fw-bold">Upload SK (Setelah TTD Basah)</label>
-                    <div class="file-container" data-field="sk_pembebasan_ttd_basah"
-                         data-accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240">
-                        <div class="file-input-group mb-2">
-                            <input type="file" class="form-control file-input" name="sk_pembebasan_ttd_basah"
-                                   accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240"
-                                   id="sk_pembebasan_ttd_basah">
-                            <small class="text-muted file-preview"></small>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
-        {{-- Container: Preview PDF --}}
-        <div id="previewSkPembebasanContainer" style="display:none; padding: 0.25rem 0;">
-            <iframe id="iframePreviewSkPembebasan" src="" style="width:100%; height:500px; border:1px solid #ddd; border-radius:8px;"></iframe>
-        </div>
-
-    </div>
-
-    {{-- ===== FOOTER (diambil oleh frame.js dan dipindah ke .modal-footer) ===== --}}
-    <div data-frame-footer style="display:none;">
-        {{-- Footer: saat form ditampilkan --}}
-        <div id="footerFormSkPembebasan" style="display:flex; gap:0.5rem; width:100%; justify-content:flex-end;">
-            <button type="button" class="btn btn-secondary" id="frameFormCancelBtn">Batal</button>
-            <button type="button" class="btn btn-primary" id="btnShowPreviewSkPembebasan">Lihat Preview</button>
-        </div>
-        {{-- Footer: saat preview ditampilkan --}}
-        <div id="footerPreviewSkPembebasan" style="display:none; gap:0.5rem; width:100%; justify-content:flex-end;">
-            <button type="button" class="btn btn-warning" id="btnEditSkPembebasan">Kembali Edit</button>
-            <button type="submit" class="btn btn-success" form="frameForm">
-                <i class="fas fa-paper-plane me-1"></i> Kirim &amp; Simpan
-            </button>
-        </div>
     </div>
 </form>
-
-<script data-form-script>
-(function () {
-    // ── Metode TTD toggle ────────────────────────────────────────────────────
-    const metodePenandaTangan = document.getElementById('metode_penanda_tangan');
-    if (metodePenandaTangan) {
-        metodePenandaTangan.addEventListener('change', function () {
-            const ttdBasahContainer = document.getElementById('sk_pembebasan_ttd_basah_container');
-            const ttdBasahInput     = document.getElementById('sk_pembebasan_ttd_basah');
-            if (this.value === 'ttd_basah') {
-                if (ttdBasahContainer) ttdBasahContainer.style.display = 'block';
-                if (ttdBasahInput)     ttdBasahInput.required = true;
-            } else {
-                if (ttdBasahContainer) ttdBasahContainer.style.display = 'none';
-                if (ttdBasahInput)     ttdBasahInput.required = false;
-            }
-        });
-    }
-
-    // ── Preview / Edit logic ─────────────────────────────────────────────────
-    const form             = document.getElementById('frameForm');
-    const formContainer    = document.getElementById('formSkPembebasanContainer');
-    const previewContainer = document.getElementById('previewSkPembebasanContainer');
-    const iframePreview    = document.getElementById('iframePreviewSkPembebasan');
-    const footerForm       = document.getElementById('footerFormSkPembebasan');
-    const footerPreview    = document.getElementById('footerPreviewSkPembebasan');
-    const modalFooter      = document.querySelector('#ViewerModal .modal-footer');
-    let currentBlobUrl     = null;
-
-    // Pindahkan kedua footer ke .modal-footer ViewerModal
-    if (modalFooter && footerForm && footerPreview) {
-        modalFooter.innerHTML = '';
-        modalFooter.appendChild(footerForm);
-        modalFooter.appendChild(footerPreview);
-        footerForm.style.display    = 'flex';
-        footerPreview.style.display = 'none';
-    }
-
-    // Cancel button
-    const cancelBtn = document.getElementById('frameFormCancelBtn');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function () {
-            if (typeof $ !== 'undefined') {
-                $('#ViewerModal').modal('hide');
-            }
-        });
-    }
-
-    // Lihat Preview
-    const btnPreview = document.getElementById('btnShowPreviewSkPembebasan');
-    if (btnPreview) {
-        btnPreview.addEventListener('click', function () {
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            const formData = new FormData(form);
-            formData.append('preview', '1');
-
-            const btn = this;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
-
-            const url = `{{ route('admin.pengajuan.generate_sk_pembebasan', $pengajuan->id) }}`;
-            fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/pdf'
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Request failed: ' + response.status);
-                return response.blob();
-            })
-            .then(blob => {
-                if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-                currentBlobUrl = URL.createObjectURL(blob);
-                iframePreview.src = currentBlobUrl;
-
-                formContainer.style.display    = 'none';
-                previewContainer.style.display = 'block';
-                footerForm.style.display       = 'none';
-                footerPreview.style.display    = 'flex';
-
-                btn.disabled  = false;
-                btn.innerHTML = 'Lihat Preview';
-            })
-            .catch(error => {
-                console.error('Preview load failed:', error);
-                alert('Gagal memuat preview PDF. Silakan coba lagi.');
-                btn.disabled  = false;
-                btn.innerHTML = 'Lihat Preview';
-            });
-        });
-    }
-
-    // Kembali Edit
-    const btnEdit = document.getElementById('btnEditSkPembebasan');
-    if (btnEdit) {
-        btnEdit.addEventListener('click', function () {
-            previewContainer.style.display = 'none';
-            formContainer.style.display    = 'block';
-            footerPreview.style.display    = 'none';
-            footerForm.style.display       = 'flex';
-        });
-    }
-
-    // Reset saat modal ditutup
-    const viewerModal = document.getElementById('ViewerModal');
-    if (viewerModal) {
-        viewerModal.addEventListener('hidden.bs.modal', function () {
-            if (currentBlobUrl) {
-                URL.revokeObjectURL(currentBlobUrl);
-                currentBlobUrl    = null;
-                iframePreview.src = '';
-            }
-            previewContainer.style.display = 'none';
-            formContainer.style.display    = 'block';
-            footerPreview.style.display    = 'none';
-            if (footerForm) footerForm.style.display = 'flex';
-        });
-    }
-})();
-</script>

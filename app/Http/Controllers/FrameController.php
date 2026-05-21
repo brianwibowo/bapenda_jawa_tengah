@@ -25,7 +25,7 @@ class FrameController extends Controller
         if (isset($config['role']) && !$user->hasAnyRole($config['role'])) {
             return response()->json(['error' => 'Anda tidak memiliki peran yang diperlukan untuk kategori ini.'], 403);
         }
-
+        error_log("Done Check Permission/Role");
 
         if ($config['footer'] ?? false) {
             foreach ($config['footer'] as $key => $action) {
@@ -55,7 +55,8 @@ class FrameController extends Controller
         }
 
         $mode = $config['mode'] ?? 'iframe';
-
+        error_log('Accessing: ' . $type . ' ' . $category . ' ' . $id);
+        
         // 3. Generate Temporary Signed URL (Valid 10 Menit)
         if ($mode === 'modal') {
             // Untuk mode modal, kirim URL signed yang akan di-fetch sebagai HTML
@@ -100,6 +101,7 @@ class FrameController extends Controller
     public function render(Request $request, $type, $category, $id)
     {
         // Render View secara modular berdasarkan konfigurasi
+        error_log("Rendering");
         $view = $type == 'sk' ? SKController::render($request, $category, $id) : SPController::render($request, $category, $id);
 
         return $view;
