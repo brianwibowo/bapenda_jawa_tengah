@@ -324,7 +324,9 @@ class PengajuanController extends Controller
             'kendaraans.pemilik', // Daftar kendaraan dengan data pemilik
             'kendaraans.media', // Media files untuk setiap kendaraan
             'kendaraans.logs.user', // log per kendaraan
-            'kendaraans.logs.media' // lampiran log per kendaraan
+            'kendaraans.logs.media', // lampiran log per kendaraan
+            'suratPengajuan',
+            'suratKeputusans'
         ]);
 
         // Urutkan kendaraan berdasarkan created_at (yang pertama dibuat = nomor 1)

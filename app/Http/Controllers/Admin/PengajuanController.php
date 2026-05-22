@@ -95,7 +95,9 @@ class PengajuanController extends Controller
             'kendaraans',
             'kendaraans.media',
             'kendaraans.logs.user', // Ambil log per kendaraan
-            'kendaraans.logs.media' // Ambil lampiran log per kendaraan
+            'kendaraans.logs.media', // Ambil lampiran log per kendaraan
+            'suratPengajuan',
+            'suratKeputusans'
         ]);
 
         $progress = $pengajuan->getTotalSurat();

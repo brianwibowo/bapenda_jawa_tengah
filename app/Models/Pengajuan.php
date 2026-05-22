@@ -52,8 +52,12 @@ class Pengajuan extends Model implements HasMedia
         return $this->hasMany(SuratPengajuan::class);
     }
 
-    public function suratKeputusans() {
+    public function suratKeputusan() {
         return $this->hasMany(SuratKeputusan::class);
+    }
+
+    public function suratKeputusans() {
+        return $this->suratKeputusan();
     }
 
     /**
