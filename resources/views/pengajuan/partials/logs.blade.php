@@ -4,13 +4,50 @@
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
-        {{-- Display SK & SP PDFs --}}
         @php
-            // Kumpulkan semua dokumen PDF dari SK dan SP yang memiliki pdf_url
-            // Gunakan ?? collect() agar aman jika relasi belum di-load atau null
-            $sk_docs = ($pengajuan->suratKeputusan ?? collect())->filter(fn($sk) => !empty($sk->pdf_url));
-            $sp_docs = ($pengajuan->suratPengajuan ?? collect())->filter(fn($sp) => !empty($sp->pdf_url));
-            $all_docs = $sk_docs->merge($sp_docs)->sortByDesc('created_at');
+            $docs = collect();
+
+            // Extract SK PDFs
+            if (!empty($pengajuan->suratKeputusan)) {
+                foreach ($pengajuan->suratKeputusan as $sk) {
+                    if (!empty($sk->pdf_url)) {
+                        $docs->push((object)[
+                            'pdf_url' => $sk->pdf_url,
+                            'display_name' => basename($sk->pdf_url),
+                            'created_at' => $sk->created_at,
+                        ]);
+                    }
+                }
+            }
+
+            // Extract SP PDFs & SP Balasan PDFs
+            if (!empty($pengajuan->suratPengajuan)) {
+                foreach ($pengajuan->suratPengajuan as $sp) {
+                    // SP Utama (Pengajuan)
+                    if (!empty($sp->pdf_url)) {
+                        $docs->push((object)[
+                            'pdf_url' => $sp->pdf_url,
+                            'display_name' => basename($sp->pdf_url),
+                            'created_at' => $sp->created_at,
+                        ]);
+                    }
+
+                    // SP Balasan from persetujuan_unit_kerja array
+                    if (!empty($sp->persetujuan_unit_kerja) && is_array($sp->persetujuan_unit_kerja)) {
+                        foreach ($sp->persetujuan_unit_kerja as $item) {
+                            if (!empty($item['pdf_url'])) {
+                                $docs->push((object)[
+                                    'pdf_url' => $item['pdf_url'],
+                                    'display_name' => 'SP Balasan (' . ($item['instansi'] ?? 'Instansi') . ') - ' . basename($item['pdf_url']),
+                                    'created_at' => !empty($item['updated_at']) ? \Carbon\Carbon::parse($item['updated_at']) : $sp->updated_at,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            $all_docs = $docs->sortByDesc('created_at');
         @endphp
         @if($all_docs->isNotEmpty())
             <div class="mb-4">
@@ -24,7 +61,7 @@
                                     @php
                                         $docPdfUrl = $doc->pdf_url;
                                         // Ambil nama file dari URL
-                                        $name = basename($docPdfUrl);
+                                        $name = $doc->display_name ?? basename($docPdfUrl);
                                         $viewUrl = $docPdfUrl;
                                         $downloadUrl = $docPdfUrl;
                                         // Build safe URL: if localhost/127.0.0.1, force port 8000

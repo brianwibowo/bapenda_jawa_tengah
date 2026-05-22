@@ -27,10 +27,16 @@ class SuratKeputusanController extends Controller
         };
     }
 
-    static public function getRegistry($type, $id, $data = null)
+    static public function getRegistry($type, $id, $data = null, ?string $unitKerja = null)
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratKeputusans'])->findOrFail($id);
         $step = $pengajuan->getStep();
+
+        // Jika unitKerja tidak disupply (e.g. saat render PDF via ID), deteksi dari auth user
+        if ($unitKerja === null && Auth::check()) {
+            $unitKerja = self::normalizeUnitKerja(Auth::user()->unit_kerja);
+        }
+
         $registries = [
             'pdf' => [
                 "default" => [
@@ -38,7 +44,7 @@ class SuratKeputusanController extends Controller
                     'mode' => 'iframe',
                     'role' => 'admin',
                     'prefix' => 'SK-',
-                    'permission' => 'view_own_sk', // Warga juga punya permission ini
+                    'permission' => 'view_own_sk',
                     'controllerroute' => 'admin.pengajuan.buat_sk',
                     'footer' => [
                         'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
@@ -78,7 +84,22 @@ class SuratKeputusanController extends Controller
                         'reject' => false,
                         'back' => false,
                     ]
-                ]
+                ],
+                "jr" => [
+                    'view' => 'pdf.view_sk',  // Dummy — sama dengan default, ganti dengan PDF JR yang sesungguhnya
+                    'mode' => 'iframe',
+                    'role' => 'jr',
+                    'prefix' => 'SK-JR-',
+                    'permission' => 'view_own_sk',
+                    'controllerroute' => 'admin.pengajuan.buat_sk',
+                    'footer' => [
+                        'accept' => ['label' => 'Selesai', 'class' => 'btn-success', 'route'=> [
+                            'name' => 'admin.pengajuan.index',
+                        ]],
+                        'reject' => false,
+                        'back' => false,
+                    ]
+                ],
             ],
             'form' => [
                 "default"  => [
@@ -122,20 +143,43 @@ class SuratKeputusanController extends Controller
                         'reject' => false,
                         'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
                     ]
-                ]
+                ],
+                "jr" => [
+                    'view' => 'form.create_sk',  // Dummy — sama dengan default, ganti dengan form JR yang sesungguhnya
+                    'mode' => 'modal',
+                    'role' => ['jr'],
+                    'permission' => 'create_sk',
+                    'footer' => [
+                        'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
+                            'name' => 'admin.pengajuan.buat_sk',
+                            'middleware' => 'signed'
+                        ]],
+                        'reject' => false,
+                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
+                    ]
+                ],
             ]
         ];
 
-
         $config = $registries[$type] ?? abort(404);
 
-        if ((int) $step < 3 && isset($config['polda2bapenda&jr'])) {
+        // Routing berbasis unit_kerja (lebih presisi dari routing berbasis step saja)
+        $normalizedUK = $unitKerja ? self::normalizeUnitKerja($unitKerja) : null;
+        if ($normalizedUK === 'Polda' && isset($config['polda2bapenda&jr'])) {
+            $config = $config['polda2bapenda&jr'];
+        } elseif ($normalizedUK === 'Bapenda' && isset($config['bapenda'])) {
+            $config = $config['bapenda'];
+        } elseif ($normalizedUK === 'JR' && isset($config['jr'])) {
+            $config = $config['jr'];
+        } elseif ((int) $step < 3 && isset($config['polda2bapenda&jr'])) {
+            // Fallback berbasis step jika unitKerja tidak diketahui
             $config = $config['polda2bapenda&jr'];
         } elseif ((int) $step < 4 && isset($config['bapenda'])) {
             $config = $config['bapenda'];
         } else {
             $config = $config['default'];
         }
+
         $config['filename'] = $data ? ($config['prefix'] ?? '') . $data->nomor_sk : 'DOKUMEN_SK';
         return $config;
     }
@@ -163,6 +207,182 @@ class SuratKeputusanController extends Controller
             'pengajuan' => $pengajuan,
             'normalizedUnitKerja' => $normalizedUnitKerja
         ]);
+    }
+
+    public function generateSkDefault(Request $request, Pengajuan $pengajuan)
+    {
+        $request->validate([
+            'kendaraan_id' => ['required',
+                function($attribute, $value, $fail) {
+                    if ($value === 'all') return;
+                    if (!\App\Models\Kendaraan::where('id', $value)->exists()) {
+                        $fail('Kendaraan tidak ditemukan.');
+                    }
+                },
+            ],
+        ]);
+
+        // Ambil data kendaraan berdasarkan pilihan dari form modal
+        $kendaraan = $request->kendaraan_id === 'all'
+            ? $pengajuan->kendaraans()->with('pemilik')->get()
+            : $pengajuan->kendaraans()->with('pemilik')->where('id', $request->kendaraan_id)->get();
+
+        if ($kendaraan->isEmpty()) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        $arrayResult = [];
+
+        foreach ($kendaraan as $k) {
+            $dataPdf = [
+                'sk'  => (object)[
+                    'nomor_sk'  => null, // Belum ada nomor SK saat generate
+                    'kendaraan' => $k,
+                ],
+            ];
+
+            $arrayResult[$k->id] = [
+                'data'           => $dataPdf,
+                'pdf_url'        => null,
+                'local_pdf_path' => null,
+            ];
+
+            // Jika bukan preview, cek apakah SK untuk kendaraan ini sudah ada (skip jika sudah)
+            if (!$request->has('preview')) {
+                $existingSk = $k->suratKeputusans()->where('unit_kerja', 'Samsat')->first();
+                if ($existingSk) {
+                    $arrayResult[$k->id]['pdf_url']        = $existingSk->pdf_url;
+                    $arrayResult[$k->id]['local_pdf_path'] = $existingSk->local_pdf_path;
+                    continue;
+                }
+            }
+
+            // Generate PDF
+            $pdf = Pdf::loadView('pdf.view_sk', ['sk' => (object)[
+                'nomor_sk'  => null,
+                'kendaraan' => $k,
+            ]])->setPaper('a4', 'portrait');
+
+            if ($request->has('preview')) {
+                $previewDir = 'sk/preview';
+                $prefix = Auth::id() . '_' . $k->id . '_default_';
+                // Hapus preview lama agar tidak memenuhi storage
+                $existingFiles = Storage::disk('public')->files($previewDir);
+                foreach ($existingFiles as $file) {
+                    if (str_starts_with(basename($file), $prefix)) {
+                        Storage::disk('public')->delete($file);
+                    }
+                }
+                $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+            } else {
+                $filename    = 'SK_DEFAULT_' . str_replace(' ', '_', $k->nrkb) . '_' . time() . '.pdf';
+                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+            }
+
+            Storage::disk('public')->put($storagePath, $pdf->output());
+            $pdfUrlAbsolute = asset('storage/' . $storagePath);
+            $localPdfPath   = Storage::disk('public')->path($storagePath);
+
+            // Catat log untuk setiap kendaraan jika bukan preview
+            if (!$request->has('preview')) {
+                $log = $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $k->id,
+                    'SK Default berhasil diterbitkan',
+                    'Catatan: ' . ($request->catatan ?? '-'),
+                    storage_path('app/public/' . $storagePath)
+                );
+                $arrayResult[$k->id]['log_id'] = $log->id;
+            }
+
+            $arrayResult[$k->id]['pdf_url']        = $pdfUrlAbsolute;
+            $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
+        }
+
+        return $arrayResult;
+    }
+    public function generateSkJR(Request $request, Pengajuan $pengajuan)
+    {
+        $request->validate([
+            'kendaraan_id' => ['required',
+                function($attribute, $value, $fail) {
+                    if ($value === 'all') return;
+                    if (!\App\Models\Kendaraan::where('id', $value)->exists()) {
+                        $fail('Kendaraan tidak ditemukan.');
+                    }
+                },
+            ],
+        ]);
+
+        // Ambil data kendaraan berdasarkan pilihan dari form modal
+        $kendaraan = $request->kendaraan_id === 'all'
+            ? $pengajuan->kendaraans()->with('pemilik')->get()
+            : $pengajuan->kendaraans()->with('pemilik')->where('id', $request->kendaraan_id)->get();
+
+        if ($kendaraan->isEmpty()) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        $arrayResult = [];
+
+        foreach ($kendaraan as $k) {
+            $arrayResult[$k->id] = [
+                'data'           => [],
+                'pdf_url'        => null,
+                'local_pdf_path' => null,
+            ];
+
+            // Jika bukan preview, cek apakah SK JR sudah ada untuk kendaraan ini
+            if (!$request->has('preview')) {
+                $existingSk = $k->suratKeputusans()->where('unit_kerja', 'JR')->first();
+                if ($existingSk) {
+                    $arrayResult[$k->id]['pdf_url']        = $existingSk->pdf_url;
+                    $arrayResult[$k->id]['local_pdf_path'] = $existingSk->local_pdf_path;
+                    continue;
+                }
+            }
+
+            // Generate PDF (dummy view_sk — ganti dengan PDF JR yang sesungguhnya)
+            $pdf = Pdf::loadView('pdf.view_sk', ['sk' => (object)[
+                'nomor_sk'  => null,
+                'kendaraan' => $k,
+            ]])->setPaper('a4', 'portrait');
+
+            if ($request->has('preview')) {
+                $previewDir = 'sk/preview';
+                $prefix = Auth::id() . '_' . $k->id . '_jr_';
+                $existingFiles = Storage::disk('public')->files($previewDir);
+                foreach ($existingFiles as $file) {
+                    if (str_starts_with(basename($file), $prefix)) {
+                        Storage::disk('public')->delete($file);
+                    }
+                }
+                $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+            } else {
+                $filename    = 'SK_JR_' . str_replace(' ', '_', $k->nrkb) . '_' . time() . '.pdf';
+                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+            }
+
+            Storage::disk('public')->put($storagePath, $pdf->output());
+            $pdfUrlAbsolute = asset('storage/' . $storagePath);
+            $localPdfPath   = Storage::disk('public')->path($storagePath);
+
+            if (!$request->has('preview')) {
+                $log = $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $k->id,
+                    'SK Jasa Raharja berhasil diterbitkan',
+                    'Catatan: ' . ($request->catatan ?? '-'),
+                    storage_path('app/public/' . $storagePath)
+                );
+                $arrayResult[$k->id]['log_id'] = $log->id;
+            }
+
+            $arrayResult[$k->id]['pdf_url']        = $pdfUrlAbsolute;
+            $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
+        }
+
+        return $arrayResult;
     }
 
     public function generateSkRegident(Request $request, Pengajuan $pengajuan)
@@ -566,8 +786,7 @@ class SuratKeputusanController extends Controller
                 break;
             case 'JR':
                 $unitKerja = 'JR';
-                // $data = $this->generateSkJR($request, $pengajuan);
-
+                $data = $this->generateSkJR($request, $pengajuan);
                 break;
             default:
                 $unitKerja = 'Unit Kerja Lain';

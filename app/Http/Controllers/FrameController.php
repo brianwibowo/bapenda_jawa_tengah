@@ -78,13 +78,22 @@ class FrameController extends Controller
                     default => trim((string) $user->unit_kerja),
                 } : '';
 
-                if (in_array($unitKerja, ['Bapenda', 'Jasa Raharja'])) {
-                    $pengajuan = Pengajuan::find($id);
-                    $currentSp = $pengajuan ? $pengajuan->getCurrentSuratPengajuan() : null;
-                    if ($currentSp) {
-                        $submitRoute = 'admin.pengajuan.sp.terima';
-                        $routeParams = ['surat' => $currentSp->id];
+                $pengajuan = Pengajuan::find($id);
+                $currentSp = $pengajuan ? $pengajuan->getCurrentSuratPengajuan() : null;
+
+                $isResponder = false;
+                if ($currentSp && !$currentSp->isFullyApproved() && !$currentSp->isRejected()) {
+                    $statusInstansi = $currentSp->persetujuan_unit_kerja
+                        ? collect($currentSp->persetujuan_unit_kerja)->firstWhere(fn($item) => strcasecmp($item['instansi'] ?? '', $unitKerja) === 0)
+                        : null;
+                    if ($statusInstansi && ($statusInstansi['status'] ?? null) === 'pending') {
+                        $isResponder = true;
                     }
+                }
+
+                if ($isResponder) {
+                    $submitRoute = 'admin.pengajuan.sp.terima';
+                    $routeParams = ['surat' => $currentSp->id];
                 }
             } elseif ($type === 'sk') {
                 $submitRoute = 'admin.pengajuan.buat_sk';

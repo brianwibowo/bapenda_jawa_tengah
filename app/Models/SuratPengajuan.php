@@ -38,6 +38,9 @@ class SuratPengajuan extends Model
         'persetujuan_unit_kerja',
         'local_pdf_path',
         'pdf_url',
+        'pdf_balasan_url',
+        'local_pdf_balasan_path',
+        'instansi_pembuat',
         'catatan_instansi',
     ];
 

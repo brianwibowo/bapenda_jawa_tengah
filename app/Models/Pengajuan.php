@@ -152,34 +152,43 @@ class Pengajuan extends Model implements HasMedia
 
         // Cek Surat Pengajuan ke Samsat
         if ($this->hasSuratPengajuanByInstansi($suratpengajuan, 'Polda')) {
+            error_log("Test 1");
             $suratTerpenuhi++;
         }
         // Cek Surat Pengajuan ke Polda
         if ($this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Polda')) {
+            error_log("Test 2");
             $suratTerpenuhi++;
         }
         // Cek Surat Pengajuan Pending ke Bapenda/JR
         if ($this->hasSuratPengajuanByInstansi($suratpengajuan, 'Bapenda')) {
+            error_log("Test 3");
             $suratTerpenuhi++;
         }
         if ($this->hasSuratPengajuanByInstansi($suratpengajuan, 'Jasa Raharja')) {
+            error_log("Test 4");
             $suratTerpenuhi++;
          }
         // Cek Surat Pengajuan ke Bapenda/JR ( dari persetujuan_unit_kerja json key 'instansi' dengan value 'bapenda' atau 'jasa_raharja' )
         if ($this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Bapenda')) {
+            error_log("Test 5");
             $suratTerpenuhi++;
         }
         if ($this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Jasa Raharja')) {
+            error_log("Test 6");
             $suratTerpenuhi++;
         }
         // Cek Surat Keputusan dari Polda
         if ($this->suratKeputusans()->where('unit_kerja', 'Polda')->exists()) {
+            error_log("Test 7");
             $suratTerpenuhi++;
         }
         if ($this->suratKeputusans()->where('unit_kerja', 'Bapenda')->exists()) {
+            error_log("Test 8");
             $suratTerpenuhi++;
         }
         if ($this->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->exists()) {
+            error_log("Test 9");
             $suratTerpenuhi++;
         }
 

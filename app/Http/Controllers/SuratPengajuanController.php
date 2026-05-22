@@ -154,8 +154,23 @@ class SuratPengajuanController extends Controller
                 default => trim((string) $user->unit_kerja),
             } : '';
 
+            // Cek apakah user adalah responder untuk SP yang aktif saat ini
+            $isResponder = false;
+            if ($lastSp && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
+                $statusInstansi = $lastSp->persetujuan_unit_kerja
+                    ? collect($lastSp->persetujuan_unit_kerja)->firstWhere(fn($item) => strcasecmp($item['instansi'] ?? '', $unitKerja) === 0)
+                    : null;
+                if ($statusInstansi && ($statusInstansi['status'] ?? null) === 'pending') {
+                    $isResponder = true;
+                }
+            }
+
             if ($unitKerja == 'Polda' && isset($config['polda'])) {
-                $config = $config['polda'];
+                if ($isResponder) {
+                    $config = $config['default'];
+                } else {
+                    $config = $config['polda'];
+                }
             } elseif (($unitKerja == 'Bapenda' || $unitKerja == 'Jasa Raharja') && isset($config['bapenda'])) {
                 $config = $config['bapenda'];
             } else {
@@ -526,7 +541,7 @@ class SuratPengajuanController extends Controller
                     SendWhatsAppNotification::dispatch(
                         pengajuan:    $pengajuan,
                         kendaraan:    $kendaraans->first(),
-                        skType:       'sk_penghapusan_regident_freysia',
+                        skType:       'sp_penghapusan_regident',
                         pdfUrl:       $pdfUrlAbsolute,
                         localPdfPath: $localPdfPath,
                         wpPhone:      $wpUser->no_hp,
@@ -714,7 +729,13 @@ class SuratPengajuanController extends Controller
 
         // ── KELOMPOK AJAX / PREVIEW FLOW (Untuk submit dari dynamic modal) ──
         if ($request->ajax() || $request->expectsJson() || $request->has('preview')) {
-            $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
+            if ($instansiUser == "Bapenda") {
+                $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
+            } else if ($instansiUser == "Jasa Raharja") {
+                $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
+            } else {
+                $data = $this->generateSPDefault($request, $pengajuan);
+            }
 
             if ($request->has('preview')) {
                 return response()->json([
@@ -735,12 +756,16 @@ class SuratPengajuanController extends Controller
                     $item['status'] = 'approved';
                     $item['user_id'] = Auth::id();
                     $item['updated_at'] = $baseLogTime;
+                    $item['pdf_url'] = $data['pdf_url'] ?? null;
+                    $item['local_pdf_path'] = $data['local_pdf_path'] ?? null;
                 }
             }
 
-            // Simpan kembali
-            $surat->local_pdf_path = $data['local_pdf_path'] ?? null;
-            $surat->pdf_url = $data['pdf_url'] ?? null;
+            // Update persetujuan status pada SP yang aktif (SP Polda/asal)
+            // JANGAN timpa pdf_url — itu milik SP pengajuan asli (dari Polda)
+            // Simpan PDF balasan di kolom terpisah pdf_balasan_url
+            $surat->pdf_balasan_url        = $data['pdf_url'] ?? null;
+            $surat->local_pdf_balasan_path = $data['local_pdf_path'] ?? null;
             $surat->persetujuan_unit_kerja = $persetujuan;
             $surat->save();
 
@@ -748,14 +773,14 @@ class SuratPengajuanController extends Controller
                 $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
-                    'SK Penghapusan Regident (Freysia) berhasil diterbitkan',
+                    $instansiUser == "Bapenda" ? 'SP Balasan Penghapusan Regident berhasil diterbitkan' : 'SP Balasan berhasil diterbitkan',
                     'Nomor Surat: ' . $request->nomor_surat,
                     $data['local_pdf_path'] ?? null,
                     $surat->id
                 );
             }
 
-            // If fully approved, change vehicle status to diproses
+            // Jika semua instansi sudah approved, ubah status kendaraan ke diproses
             if ($surat->fresh()->isFullyApprovedByAll()) {
                 foreach ($pengajuan->kendaraans as $k) {
                     $k->update(['status' => 'diproses']);
