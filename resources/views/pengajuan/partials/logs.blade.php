@@ -4,40 +4,81 @@
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
     <div class="card-body">
-        {{-- Display SK POLDA PDFs --}}
         @php
-            $skPoldaPdfs = $pengajuan->getMedia('sk_polda_pdf');
+            $docs = collect();
+
+            // Extract SK PDFs
+            if (!empty($pengajuan->suratKeputusan)) {
+                foreach ($pengajuan->suratKeputusan as $sk) {
+                    if (!empty($sk->pdf_url)) {
+                        $docs->push((object)[
+                            'pdf_url' => $sk->pdf_url,
+                            'display_name' => basename($sk->pdf_url),
+                            'created_at' => $sk->created_at,
+                        ]);
+                    }
+                }
+            }
+
+            // Extract SP PDFs & SP Balasan PDFs
+            if (!empty($pengajuan->suratPengajuan)) {
+                foreach ($pengajuan->suratPengajuan as $sp) {
+                    // SP Utama (Pengajuan)
+                    if (!empty($sp->pdf_url)) {
+                        $docs->push((object)[
+                            'pdf_url' => $sp->pdf_url,
+                            'display_name' => basename($sp->pdf_url),
+                            'created_at' => $sp->created_at,
+                        ]);
+                    }
+
+                    // SP Balasan from persetujuan_unit_kerja array
+                    if (!empty($sp->persetujuan_unit_kerja) && is_array($sp->persetujuan_unit_kerja)) {
+                        foreach ($sp->persetujuan_unit_kerja as $item) {
+                            if (!empty($item['pdf_url'])) {
+                                $docs->push((object)[
+                                    'pdf_url' => $item['pdf_url'],
+                                    'display_name' => 'SP Balasan (' . ($item['instansi'] ?? 'Instansi') . ') - ' . basename($item['pdf_url']),
+                                    'created_at' => !empty($item['updated_at']) ? \Carbon\Carbon::parse($item['updated_at']) : $sp->updated_at,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            $all_docs = $docs->sortByDesc('created_at');
         @endphp
-        @if($skPoldaPdfs->isNotEmpty())
+        @if($all_docs->isNotEmpty())
             <div class="mb-4">
-                <h5 class="mb-3">Dokumen SK POLDA</h5>
+                <h5 class="mb-3">Dokumen</h5>
                 <div class="row">
-                    @foreach($skPoldaPdfs as $pdf)
+                    @foreach($all_docs as $doc)
                         <div class="col-md-6 col-lg-4 mb-3">
                             <div class="card border">
                                 <div class="card-body text-center">
                                     <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
-                                    <h6 class="card-title">{{ $pdf->name }}</h6>
-                                    <p class="card-text small text-muted">
-                                        Dibuat: {{ $pdf->created_at->format('d M Y H:i') }}
-                                    </p>
                                     @php
-                                        // Build a safe URL: if host is localhost or 127.0.0.1, force port 8000
-                                        $originalUrl = $pdf->getUrl();
-                                        $viewUrl = $originalUrl;
-                                        $downloadUrl = $originalUrl;
-                                        $parts = @parse_url($originalUrl);
+                                        $docPdfUrl = $doc->pdf_url;
+                                        // Ambil nama file dari URL
+                                        $name = $doc->display_name ?? basename($docPdfUrl);
+                                        $viewUrl = $docPdfUrl;
+                                        $downloadUrl = $docPdfUrl;
+                                        // Build safe URL: if localhost/127.0.0.1, force port 8000
+                                        $parts = @parse_url($docPdfUrl);
                                         if ($parts && isset($parts['host']) && in_array($parts['host'], ['localhost', '127.0.0.1'])) {
-                                            $scheme = isset($parts['scheme']) ? $parts['scheme'] : 'http';
-                                            $host = $parts['host'];
-                                            $port = 8000;
-                                            $path = isset($parts['path']) ? $parts['path'] : '';
-                                            $query = isset($parts['query']) ? ('?'.$parts['query']) : '';
-                                            $fragment = isset($parts['fragment']) ? ('#'.$parts['fragment']) : '';
-                                            $viewUrl = $scheme.'://'.$host.':'.$port.$path.$query.$fragment;
+                                            $scheme = $parts['scheme'] ?? 'http';
+                                            $path = $parts['path'] ?? '';
+                                            $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
+                                            $fragment = isset($parts['fragment']) ? ('#' . $parts['fragment']) : '';
+                                            $viewUrl = $scheme . '://' . $parts['host'] . ':8000' . $path . $query . $fragment;
                                             $downloadUrl = $viewUrl;
                                         }
                                     @endphp
+                                    <h6 class="card-title text-truncate" title="{{ $name }}">{{ $name }}</h6>
+                                    <p class="card-text small text-muted">
+                                        Dibuat: {{ $doc->created_at->format('d M Y H:i') }}
+                                    </p>
                                     <a href="{{ $viewUrl }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-eye me-1"></i> Lihat PDF
                                     </a>
@@ -62,17 +103,17 @@
                     $type = '';
                     $label = '';
                     if ($hasSuratAction) {
-                        if ($permissionSurat['canAjukanSP']) {
+                        if (!empty($permissionSurat['canAjukanSP'])) {
                             $type = 'sp';
                             $label = 'Buat Pengajuan ke ' . (Auth::user()->unit_kerja == 'Samsat' ? 'Polda' : 'Bapenda/Jasa Raharja');
-                        } elseif ($permissionSurat['canRespondSP']) {
+                        } elseif (!empty($permissionSurat['canRespondSP'])) {
                             $type = 'sp';
                             $label = 'Review & Balas SP';
-                        } elseif ($permissionSurat['canAjukanSK']) {
+                        } elseif (!empty($permissionSurat['canAjukanSK'])) {
                             $type = 'sk';
                             $label = 'Terbitkan Surat Keputusan';
                         } else {
-                            $hasSuratAction = false; // Tidak ada aksi surat yang tersedia
+                            $hasSuratAction = false;
                         }
                     }
                     @endphp
@@ -178,6 +219,11 @@
                                         <i class="fas fa-eye me-1"></i> Detail
                                     </a>
                                 @endif
+                                @if (isset($isUpload) && (($log->sk_id && isset($isUpload['sk'][$log->sk_id])) || ($log->sp_id && isset($isUpload['sp'][$log->sp_id]))))
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#upload{{ $log->sk_id ? 'SK' : 'SP' }}Modal" data-log-id="{{ $log->id }}" data-surat-id="{{ $log->sk_id ?? $log->sp_id }}">
+                                        <i class="fas fa-file-contract me-1"></i>Upload
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -281,9 +327,65 @@
     </div>
 </div>
 
+<!-- Modal Upload SK -->
+<div class="modal fade" id="uploadSKModal" tabindex="-1" aria-labelledby="uploadSKModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.pengajuan.sk.upload_media') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadSKModalLabel">Upload File Surat Keputusan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="log_id" id="skLogIdInput">
+                    <input type="hidden" name="sk_id" id="skIdInput">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih File (PDF/Image, Max 10MB)</label>
+                        <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Upload SP -->
+<div class="modal fade" id="uploadSPModal" tabindex="-1" aria-labelledby="uploadSPModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.pengajuan.sp.upload_media') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadSPModalLabel">Upload File Surat Pengajuan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="log_id" id="spLogIdInput">
+                    <input type="hidden" name="sp_id" id="spIdInput">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih File (PDF/Image, Max 10MB)</label>
+                        <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Prefill modal kendaraan select when "Buat Aksi" from a row is clicked
     document.addEventListener('DOMContentLoaded', function () {
+        // Prefill modal kendaraan select when "Buat Aksi" from a row is clicked
         document.querySelectorAll('.btn-open-log-modal').forEach(btn => {
             btn.addEventListener('click', function () {
                 const kendId = this.getAttribute('data-kendaraan-id');
@@ -291,6 +393,30 @@
                 if (sel && kendId) sel.value = kendId;
             });
         });
+        
+        // Populate SK Upload Modal
+        const uploadSKModal = document.getElementById('uploadSKModal');
+        if (uploadSKModal) {
+            uploadSKModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const logId = button.getAttribute('data-log-id');
+                const suratId = button.getAttribute('data-surat-id');
+                uploadSKModal.querySelector('#skLogIdInput').value = logId;
+                uploadSKModal.querySelector('#skIdInput').value = suratId;
+            });
+        }
+
+        // Populate SP Upload Modal
+        const uploadSPModal = document.getElementById('uploadSPModal');
+        if (uploadSPModal) {
+            uploadSPModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const logId = button.getAttribute('data-log-id');
+                const suratId = button.getAttribute('data-surat-id');
+                uploadSPModal.querySelector('#spLogIdInput').value = logId;
+                uploadSPModal.querySelector('#spIdInput').value = suratId;
+            });
+        }
         
         // Dynamic Multiple File Input Logic
         const btnAddFile = document.getElementById('btnAddFile');

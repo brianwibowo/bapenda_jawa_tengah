@@ -120,6 +120,26 @@ class Kendaraan extends Model implements HasMedia
         return $this->belongsTo(Pemilik::class);
     }
 
+    public function suratKeputusan()
+    {
+        return $this->hasMany(SuratKeputusan::class);
+    }
+
+    public function suratKeputusans()
+    {
+        return $this->suratKeputusan();
+    }
+
+    public function suratPengajuan()
+    {
+        return $this->hasMany(SuratPengajuan::class);
+    }
+
+    public function suratPengajuans()
+    {
+        return $this->suratPengajuan();
+    }
+
     /**
      * Relasi: Satu Kendaraan punya BANYAK Log Histori.
      */
@@ -127,4 +147,57 @@ class Kendaraan extends Model implements HasMedia
     {
         return $this->hasMany(KendaraanLog::class)->latest();
     }
+
+    /***
+     * Cek apakah dokumen {nama} sudah ada di media library lampiran, sesuaikan koleksi media dengan jenisnya
+     * contoh: lampiran sk dari polda sudah ada atau tidak. Case seperti untuk metode ttd pada sk mempengaruhi lampiran yang ada, jika ttd basah maka user perlu upload dan pengajuan harus mengecek tiap lampiran yang ada agar sesuai dengan total surat keputusan yang diizinkan untuk diunggah
+     * Jika pengajuan memiliki lebih dari satu kendaraan, maka pengajuan harus mengecek tiap kendaraan untuk memastikan semua lampiran sudah lengkap.
+     * Pengajuan selesai jika semua kendaraan sudah memiliki semua lampiran yang diperlukan.
+     * 
+     * Section Logic untuk pengajuan completion requirement
+     * 
+     * 
+    */
+
+    public function checkSKRequirements(String $unit_kerja, ...$params) : array|bool{
+        $array_sk_belum_lengkap = [];
+        foreach ($this->suratKeputusans as $sk) {
+            if($sk->unit_kerja == $unit_kerja) {
+                // Media foreach trim nama file pattern nama file, {unit_kerja}_{id}_{nomor_sk}_{uuid}.(pdf|docx|doc)
+                // Cek apakah setiap unit kerja ada sknya
+                $sk_polda = $sk->where('unit_kerja', 'polda')->first();
+                $sk_bapenda = $sk->where('unit_kerja', 'bapenda')->first();
+                $sk_jr = $sk->where('unit_kerja', 'jr')->first();
+
+                // TODO: logic cek sk complete berdasarkan unit kerja
+                // Cek semua unit kerja untuk lampirannya, jika tidak ada maka masukan ke array belum lengkap
+                
+                if(!$sk_polda || !$sk_polda->media()->where('collection_name', 'lampiran')->exists()) {
+                    $array_sk_belum_lengkap[] = [
+                        'message' => "SK Polda untuk kendaraan ID {$this->id} belum lengkap.",
+                        'sk_id' => $sk_polda->id ?? null,
+                    ];
+                }
+                if (!$sk_bapenda || !$sk_bapenda->media()->where('collection_name', 'lampiran')->exists()) {
+                    $array_sk_belum_lengkap[] = [
+                        'message' => "SK Bapenda untuk kendaraan ID {$this->id} belum lengkap.",
+                        'sk_id' => $sk_bapenda->id ?? null,
+                    ];
+                }
+                if (!$sk_jr || !$sk_jr->media()->where('collection_name', 'lampiran')->exists()) {
+                    $array_sk_belum_lengkap[] = [
+                        'message' => "SK JR untuk kendaraan ID {$this->id} belum lengkap.",
+                        'sk_id' => $sk_jr->id ?? null,
+                    ];
+                }
+            }
+        }
+        if (!empty($array_sk_belum_lengkap)) {
+            return $array_sk_belum_lengkap;
+        }
+        return true;
+    }
+
+    
+    
 }

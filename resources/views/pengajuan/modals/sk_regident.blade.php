@@ -17,6 +17,7 @@
                                 <label class="form-label fw-bold">Pilih Kendaraan</label>
                                 <select class="form-select" name="kendaraan_id" required>
                                     <option value="">-- Pilih Kendaraan (NRKB) --</option>
+                                    <option value="all">Semua Kendaraan</option>
                                     @foreach($pengajuan->kendaraans as $k)
                                         <option value="{{ $k->id }}">{{ $k->nrkb }} - {{ $k->merk_kendaraan }}</option>
                                     @endforeach

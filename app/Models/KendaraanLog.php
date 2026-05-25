@@ -47,9 +47,11 @@ class KendaraanLog extends Model implements HasMedia
         'kendaraan_id', // <-- Terhubung ke kendaraan
         'user_id',
         'aksi',
-    'tipe',
-    'status_baru',
+        'tipe',
+        'status_baru',
         'catatan',
+        'sp_id',
+        'sk_id',
     ];
 
     /**

@@ -134,7 +134,7 @@
                     <tr>
                         <td style="vertical-align: top;">Hal</td>
                         <td style="vertical-align: top;">:</td>
-                        <td style="vertical-align: top;">pemberitahuan penghapusan data kendaraan bermotor NRKB {{ $data->nrkb ?? 'AA-9660-QE' }}.</td>
+                        <td style="vertical-align: top;">pemberitahuan penghapusan data kendaraan bermotor NRKB {{ (isset($kendaraans) && count($kendaraans) === 1) ? $kendaraans->first()->nrkb : 'TERLAMPIR' }}.</td>
                     </tr>
                     <tr>
                         <td></td>
@@ -194,7 +194,7 @@
         <tr>
             <td class="cl" style="padding-top: 10px;">2.</td>
             <td class="tj" style="padding-top: 10px;">
-                Sehubungan dengan rujukan di atas, bersama ini diberitahukan bahwa kendaraan bermotor dengan NRKB {{ $data->nrkb ?? 'AA-9660-QE' }} telah dilakukan identifikasi dan verifikasi pada sistem ERI (Electronic Registration and Identification) Korlantas dan dinyatakan terdaftar serta tidak terblokir.
+                Sehubungan dengan rujukan di atas, bersama ini diberitahukan bahwa kendaraan bermotor dengan NRKB {{ (isset($kendaraans) && count($kendaraans) === 1) ? $kendaraans->first()->nrkb : 'TERLAMPIR' }} telah dilakukan identifikasi dan verifikasi pada sistem ERI (Electronic Registration and Identification) Korlantas dan dinyatakan terdaftar serta tidak terblokir.
             </td>
         </tr>
         <tr>
@@ -238,10 +238,7 @@
         </tr>
     </table>
 
-
-    {{-- ========================================== --}}
-    {{-- HALAMAN 2: LAMPIRAN                        --}}
-    {{-- ========================================== --}}
+    @foreach($kendaraans as $index => $k)
     <div class="page-break"></div>
 
     {{-- KOP LAMPIRAN --}}
@@ -267,6 +264,23 @@
         </tr>
     </table>
 
+    @php
+        $vData = (object)[
+            'nrkb' => strtoupper($k->nrkb ?? '-'),
+            'nama' => strtoupper(optional($k->pemilik)->nama_pemilik ?? '-'),
+            'alamat' => strtoupper(optional($k->pemilik)->alamat_pemilik ?? '-'),
+            'jenis_model' => strtoupper(($k->jenis_kendaraan ?? '-') . '/' . ($k->model_kendaraan ?? '-')),
+            'merek_tipe' => strtoupper(($k->merk_kendaraan ?? '-') . '/' . ($k->tipe_kendaraan ?? '-')),
+            'tahun' => $k->tahun_pembuatan ?? '-',
+            'isi_silinder' => strtoupper($k->isi_silinder ?? '-'),
+            'bahan_bakar' => strtoupper($k->jenis_bahan_bakar ?? '-'),
+            'no_rangka' => strtoupper($k->nomor_rangka ?? '-'),
+            'no_mesin' => strtoupper($k->nomor_mesin ?? '-'),
+            'warna' => strtoupper($k->warna_kendaraan ?? '-'),
+            'no_bpkb' => strtoupper($k->nomor_bpkb ?? '-'),
+        ];
+    @endphp
+
     {{-- POIN 1: IDENTITAS KENDARAAN --}}
     <table style="margin-bottom: 15px;">
         <tr>
@@ -275,18 +289,18 @@
                 Identitas kendaraan bermotor:
                 
                 <table style="margin-top: 10px;">
-                    <tr><td class="cl">a.</td><td class="lbl">NRKB</td><td class="sep">:</td><td class="val uc">{{ $data->nrkb ?? 'AA-9660-QE' }}</td></tr>
-                    <tr><td class="cl">b.</td><td class="lbl">Atas nama/NIK</td><td class="sep">:</td><td class="val uc">{{ $data->nama ?? 'PEMERINTAH DESA GANDUWETAN' }}</td></tr>
-                    <tr><td class="cl">c.</td><td class="lbl">Alamat</td><td class="sep">:</td><td class="val uc">{{ $data->alamat ?? 'JL. JUMO NO 03 KEL NGADIREJO KAB TEMANGGUNG' }}</td></tr>
-                    <tr><td class="cl">d.</td><td class="lbl">Jenis/Model</td><td class="sep">:</td><td class="val uc">{{ $data->jenis_model ?? 'SEPEDA MOTOR/RODA TIGA' }}</td></tr>
-                    <tr><td class="cl">e.</td><td class="lbl">Merk/type</td><td class="sep">:</td><td class="val uc">{{ $data->merek_tipe ?? 'VIAR/V15 RL' }}</td></tr>
-                    <tr><td class="cl">f.</td><td class="lbl">Tahun</td><td class="sep">:</td><td class="val">{{ $data->tahun ?? '2015' }}</td></tr>
-                    <tr><td class="cl">g.</td><td class="lbl">Isi Silinder</td><td class="sep">:</td><td class="val uc">{{ $data->isi_silinder ?? '150 CC' }}</td></tr>
-                    <tr><td class="cl">h.</td><td class="lbl">Jenis Bahan Bakar</td><td class="sep">:</td><td class="val uc">{{ $data->bahan_bakar ?? 'BENSIN' }}</td></tr>
-                    <tr><td class="cl">i.</td><td class="lbl">Nomor Rangka</td><td class="sep">:</td><td class="val uc">{{ $data->no_rangka ?? 'MGRVR15TAFL207980' }}</td></tr>
-                    <tr><td class="cl">j.</td><td class="lbl">Nomor Mesin</td><td class="sep">:</td><td class="val uc">{{ $data->no_mesin ?? 'YX161FMG15207805' }}</td></tr>
-                    <tr><td class="cl">k.</td><td class="lbl">Warna</td><td class="sep">:</td><td class="val uc">{{ $data->warna ?? 'BIRU' }}</td></tr>
-                    <tr><td class="cl">l.</td><td class="lbl">Nomor BPKB</td><td class="sep">:</td><td class="val uc">{{ $data->no_bpkb ?? 'M01679715' }}</td></tr>
+                    <tr><td class="cl">a.</td><td class="lbl">NRKB</td><td class="sep">:</td><td class="val uc">{{ $vData->nrkb }}</td></tr>
+                    <tr><td class="cl">b.</td><td class="lbl">Atas nama/NIK</td><td class="sep">:</td><td class="val uc">{{ $vData->nama }}</td></tr>
+                    <tr><td class="cl">c.</td><td class="lbl">Alamat</td><td class="sep">:</td><td class="val uc">{{ $vData->alamat }}</td></tr>
+                    <tr><td class="cl">d.</td><td class="lbl">Jenis/Model</td><td class="sep">:</td><td class="val uc">{{ $vData->jenis_model }}</td></tr>
+                    <tr><td class="cl">e.</td><td class="lbl">Merk/type</td><td class="sep">:</td><td class="val uc">{{ $vData->merek_tipe }}</td></tr>
+                    <tr><td class="cl">f.</td><td class="lbl">Tahun</td><td class="sep">:</td><td class="val">{{ $vData->tahun }}</td></tr>
+                    <tr><td class="cl">g.</td><td class="lbl">Isi Silinder</td><td class="sep">:</td><td class="val uc">{{ $vData->isi_silinder }}</td></tr>
+                    <tr><td class="cl">h.</td><td class="lbl">Jenis Bahan Bakar</td><td class="sep">:</td><td class="val uc">{{ $vData->bahan_bakar }}</td></tr>
+                    <tr><td class="cl">i.</td><td class="lbl">Nomor Rangka</td><td class="sep">:</td><td class="val uc">{{ $vData->no_rangka }}</td></tr>
+                    <tr><td class="cl">j.</td><td class="lbl">Nomor Mesin</td><td class="sep">:</td><td class="val uc">{{ $vData->no_mesin }}</td></tr>
+                    <tr><td class="cl">k.</td><td class="lbl">Warna</td><td class="sep">:</td><td class="val uc">{{ $vData->warna }}</td></tr>
+                    <tr><td class="cl">l.</td><td class="lbl">Nomor BPKB</td><td class="sep">:</td><td class="val uc">{{ $vData->no_bpkb }}</td></tr>
                 </table>
             </td>
         </tr>
@@ -301,7 +315,7 @@
                 
                 @php
                     // Ambil foto dari media library
-                    $fotoRanmor = isset($kendaraan) ? $kendaraan->getMedia('foto_ranmor')->take(9) : collect();
+                    $fotoRanmor = $k->getMedia('foto_ranmor')->take(9);
                     $fotoRows = $fotoRanmor->chunk(3);
                 @endphp
 
@@ -344,6 +358,7 @@
             </td>
         </tr>
     </table>
+    @endforeach
 
 </body>
 

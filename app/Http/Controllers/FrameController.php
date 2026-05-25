@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengajuan;
+use App\Models\SuratKeputusan;
+use App\Models\SuratPengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -15,13 +17,17 @@ class FrameController extends Controller
     {
         $user = Auth::user();
         $config = $type == 'sk' ? SKController::getRegistry($category, $id) : SPController::getRegistry($category, $id);
-
         
         // 1. Cek Permission dari RBAC Spatie secara dinamis sesuai kategori
-        if (!$user->canAny($config['permission'])) {
+        if (isset($config['permission']) && !$user->canAny($config['permission'])) {
             return response()->json(['error' => 'Anda tidak memiliki izin akses untuk kategori ini.'], 403);
         } 
-            
+
+        // 2. Cek Role dari RBAC Spatie secara dinamis sesuai kategori
+        if (isset($config['role']) && !$user->hasAnyRole($config['role'])) {
+            return response()->json(['error' => 'Anda tidak memiliki peran yang diperlukan untuk kategori ini.'], 403);
+        }
+
         if ($config['footer'] ?? false) {
             foreach ($config['footer'] as $key => $action) {
                 // Cek apakah key 'route' ada agar tidak error
@@ -48,18 +54,82 @@ class FrameController extends Controller
                 $config['footer']['back']['route'] = $config['footer']['back']['route']['url'] ?? null;
             }
         }
-        // 2. Logika District (Future Development)
-        // if ($user->unit_kerja !== $pengajuan->unit_kerja && !$user->hasRole('superadmin')) {
-        //     return response()->json(['error' => 'Akses ditolak: Wilayah kerja berbeda.'], 403);
-        // }
 
+        $mode = $config['mode'] ?? 'iframe';
+        
         // 3. Generate Temporary Signed URL (Valid 10 Menit)
-        $temporaryUrl = URL::temporarySignedRoute(
-            'frame.secure.render', 
-            now()->addMinutes(10), 
-            ['type' => $type, 'category' => $category, 'id' => $id]
-        );
-        return response()->json(['access_url' => $temporaryUrl, 'footer' => $config['footer'] ?? null]);
+        if ($mode === 'modal') {
+            // Untuk mode modal, kirim URL signed yang akan di-fetch sebagai HTML
+            $temporaryUrl = URL::temporarySignedRoute(
+                'frame.secure.render',
+                now()->addMinutes(10),
+                ['type' => $type, 'category' => $category, 'id' => $id]
+            );
+
+            $submitRoute = 'admin.pengajuan.ajukan';
+            $routeParams = ['id' => $id];
+
+            if ($type === 'sp') {
+                $user = Auth::user();
+                $unitKerja = $user ? match (strtolower(trim((string) $user->unit_kerja))) {
+                    'jr', 'jasa raharja', 'jasa_raharja' => 'Jasa Raharja',
+                    'bapenda' => 'Bapenda',
+                    'polda' => 'Polda',
+                    default => trim((string) $user->unit_kerja),
+                } : '';
+
+                $pengajuan = Pengajuan::find($id);
+                $currentSp = $pengajuan ? $pengajuan->getCurrentSuratPengajuan() : null;
+
+                $isResponder = false;
+                if ($currentSp && !$currentSp->isFullyApproved() && !$currentSp->isRejected()) {
+                    $statusInstansi = $currentSp->persetujuan_unit_kerja
+                        ? collect($currentSp->persetujuan_unit_kerja)->firstWhere(fn($item) => strcasecmp($item['instansi'] ?? '', $unitKerja) === 0)
+                        : null;
+                    if ($statusInstansi && ($statusInstansi['status'] ?? null) === 'pending') {
+                        $isResponder = true;
+                    }
+                }
+
+                if ($isResponder) {
+                    $submitRoute = 'admin.pengajuan.sp.terima';
+                    $routeParams = ['surat' => $currentSp->id];
+                }
+            } elseif ($type === 'sk') {
+                $submitRoute = 'admin.pengajuan.buat_sk';
+                $routeParams = ['id' => $id];
+            }
+
+            $temporaryUrlSubmit = URL::temporarySignedRoute(
+                $submitRoute,
+                now()->addMinutes(10),
+                $routeParams
+            );
+
+            return response()->json([
+                'mode'       => 'modal',
+                'access_url' => $temporaryUrl,
+                'footer'     => $config['footer'] ?? null,
+                'submit_url' => $temporaryUrlSubmit,
+            ]);
+        } elseif (isset($request->data) && isset($request->data['pdf_url'])) {
+            return response()->json([
+                'mode'       => 'iframe',
+                'access_url' => $request->data['pdf_url'],
+                'footer'     => $config['footer'] ?? null,
+            ]);
+        } else {
+            $temporaryUrl = URL::temporarySignedRoute(
+                'frame.secure.render', 
+                now()->addMinutes(10), 
+                ['type' => $type, 'category' => $category, 'id' => $id]
+            );
+            return response()->json([
+                'mode'       => 'iframe',
+                'access_url' => $temporaryUrl,
+                'footer'     => $config['footer'] ?? null,
+            ]);
+        }
     }
 
     public function render(Request $request, $type, $category, $id)

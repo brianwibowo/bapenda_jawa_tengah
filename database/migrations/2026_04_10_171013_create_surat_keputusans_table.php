@@ -14,13 +14,14 @@ return new class extends Migration
         Schema::create('surat_keputusans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pengajuan_id')->constrained('pengajuans')->onDelete('cascade');
+            $table->foreignId('kendaraan_id')->constrained('kendaraans')->onDelete('cascade');  // Relasi ke Kendaraan
             $table->foreignId('user_id')->constrained('users'); // Admin yang membuat SK
             
             // Klasifikasi Instansi: polda / bapenda / jasa_raharja
             $table->string('unit_kerja');
             $table->string('nomor_sk')->unique();
-            $table->string('perihal');
-            $table->text('isi_putusan');
+            $table->string('local_pdf_path')->nullable(); // Menyimpan path lokal file PDF
+            $table->string('pdf_url')->nullable(); // Menyimpan URL akses file PDF
             $table->date('tanggal_ditetapkan');
             $table->timestamps();
         });

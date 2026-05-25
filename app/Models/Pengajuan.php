@@ -52,8 +52,12 @@ class Pengajuan extends Model implements HasMedia
         return $this->hasMany(SuratPengajuan::class);
     }
 
-    public function suratKeputusans() {
+    public function suratKeputusan() {
         return $this->hasMany(SuratKeputusan::class);
+    }
+
+    public function suratKeputusans() {
+        return $this->suratKeputusan();
     }
 
     /**
@@ -221,11 +225,11 @@ class Pengajuan extends Model implements HasMedia
 
         if ($totalsurat == 0 && ($suratpengajuan->isEmpty() || ($suratpengajuan->count() == 1 && $suratpengajuan->first()->isRejected()))) {
             $step = 0; // Progres 0: Belum ada SP atau SP pertama ditolak
-        } elseif ($totalsurat < 2 && $this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Polda')) {
+        } elseif ($totalsurat < 2) {
             $step = 1; // Progres 1: Pengajuan ke Polda
-        } elseif ($totalsurat < 6) {
+        } elseif ($totalsurat < 7) {
             $step = 2; // Progres 2: Polda ke Bapenda/JR & Balasan dari Bapenda/JR
-        } elseif ($totalsurat < 10) {
+        } elseif ($totalsurat < 9) {
             $step = 3; // Progres 3: Polda, Bapenda, dan JR membuat SK
         } else {
             $step = 4; // Progres 4: Semua SP terpenuhi dan SK sudah dibuat
