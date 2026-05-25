@@ -10,5 +10,8 @@ chown -R www-data:www-data /var/www/html/public
 chown -R www-data:www-data /var/www/html/storage
 chmod -R 775 /var/www/html/storage
 
+# Create storage symlink (public/storage -> storage/app/public)
+php artisan storage:link --force 2>/dev/null || true
+
 echo "✅ Public files synced. Starting PHP-FPM..."
 exec "$@"

@@ -94,7 +94,7 @@
                         <span class="badge bg-primary rounded-pill me-2">BARU</span>
                         <span class="small fw-semibold text-secondary">Sistem v2 Tertata Lengkap</span>
                     </div>
-                    <h1 class="display-3 fw-bold mb-4" style="line-height: 1.2;">Sistem Monitoring <br><span style="color: #0D8ABC;">Bapenda Jateng</span></h1>
+                    <h1 class="display-3 fw-bold mb-4" style="line-height: 1.2;">Sistem Monitoring <br><span style="color: #0D8ABC;">SIP-Hapus</span></h1>
                     <p class="lead mb-5 text-muted pe-lg-5" style="font-weight: 400;">Platform terintegrasi untuk manajemen data pengajuan kendaraan, surat keputusan, dan log aktivitas yang terpusat, cepat, dan transparan.</p>
                     
                     <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">

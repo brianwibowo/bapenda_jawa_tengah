@@ -276,8 +276,8 @@ class PengajuanController extends Controller
                 ->with('incomplete_kendaraans', $incompleteKendaraans);
         }
 
-        // Pengajuan sudah lengkap, redirect ke index (daftar bundel)
-        return redirect()->route('pengajuan.index')
+        // Pengajuan sudah lengkap, redirect ke halaman detail pengajuan
+        return redirect()->route('pengajuan.show', $pengajuan)
             ->with('success', 'Pengajuan berhasil dibuat! Nomor Pengajuan: ' . $pengajuan->nomor_pengajuan . ' (' . $kendaraans->count() . ' kendaraan)');
     }
 

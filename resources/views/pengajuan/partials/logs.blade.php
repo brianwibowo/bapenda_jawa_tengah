@@ -142,6 +142,7 @@
                                 @endif
                             </td>
                             <td>
+                                <div class="d-flex flex-wrap gap-1 align-items-center">
                                 @if(in_array($log->tipe, ['komentar', 'admin']))
                                     <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
                                 @elseif($log->status_baru === 'selesai' || $log->tipe === 'system')
@@ -162,8 +163,9 @@
                                 @endif
 
                                 @if(isset($kendaraanIndexMap[$log->kendaraan_id]))
-                                    <span class="badge bg-dark bg-opacity-75 px-3 py-2 ms-1">Kendaraan {{ $kendaraanIndexMap[$log->kendaraan_id] }}</span>
+                                    <span class="badge bg-dark bg-opacity-75 px-3 py-2">Kendaraan {{ $kendaraanIndexMap[$log->kendaraan_id] }}</span>
                                 @endif
+                                </div>
                             </td>
                             <td>{{ $log->user->name ?? 'N/A' }} @if($log->user && $log->user->unit_kerja) <br><small class="text-muted">{{ $log->user->unit_kerja }}</small>@endif</td>
                             <td class="text-center">
