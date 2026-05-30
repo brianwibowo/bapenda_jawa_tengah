@@ -516,6 +516,14 @@ class PengajuanController extends Controller
 
         $response = $skController->ajukan($request, $pengajuan->id);
 
+        // Jika response berupa redirect (karena validasi/kondisi domain gagal)
+        if ($response instanceof \Illuminate\Http\RedirectResponse) {
+            return response()->json([
+                'success' => false,
+                'message' => session('error') ?? 'Gagal membuat Surat Keputusan.',
+            ], 400);
+        }
+
         // ajukan() returns JSON response, decode it
         $responseData = $response->getData(true);
 
