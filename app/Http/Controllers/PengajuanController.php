@@ -96,7 +96,12 @@ class PengajuanController extends Controller
         $perPage = (int) $request->input('per_page', 10);
         $pengajuans = $query->paginate($perPage)->appends($request->except('page'));
 
-        return view('pengajuan.index', compact('pengajuans'));
+        $progress = [];
+        foreach ($pengajuans as $pengajuan) {
+            $progress[$pengajuan->id] = $pengajuan->getTotalSurat();
+        }
+
+        return view('pengajuan.index', compact('pengajuans', 'progress'));
     }
 
     /**
@@ -276,7 +281,10 @@ class PengajuanController extends Controller
         }
 
         // Pengajuan sudah lengkap, redirect ke halaman detail pengajuan
-        return redirect()->route('pengajuan.show', $pengajuan)
+        $isAdmin = auth()->user()->can('view_menu_manajemen_pengajuan');
+        $route = $isAdmin ? 'admin.pengajuan.show' : 'pengajuan.show';
+
+        return redirect()->route($route, $pengajuan)
             ->with('success', 'Pengajuan berhasil dibuat! Nomor Pengajuan: ' . $pengajuan->nomor_pengajuan . ' (' . $kendaraans->count() . ' kendaraan)');
     }
 
@@ -332,8 +340,10 @@ class PengajuanController extends Controller
         // Urutkan kendaraan berdasarkan created_at (yang pertama dibuat = nomor 1)
         $pengajuan->kendaraans = $pengajuan->kendaraans->sortBy('created_at')->values();
 
+        $progress = $pengajuan->getTotalSurat();
+
         // 3. Tampilkan view
-        return view('pengajuan.show', compact('pengajuan'));
+        return view('pengajuan.show', compact('pengajuan', 'progress'));
     }
 
     /**
@@ -423,18 +433,5 @@ class PengajuanController extends Controller
         }
 
         return view('pengajuan.log_show', compact('pengajuan', 'log'));
-    }
-
-    /**
-     * Menampilkan halaman pilihan SK
-     */
-    public function pilihSk(Pengajuan $pengajuan)
-    {
-        if (Auth::id() !== $pengajuan->user_id) {
-            abort(403);
-        }
-        
-        $admin = false;
-        return view('pengajuan.pilih_sk', compact('pengajuan', 'admin'));
     }
 }

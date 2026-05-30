@@ -2,9 +2,9 @@
 <div class="modal fade" id="modalSkPembebasan" tabindex="-1" aria-labelledby="modalSkPembebasanLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="{{ route('admin.pengajuan.generate_sk_pembebasan', $pengajuan->id) }}" method="POST"
-                target="_blank" enctype="multipart/form-data">
+            <form id="formSkPembebasanDraft" method="POST" enctype="multipart/form-data">
                 @csrf
+                <input type="hidden" name="draft_mode" value="1">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalSkRegidentLabel">Input Data Surat Keputusan Pembebasan</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
@@ -134,8 +134,8 @@
                 </div>
                 <div class="modal-footer" id="footerPreviewSkPembebasan" style="display:none;">
                     <button type="button" class="btn btn-warning" id="btnEditSkPembebasan">Kembali Edit</button>
-                    <button type="submit" class="btn btn-success" id="btnSubmitSkPembebasan">
-                        <i class="fas fa-paper-plane me-1"></i> Kirim & Simpan
+                    <button type="button" class="btn btn-success" id="btnSubmitSkPembebasanDraft">
+                        <i class="fas fa-save me-1"></i> Simpan sebagai Draft
                     </button>
                 </div>
             </form>
@@ -143,14 +143,7 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-       const form = document.querySelector('#modalSkPembebasan form');
-
-       form.addEventListener('submit', function(e) {
-           setTimeout(() => {
-               window.location.href = '{{ route("admin.pengajuan.show", $pengajuan->id) }}';
-           }, 300);
-       });
-
+       const form = document.getElementById('formSkPembebasanDraft');
        const metodePenandaTangan = document.getElementById('metode_penanda_tangan');
        const formContainer = document.getElementById('formSkPembebasanContainer');
        const previewContainer = document.getElementById('previewSkPembebasanContainer');
@@ -174,10 +167,8 @@
                form.reportValidity();
                return;
            }
-
            const formData = new FormData(form);
            formData.append('preview', '1');
-           
            const btn = this;
            btn.disabled = true;
            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
@@ -186,56 +177,49 @@
            fetch(url, {
                method: 'POST',
                body: formData,
-               headers: {
-                   'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                   'Accept': 'application/pdf'
-               }
+               headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/pdf' }
            })
-           .then(response => {
-               if (!response.ok) throw new Error('Request failed: ' + response.status);
-               return response.blob();
-           })
+           .then(response => { if (!response.ok) throw new Error('Request failed: ' + response.status); return response.blob(); })
            .then(blob => {
-               if (currentBlobUrl) {
-                   URL.revokeObjectURL(currentBlobUrl);
-               }
+               if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
                currentBlobUrl = URL.createObjectURL(blob);
                iframePreview.src = currentBlobUrl;
-               
-               formContainer.style.display = 'none';
-               footerForm.style.display = 'none';
-               previewContainer.style.display = 'block';
-               footerPreview.style.display = 'flex';
-               
-               btn.disabled = false;
-               btn.innerText = 'Lihat Preview';
+               formContainer.style.display = 'none'; footerForm.style.display = 'none';
+               previewContainer.style.display = 'block'; footerPreview.style.display = 'flex';
+               btn.disabled = false; btn.innerText = 'Lihat Preview';
            })
-           .catch(error => {
-               console.error('Preview load failed:', error);
-               alert('Gagal memuat preview PDF. Silakan coba lagi.');
-               btn.disabled = false;
-               btn.innerText = 'Lihat Preview';
-           });
+           .catch(error => { console.error('Preview load failed:', error); alert('Gagal memuat preview PDF.'); btn.disabled = false; btn.innerText = 'Lihat Preview'; });
        });
 
        document.getElementById('btnEditSkPembebasan').addEventListener('click', function () {
-           previewContainer.style.display = 'none';
-           footerPreview.style.display = 'none';
-           formContainer.style.display = 'block';
-           footerForm.style.display = 'flex';
+           previewContainer.style.display = 'none'; footerPreview.style.display = 'none';
+           formContainer.style.display = 'block'; footerForm.style.display = 'flex';
+       });
+
+       // Submit as Draft (AJAX)
+       document.getElementById('btnSubmitSkPembebasanDraft').addEventListener('click', function () {
+           if (!form.checkValidity()) { form.reportValidity(); return; }
+           const btn = this;
+           btn.disabled = true;
+           btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+           const formData = new FormData(form);
+           const url = `{{ route('admin.pengajuan.draft_sk', $pengajuan->id) }}`;
+           fetch(url, {
+               method: 'POST', body: formData,
+               headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+           })
+           .then(response => response.json())
+           .then(data => {
+               if (data.success && data.redirect) { window.location.href = data.redirect; }
+               else { alert(data.message || 'Terjadi kesalahan.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft'; }
+           })
+           .catch(error => { console.error('Draft save failed:', error); alert('Gagal menyimpan draft.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft'; });
        });
        
-       // Handle modal close to revoke URL
        document.getElementById('modalSkPembebasan').addEventListener('hidden.bs.modal', function () {
-           if (currentBlobUrl) {
-               URL.revokeObjectURL(currentBlobUrl);
-               currentBlobUrl = null;
-               iframePreview.src = '';
-           }
-           previewContainer.style.display = 'none';
-           footerPreview.style.display = 'none';
-           formContainer.style.display = 'block';
-           footerForm.style.display = 'flex';
+           if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; iframePreview.src = ''; }
+           previewContainer.style.display = 'none'; footerPreview.style.display = 'none';
+           formContainer.style.display = 'block'; footerForm.style.display = 'flex';
        });
     });
     </script>

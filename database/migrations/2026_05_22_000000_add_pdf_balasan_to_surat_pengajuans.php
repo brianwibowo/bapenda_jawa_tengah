@@ -13,11 +13,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('surat_pengajuans', function (Blueprint $table) {
-            $table->string('pdf_balasan_url')->nullable()->after('pdf_url');
-            $table->string('local_pdf_balasan_path')->nullable()->after('pdf_balasan_url');
-            // instansi_pembuat: siapa yang membuat SP ini (Samsat, Polda, Bapenda, JR)
-            // Digunakan untuk membedakan SP pengajuan vs SP balasan tanpa entitas terpisah
-            $table->string('instansi_pembuat')->nullable()->after('local_pdf_balasan_path');
+            if (!Schema::hasColumn('surat_pengajuans', 'pdf_url')) {
+                $table->string('pdf_url')->nullable();
+            }
+            if (!Schema::hasColumn('surat_pengajuans', 'pdf_balasan_url')) {
+                $table->string('pdf_balasan_url')->nullable();
+            }
+            if (!Schema::hasColumn('surat_pengajuans', 'local_pdf_balasan_path')) {
+                $table->string('local_pdf_balasan_path')->nullable();
+            }
+            if (!Schema::hasColumn('surat_pengajuans', 'instansi_pembuat')) {
+                $table->string('instansi_pembuat')->nullable();
+            }
         });
     }
 

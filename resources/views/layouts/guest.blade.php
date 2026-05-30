@@ -66,7 +66,7 @@
                 <div class="mb-3">
                     <span class="badge bg-white text-primary px-3 py-2 rounded-pill shadow-sm border border-light fw-bold" style="letter-spacing: 1px;"><i class="fas fa-fingerprint me-2"></i> PORTAL RESMI</span>
                 </div>
-                <h1 class="display-5 fw-bold text-dark mb-4" style="line-height: 1.25;">Sistem Monitoring<br><span style="color: #0D8ABC;">Bapenda Jateng</span></h1>
+                <h1 class="display-5 fw-bold text-dark mb-4" style="line-height: 1.25;">Sistem Monitoring<br><span style="color: #0D8ABC;">SIP-Hapus</span></h1>
                 <p class="lead text-secondary opacity-75 pe-md-4 mb-5" style="font-size: 1.1rem; font-weight: 400; line-height: 1.6;">
                     Platform terintegrasi untuk manajemen data pengajuan kendaraan, surat keputusan, dan log aktivitas yang terpusat dan transparan.
                 </p>
@@ -100,7 +100,7 @@
             </div>
 
             <div class="text-center mt-5">
-                <p class="small text-muted mb-0">&copy; {{ date('Y') }} Badan Pendapatan Daerah Provinsi Jawa Tengah.</p>
+                <p class="small text-muted mb-0">&copy; {{ date('Y') }} Sistem Monitoring SIP-Hapus</p>
             </div>
         </div>
     </div>

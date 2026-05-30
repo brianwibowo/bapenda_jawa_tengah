@@ -38,16 +38,17 @@ class PengajuanController extends Controller
         $search = $request->query('search');
         $selectedCabang = $request->query('cabang_id');
         $user = Auth::user();
-        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+        $isBranchScoped = $user->can('scoped_to_own_branch');
+        $isSamsat = $isBranchScoped;
 
         $query = Pengajuan::with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
             ->withCount('kendaraans')
             ->latest('updated_at');
 
-        if ($isSamsat) {
-            // Samsat wajib terbatas ke cabang/wilayah sendiri.
+        if ($isBranchScoped) {
+            // User dengan permission ini hanya bisa lihat pengajuan dari cabangnya sendiri.
             if (!$user->cabang_id) {
-                abort(403, 'Akun Samsat belum ditetapkan ke cabang/wilayah.');
+                abort(403, 'Akun Anda belum ditetapkan ke cabang/wilayah.');
             }
 
             $query->where('cabang_id', $user->cabang_id);
@@ -173,6 +174,30 @@ class PengajuanController extends Controller
                 }
             }
 
+            // Mapping jenis SK per role untuk modal "Pilih Jenis SK"
+            $skTypeOptions = [];
+            $normalizedUK = $this->normalizeUnitKerja($user->unit_kerja);
+            switch ($normalizedUK) {
+                case 'Polda':
+                    $skTypeOptions = [
+                        ['key' => 'sk_regident', 'label' => 'SK Penghapusan Regident Polda', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkRegident'],
+                        ['key' => 'sk_polda', 'label' => 'SK Polda', 'icon' => 'fas fa-shield-alt', 'modal' => '#modalSkPolda'],
+                    ];
+                    break;
+                case 'Bapenda':
+                    $skTypeOptions = [
+                        ['key' => 'sk_bapenda_pembebasan', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'],
+                        ['key' => 'sk_penghapusan_regident', 'label' => 'SK Penghapusan Regident Bapenda', 'icon' => 'fas fa-file-excel', 'modal' => '#modalSkPenghapusanRegident'],
+                    ];
+                    break;
+                case 'JR':
+                    $skTypeOptions = [
+                        ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'],
+                        ['key' => 'sk_balasan_jr', 'label' => 'Surat Balasan Jasa Raharja', 'icon' => 'fas fa-envelope', 'modal' => '#modalSkBalasanJR'],
+                    ];
+                    break;
+            }
+
 
             return view('admin.pengajuan.show', compact(
             'pengajuan',
@@ -180,7 +205,8 @@ class PengajuanController extends Controller
             'suratpengajuan',
             'progress',
             'permissionSurat',
-            'isUpload'
+            'isUpload',
+            'skTypeOptions'
         ));
     }
 
@@ -302,9 +328,9 @@ class PengajuanController extends Controller
     private function authorizeBranch(Pengajuan $pengajuan): void
     {
         $user = Auth::user();
-        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+        $isBranchScoped = $user->can('scoped_to_own_branch');
 
-        if ($isSamsat && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
+        if ($isBranchScoped && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
             abort(403, 'Akses ditolak: cabang berbeda.');
         }
     }
@@ -312,13 +338,27 @@ class PengajuanController extends Controller
     {
         $this->authorizeBranch($pengajuan);
 
-        $request->validate([
+        $rules = [
             'kendaraan_id' => 'required|exists:kendaraans,id',
             'tipe' => 'required|in:komentar,revisi,catatan_admin,status_pengajuan,status_diproses,status_selesai,status_ditolak',
             'status_baru' => 'nullable|string',
             'catatan' => 'nullable|string|max:1000',
             'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,heic,heif,doc,docx|max:5120',
-        ]);
+        ];
+
+        // Validasi tambahan: jika tipe = revisi, wajib pilih bagian yang direvisi
+        if ($request->tipe === 'revisi') {
+            $rules['revisi_fields'] = 'required|array|min:1';
+            $rules['revisi_fields.*'] = 'string|in:nama_pemilik,nik_pemilik,alamat_pemilik,telp_pemilik,email_pemilik,nrkb,merk_kendaraan,tipe_kendaraan,jenis_kendaraan,model_kendaraan,tahun_pembuatan,isi_silinder,nomor_rangka,nomor_mesin,warna_kendaraan,jenis_bahan_bakar,warna_tnkb,nomor_bpkb,surat_permohonan,surat_pernyataan,ktp,bpkb,tbpkp,cek_fisik,foto_ranmor,stnk';
+        }
+
+        $request->validate($rules);
+
+        // Cek permission RBAC untuk revisi
+        $adminUser = Auth::user();
+        if ($request->tipe === 'revisi' && !$adminUser->can('request_revision')) {
+            abort(403, 'Anda tidak memiliki izin untuk meminta revisi.');
+        }
 
         $kendaraan = Kendaraan::findOrFail($request->kendaraan_id);
 
@@ -337,9 +377,9 @@ class PengajuanController extends Controller
             $resolvedTipe = 'catatan_admin'; // Normalkan tipe ke catatan_admin
         }
 
-        $adminUser = Auth::user();
         if ($resolvedTipe === 'revisi') {
-            $aksiText = "Admin {$adminUser->name} meminta revisi dokumen";
+            $fieldLabels = $this->getRevisiFieldLabels($request->revisi_fields);
+            $aksiText = "Admin {$adminUser->name} meminta revisi: " . implode(', ', $fieldLabels);
         } elseif ($resolvedTipe === 'komentar') {
             $aksiText = "Admin {$adminUser->name} menambahkan komentar";
         } else {
@@ -351,14 +391,21 @@ class PengajuanController extends Controller
         }
 
         // 1. Buat Log
-        $log = KendaraanLog::create([
+        $logData = [
             'kendaraan_id' => $kendaraan->id,
             'user_id' => $adminUser->id,
             'aksi' => $aksiText,
             'tipe' => $resolvedTipe,
             'status_baru' => $resolvedStatusBaru,
             'catatan' => $request->catatan,
-        ]);
+        ];
+
+        // Simpan bagian revisi jika tipe = revisi
+        if ($resolvedTipe === 'revisi' && $request->has('revisi_fields')) {
+            $logData['revisi_fields'] = $request->revisi_fields;
+        }
+
+        $log = KendaraanLog::create($logData);
 
         // 2. Handle Upload Lampiran Diskusi/Revisi (Multi-file)
         if ($request->hasFile('lampiran')) {
@@ -369,18 +416,58 @@ class PengajuanController extends Controller
             }
         }
 
-        // 3. Auto-update status kendaraan ke 'diproses' jika Samsat melakukan
-        //    aksi catatan_admin atau revisi dan kendaraan masih berstatus 'pengajuan'.
-        $isSamsat = $adminUser->hasRole('samsat')
-            || strcasecmp((string) $adminUser->unit_kerja, 'Samsat') === 0;
+        // 3. Auto-update status kendaraan ke 'diproses' jika user dengan permission
+        //    auto_process_on_action melakukan aksi catatan_admin atau revisi
+        //    dan kendaraan masih berstatus 'pengajuan'.
+        $canAutoProcess = $adminUser->can('auto_process_on_action');
 
-        if ($isSamsat
+        if ($canAutoProcess
             && $kendaraan->status === 'pengajuan'
             && in_array($resolvedTipe, ['catatan_admin', 'revisi'])) {
             $kendaraan->update(['status' => 'diproses']);
         }
 
         return back()->with('success', 'Catatan admin berhasil disimpan ke log.');
+    }
+
+    /**
+     * Helper: Konversi revisi_fields key ke label yang readable.
+     */
+    private function getRevisiFieldLabels(array $fields): array
+    {
+        $map = [
+            // Identitas Pemilik
+            'nama_pemilik' => 'Nama Pemilik',
+            'nik_pemilik' => 'NIK Pemilik',
+            'alamat_pemilik' => 'Alamat Pemilik',
+            'telp_pemilik' => 'Telp Pemilik',
+            'email_pemilik' => 'Email Pemilik',
+            // Identitas Kendaraan
+            'nrkb' => 'NRKB',
+            'merk_kendaraan' => 'Merk',
+            'tipe_kendaraan' => 'Tipe',
+            'jenis_kendaraan' => 'Jenis',
+            'model_kendaraan' => 'Model',
+            'tahun_pembuatan' => 'Tahun Pembuatan',
+            'isi_silinder' => 'Isi Silinder',
+            'nomor_rangka' => 'No. Rangka',
+            'nomor_mesin' => 'No. Mesin',
+            'warna_kendaraan' => 'Warna Kendaraan',
+            'jenis_bahan_bakar' => 'Bahan Bakar',
+            'warna_tnkb' => 'Warna TNKB',
+            'nomor_bpkb' => 'No. BPKB',
+            // Dokumen
+            'surat_permohonan' => 'Surat Permohonan',
+            'surat_pernyataan' => 'Surat Pernyataan',
+            'ktp' => 'KTP',
+            'bpkb' => 'BPKB',
+            'tbpkp' => 'TBPKP',
+            'cek_fisik' => 'Cek Fisik',
+            'foto_ranmor' => 'Foto Kendaraan',
+            'stnk' => 'STNK',
+        ];
+
+        return array_map(fn($f) => $map[$f] ?? $f, $fields);
     }
 
     /**
@@ -414,13 +501,138 @@ class PengajuanController extends Controller
     }
 
     /**
-     * Menampilkan halaman pilihan SK (Admin)
+     * Simpan SK sebagai Draft (AJAX dari modal inline di Log & Diskusi)
+     * Memanggil SuratKeputusanController->ajukan() lalu set sk_status='draft' di log-nya.
      */
-    public function pilihSk(Pengajuan $pengajuan)
+    public function storeDraftSk(Request $request, Pengajuan $pengajuan)
     {
         $this->authorizeBranch($pengajuan);
-        $admin = true;
-        return view('pengajuan.pilih_sk', compact('pengajuan', 'admin'));
+
+        // Panggil method ajukan yang existing di SuratKeputusanController
+        $skController = app(\App\Http\Controllers\SuratKeputusanController::class);
+
+        // Tambahin flag agar ajukan tahu ini draft mode
+        $request->merge(['draft_mode' => true]);
+
+        $response = $skController->ajukan($request, $pengajuan->id);
+
+        // ajukan() returns JSON response, decode it
+        $responseData = $response->getData(true);
+
+        if (isset($responseData['data'])) {
+            // Update semua KendaraanLog yang terkait menjadi draft
+            foreach ($responseData['data'] as $kendaraanId => $item) {
+                if (isset($item['log_id'])) {
+                    KendaraanLog::where('id', $item['log_id'])->update(['sk_status' => 'draft']);
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Surat Keputusan berhasil disimpan sebagai draft.',
+            'redirect' => route('admin.pengajuan.show', $pengajuan->id),
+            'data' => $responseData['data'] ?? [],
+        ]);
+    }
+
+    /**
+     * Publish (terbitkan) SK Draft:
+     * - Upload dokumen bertandatangan
+     * - Centang checkbox pernyataan
+     * - Ubah sk_status dari 'draft' ke 'terbit'
+     * - Visible to all
+     */
+    public function publishSk(Request $request, KendaraanLog $log)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png,heic,heif,docx|max:10240',
+            'pernyataan' => 'required|accepted',
+        ], [
+            'file.required' => 'Dokumen bertandatangan wajib diunggah.',
+            'pernyataan.required' => 'Anda harus mencentang pernyataan penerbitan.',
+            'pernyataan.accepted' => 'Anda harus mencentang pernyataan penerbitan.',
+        ]);
+
+        // Pastikan log ini memang SK draft
+        if ($log->sk_status !== 'draft' || !$log->sk_id) {
+            return redirect()->back()->with('error', 'Log ini bukan draft SK yang valid.');
+        }
+
+        $pengajuan = $log->kendaraan->pengajuan;
+        $this->authorizeBranch($pengajuan);
+
+        // Upload file ke storage
+        $filename = $request->file->getClientOriginalName();
+        $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+        Storage::disk('public')->put($storagePath, $request->file('file')->get());
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+
+        // Update SuratKeputusan record
+        $sk = SuratKeputusan::find($log->sk_id);
+        if ($sk) {
+            $sk->update([
+                'local_pdf_path' => $pdfUrlAbsolute,
+                'pdf_url' => $pdfUrlAbsolute,
+            ]);
+        }
+
+        // Attach file ke media library log
+        $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
+
+        // Update sk_status ke terbit
+        $log->update(['sk_status' => 'terbit']);
+
+        // Dispatch WhatsApp notification
+        if ($sk) {
+            $kendaraan = $log->kendaraan;
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp) {
+                try {
+                    $skType = match ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
+                        'Polda' => 'regident',
+                        'Bapenda' => 'pembebasan',
+                        'JR' => 'jr',
+                        default => 'default',
+                    };
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan: $pengajuan,
+                        kendaraan: $kendaraan,
+                        skType: $skType,
+                        pdfUrl: $pdfUrlAbsolute,
+                        localPdfPath: $localPdfPath,
+                        wpPhone: $wpUser->no_hp,
+                        wpName: $wpUser->name,
+                        nrkb: $kendaraan->nrkb,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Publish): ' . $e->getMessage());
+                }
+            }
+
+            // Cek apakah semua 3 role sudah publish SK → status kendaraan = selesai
+            $kendaraan->refresh();
+            $totalSkByUnitKerja = $kendaraan->suratKeputusans()
+                ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'JR'])
+                ->distinct('unit_kerja')
+                ->count('unit_kerja');
+
+            if ($kendaraan->status == 'diproses' && $totalSkByUnitKerja >= 3) {
+                $kendaraan->update(['status' => 'selesai']);
+                KendaraanLog::create([
+                    'kendaraan_id' => $kendaraan->id,
+                    'user_id' => Auth::id(),
+                    'aksi' => 'Pengajuan Selesai',
+                    'tipe' => 'system',
+                    'status_baru' => 'selesai',
+                    'catatan' => 'Pengajuan Selesai Setelah Ketiga Surat Keputusan Diterbitkan.',
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+            ->with('success', 'Surat Keputusan berhasil diterbitkan.');
     }
 
     /**

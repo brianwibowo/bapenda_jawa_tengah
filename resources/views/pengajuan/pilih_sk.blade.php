@@ -19,7 +19,7 @@
                     style="background-color: #FEC014; border: none; font-size: 14px;"
                     data-bs-toggle="modal" data-bs-target="#modalSkRegident">
                     <i class="fas fa-file-alt mb-2 fs-3 d-block text-center"></i>
-                    SURAT KETERANGAN PENGHAPUSAN REGIDENT RANMOR (ABDUL)
+                    SK PENGHAPUSAN REGIDENT POLDA
                 </button>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -34,7 +34,7 @@
                     style="background-color: #FEC014; border: none; font-size: 14px;"
                     data-bs-toggle="modal" data-bs-target="#modalSkPolda">
                     <i class="fas fa-shield-alt mb-2 fs-3 d-block text-center"></i>
-                    SK POLDA (Arfa)
+                    SK POLDA
                 </button>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -57,7 +57,7 @@
                     style="background-color: #FEC014; border: none; font-size: 14px;"
                     data-bs-toggle="modal" data-bs-target="#modalSkPenghapusanRegident">
                     <i class="fas fa-file-excel mb-2 fs-3 d-block text-center"></i>
-                    SK PENGHAPUSAN REGIDENT (FREYSIA)
+                    SK PENGHAPUSAN REGIDENT BAPENDA
                 </button>
             </div>
         </div>

@@ -2,9 +2,9 @@
 <div class="modal fade" id="modalSkRegident" tabindex="-1" aria-labelledby="modalSkRegidentLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="{{ route('admin.pengajuan.generate_sk_regident', $pengajuan->id) }}" method="POST"
-                target="_blank">
+            <form id="formSkRegidentDraft" method="POST">
                 @csrf
+                <input type="hidden" name="draft_mode" value="1">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalSkRegidentLabel">Input Data SK Regident</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
@@ -78,8 +78,8 @@
                 </div>
                 <div class="modal-footer" id="footerPreviewSkRegident" style="display:none;">
                     <button type="button" class="btn btn-warning" id="btnEditSkRegident">Kembali Edit</button>
-                    <button type="submit" class="btn btn-success" id="btnSubmitSkRegident">
-                        <i class="fas fa-paper-plane me-1"></i> Kirim & Simpan
+                    <button type="button" class="btn btn-success" id="btnSubmitSkRegidentDraft">
+                        <i class="fas fa-save me-1"></i> Simpan sebagai Draft
                     </button>
                 </div>
             </form>
@@ -87,14 +87,7 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-       const form = document.querySelector('#modalSkRegident form');
-
-       form.addEventListener('submit', function(e) {
-           setTimeout(() => {
-               window.location.href = '{{ route("admin.pengajuan.show", $pengajuan->id) }}';
-           }, 300);
-       });
-
+       const form = document.getElementById('formSkRegidentDraft');
        const formContainer = document.getElementById('formSkRegidentContainer');
        const previewContainer = document.getElementById('previewSkRegidentContainer');
        const footerForm = document.getElementById('footerFormSkRegident');
@@ -129,9 +122,7 @@
                return response.blob();
            })
            .then(blob => {
-               if (currentBlobUrl) {
-                   URL.revokeObjectURL(currentBlobUrl);
-               }
+               if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
                currentBlobUrl = URL.createObjectURL(blob);
                iframePreview.src = currentBlobUrl;
                
@@ -156,6 +147,46 @@
            footerPreview.style.display = 'none';
            formContainer.style.display = 'block';
            footerForm.style.display = 'flex';
+       });
+
+       // Submit as Draft (AJAX)
+       document.getElementById('btnSubmitSkRegidentDraft').addEventListener('click', function () {
+           if (!form.checkValidity()) {
+               form.reportValidity();
+               return;
+           }
+
+           const btn = this;
+           btn.disabled = true;
+           btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+
+           const formData = new FormData(form);
+           const url = `{{ route('admin.pengajuan.draft_sk', $pengajuan->id) }}`;
+
+           fetch(url, {
+               method: 'POST',
+               body: formData,
+               headers: {
+                   'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                   'Accept': 'application/json'
+               }
+           })
+           .then(response => response.json())
+           .then(data => {
+               if (data.success && data.redirect) {
+                   window.location.href = data.redirect;
+               } else {
+                   alert(data.message || 'Terjadi kesalahan saat menyimpan draft.');
+                   btn.disabled = false;
+                   btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
+               }
+           })
+           .catch(error => {
+               console.error('Draft save failed:', error);
+               alert('Gagal menyimpan draft. Silakan coba lagi.');
+               btn.disabled = false;
+               btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
+           });
        });
        
        document.getElementById('modalSkRegident').addEventListener('hidden.bs.modal', function () {

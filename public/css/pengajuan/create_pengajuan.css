@@ -33,3 +33,60 @@
         transform: translateY(0);
     }
 }
+
+/* ── File Upload Dropzone ── */
+.file-dropzone {
+    border: 2px dashed #c5d1de;
+    border-radius: 10px;
+    padding: 16px;
+    background-color: #f8fafc;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.file-dropzone:hover {
+    border-color: #0d6efd;
+    background-color: #eef4ff;
+}
+
+/* ── File Hint (inside dropzone) ── */
+.file-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #8b98a8;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+.file-hint i {
+    font-size: 1rem;
+    color: #a4b3c5;
+}
+
+/* ── Compact Add-File Button ── */
+.btn-add-file {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid #0d6efd;
+    background: transparent;
+    color: #0d6efd;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.btn-add-file:hover {
+    background: #0d6efd;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.btn-add-file:active {
+    transform: scale(0.95);
+}

@@ -52,7 +52,57 @@ class KendaraanLog extends Model implements HasMedia
         'catatan',
         'sp_id',
         'sk_id',
+        'sk_status',
+        'revisi_fields',
+        'revisi_resolved_at',
     ];
+
+    protected $casts = [
+        'revisi_fields' => 'array',
+        'revisi_resolved_at' => 'datetime',
+    ];
+
+    /**
+     * Cek apakah log ini adalah SK Draft (belum diterbitkan).
+     */
+    public function isSkDraft(): bool
+    {
+        return $this->sk_status === 'draft';
+    }
+
+    /**
+     * Cek apakah log ini adalah SK yang sudah diterbitkan.
+     */
+    public function isSkPublished(): bool
+    {
+        return $this->sk_status === 'terbit';
+    }
+
+    /**
+     * Cek apakah log ini visible untuk user tertentu.
+     * Draft SK hanya visible ke unit_kerja pembuat.
+     * Log lainnya visible to all.
+     */
+    public function isVisibleToUser($user): bool
+    {
+        if ($this->sk_status !== 'draft') {
+            return true; // null atau 'terbit' → visible to all
+        }
+        // Draft SK: hanya visible jika unit_kerja viewer = unit_kerja pembuat log
+        $creator = $this->user;
+        if (!$creator || !$user) return false;
+        return $creator->unit_kerja === $user->unit_kerja;
+    }
+
+    /**
+     * Cek apakah log revisi ini masih menunggu response.
+     */
+    public function isRevisionPending(): bool
+    {
+        return $this->tipe === 'revisi'
+            && !empty($this->revisi_fields)
+            && is_null($this->revisi_resolved_at);
+    }
 
     /**
      * Relasi: Log ini milik Kendaraan mana.

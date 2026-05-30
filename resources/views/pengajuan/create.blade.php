@@ -189,9 +189,10 @@
                                 <div class="row">
                                     <!-- Surat Permohonan -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Surat permohonan penghapusan
-                                            (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="surat_permohonan"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">Surat permohonan penghapusan</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="surat_permohonan"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input"
@@ -199,16 +200,25 @@
                                                     data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
-
+ 
                                     <!-- Surat Pernyataan -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Surat pernyataan kepemilikan
-                                            (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="surat_pernyataan"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">Surat pernyataan kepemilikan</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="surat_pernyataan"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input"
@@ -216,101 +226,167 @@
                                                     data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
-
+ 
                                     <!-- KTP -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Tanda bukti identitas pemilik (KTP)
-                                            (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="ktp"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">Tanda bukti identitas pemilik (KTP)</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="ktp"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input" name="ktp[]"
                                                     accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
-
+ 
                                     <!-- BPKB -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">BPKB (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="bpkb"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">BPKB</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="bpkb"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input" name="bpkb[]"
                                                     accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
-
+ 
                                     <!-- TBPKP -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">TBPKP (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="tbpkp"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">TBPKP</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="tbpkp"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input" name="tbpkp[]"
                                                     accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
-
+ 
                                     <!-- Cek Fisik -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Hasil pemeriksaan cek fisik
-                                            (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="cek_fisik"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">Hasil pemeriksaan cek fisik</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="cek_fisik"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input" name="cek_fisik[]"
                                                     accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
-
+ 
                                     <!-- Foto Ranmor -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">Foto Kendaraan (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="foto_ranmor"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">Foto Kendaraan</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="foto_ranmor"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input" name="foto_ranmor[]"
                                                     accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
-
+ 
                                     <!-- STNK -->
                                     <div class="col-md-6 mb-4">
-                                        <label class="form-label fw-bold">STNK (PDF/DOCX/JPG/PNG)</label>
-                                        <div class="file-container" data-field="stnk"
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold mb-0">STNK</label>
+                                        </div>
+                                        <div class="file-container file-dropzone" data-field="stnk"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
                                             <div class="file-input-group mb-2">
                                                 <input type="file" class="form-control file-input" name="stnk[]"
                                                     accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240" required>
                                                 <small class="text-muted file-preview"></small>
                                             </div>
+                                            <div class="file-hint d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <span>PDF, DOCX, JPG, PNG · Maks 10MB</span>
+                                                </div>
+                                                <button type="button" class="btn-add-file" onclick="addFileInput(this)"
+                                                    title="Tambah file lainnya">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                            onclick="addFileInput(this)">+ Tambah File</button>
                                     </div>
                                 </div>
                             </div>
