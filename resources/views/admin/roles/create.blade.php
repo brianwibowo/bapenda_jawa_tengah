@@ -32,12 +32,12 @@
                             <div class="card-body py-2">
                                 <div class="row g-2">
                                     @foreach($perms as $permission)
-                                        <div class="col-md-3 col-sm-6">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="permissions[]"
+                                        <div class="col-xl-4 col-md-6 col-12 mb-2">
+                                            <div class="form-check d-flex align-items-start gap-2 ps-0">
+                                                <input class="form-check-input ms-0 mt-1 flex-shrink-0" type="checkbox" name="permissions[]"
                                                     value="{{ $permission->name }}" id="perm_{{ $permission->id }}">
-                                                <label class="form-check-label" for="perm_{{ $permission->id }}">
-                                                    {{ $permission->name }}
+                                                <label class="form-check-label lh-sm text-wrap" for="perm_{{ $permission->id }}">
+                                                    {{ $permission->alias }}
                                                 </label>
                                             </div>
                                         </div>

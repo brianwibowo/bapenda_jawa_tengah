@@ -52,7 +52,7 @@
                                         @foreach($permissions as $permission)
                                             @php
                                                 // Human readable transformer: "view_dashboard" -> "View Dashboard"
-                                                $humanReadable = ucwords(str_replace('_', ' ', $permission->name));
+                                                $humanReadable = $permission->alias;
                                             @endphp
                                             <tr>
                                                 <td class="text-end text-muted"><i class="fas fa-angle-right"></i></td>

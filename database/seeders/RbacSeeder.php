@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
+use App\Models\Permission;
 use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +16,7 @@ class RbacSeeder extends Seeder
         $permissions = [
             // Dashboard
             ['name' => 'view_dashboard', 'group_name' => 'Dashboard'],
+            ['name' => 'view_daftar_kendaraan', 'group_name' => 'Daftar Kendaraan'],
 
             // Buat Pengajuan (WP)
             ['name' => 'view_menu_buat_pengajuan', 'group_name' => 'Buat Pengajuan'],
@@ -115,7 +116,13 @@ class RbacSeeder extends Seeder
             'view_dashboard', 'view_menu_manajemen_pengajuan', 'approve_status_pengajuan',
             'create_pdf_pengajuan', 'view_dokumen_surat_balasan', 'view_own_sk',
             'scoped_to_own_branch', 'auto_process_on_action',
-            'request_revision', 'submit_revision'
+            'request_revision', 'submit_revision',
+            'view_daftar_kendaraan',
+            'view_menu_buat_pengajuan',
+            'create_pengajuan_baru',
+            'view_menu_daftar_pengajuan',
+            'edit_kendaraan_pengajuan_sendiri',
+            'delete_kendaraan_pengajuan_sendiri'
         ]);
 
         // Polda

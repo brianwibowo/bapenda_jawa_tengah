@@ -134,10 +134,12 @@
                     @endif
                 @endif
 
-                {{-- Tombol Buat Aksi (Selalu Ada untuk Log - Admin & Wajib Pajak) --}}
+                {{-- Tombol Buat Aksi (Hanya untuk Wajib Pajak, Samsat, dan Superadmin) --}}
+                @if(auth()->user()->hasAnyRole(['wajib_pajak', 'samsat', 'superadmin']))
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createLogModal">
                     <i class="fas fa-plus-circle me-1"></i> Buat Aksi / Komentar
                 </button>
+                @endif
             </div>
         </div>
 

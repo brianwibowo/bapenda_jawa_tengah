@@ -37,6 +37,7 @@
 
     <div class="row">
         <!-- === KOLOM UTAMA: TABEL INTERAKTIF KENDARAAN === -->
+        @can('view_daftar_kendaraan')
         <div class="col-12">
             
             <div class="card border-0 shadow-sm panel-card">
@@ -87,7 +88,7 @@
                                                     <span class="badge bg-danger">Ditolak</span>
                                                 @endif
                                             </td>
-
+ 
                                             {{-- Kolom Aksi (Form Input) --}}
                                             <td>
                                                 <select name="status[{{ $kendaraan->id }}]" class="form-select form-select-sm">
@@ -97,7 +98,7 @@
                                                     <option value="ditolak" {{ $kendaraan->status == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                                                 </select>
                                             </td>
-
+ 
                                             {{-- Kolom Aksi (View) --}}
                                             <td class="text-center">
                                                 <a href="{{ route('kendaraan.show', $kendaraan) }}" class="btn btn-sm btn-info" title="Lihat Detail & Dokumen" target="_blank">
@@ -121,6 +122,7 @@
                 @endif
             </div>
         </div>
+        @endcan
 
         <!-- === TABS: Log & Diskusi | Detail Kendaraan === -->
         <div class="col-12 mt-4">

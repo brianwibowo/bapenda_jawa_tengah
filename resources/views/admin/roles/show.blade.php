@@ -18,7 +18,7 @@
                     @if($role->permissions->count() > 0)
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($role->permissions as $permission)
-                                <span class="badge bg-secondary p-2">{{ $permission->name }}</span>
+                                <span class="badge bg-secondary p-2">{{ $permission->alias }}</span>
                             @endforeach
                         </div>
                     @else
