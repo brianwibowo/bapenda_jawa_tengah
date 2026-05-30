@@ -174,6 +174,30 @@ class PengajuanController extends Controller
                 }
             }
 
+            // Mapping jenis SK per role untuk modal "Pilih Jenis SK"
+            $skTypeOptions = [];
+            $normalizedUK = $this->normalizeUnitKerja($user->unit_kerja);
+            switch ($normalizedUK) {
+                case 'Polda':
+                    $skTypeOptions = [
+                        ['key' => 'sk_regident', 'label' => 'SK Penghapusan Regident Polda', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkRegident'],
+                        ['key' => 'sk_polda', 'label' => 'SK Polda', 'icon' => 'fas fa-shield-alt', 'modal' => '#modalSkPolda'],
+                    ];
+                    break;
+                case 'Bapenda':
+                    $skTypeOptions = [
+                        ['key' => 'sk_bapenda_pembebasan', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'],
+                        ['key' => 'sk_penghapusan_regident', 'label' => 'SK Penghapusan Regident Bapenda', 'icon' => 'fas fa-file-excel', 'modal' => '#modalSkPenghapusanRegident'],
+                    ];
+                    break;
+                case 'JR':
+                    $skTypeOptions = [
+                        ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'],
+                        ['key' => 'sk_balasan_jr', 'label' => 'Surat Balasan Jasa Raharja', 'icon' => 'fas fa-envelope', 'modal' => '#modalSkBalasanJR'],
+                    ];
+                    break;
+            }
+
 
             return view('admin.pengajuan.show', compact(
             'pengajuan',
@@ -181,7 +205,8 @@ class PengajuanController extends Controller
             'suratpengajuan',
             'progress',
             'permissionSurat',
-            'isUpload'
+            'isUpload',
+            'skTypeOptions'
         ));
     }
 
@@ -476,13 +501,138 @@ class PengajuanController extends Controller
     }
 
     /**
-     * Menampilkan halaman pilihan SK (Admin)
+     * Simpan SK sebagai Draft (AJAX dari modal inline di Log & Diskusi)
+     * Memanggil SuratKeputusanController->ajukan() lalu set sk_status='draft' di log-nya.
      */
-    public function pilihSk(Pengajuan $pengajuan)
+    public function storeDraftSk(Request $request, Pengajuan $pengajuan)
     {
         $this->authorizeBranch($pengajuan);
-        $admin = true;
-        return view('pengajuan.pilih_sk', compact('pengajuan', 'admin'));
+
+        // Panggil method ajukan yang existing di SuratKeputusanController
+        $skController = app(\App\Http\Controllers\SuratKeputusanController::class);
+
+        // Tambahin flag agar ajukan tahu ini draft mode
+        $request->merge(['draft_mode' => true]);
+
+        $response = $skController->ajukan($request, $pengajuan->id);
+
+        // ajukan() returns JSON response, decode it
+        $responseData = $response->getData(true);
+
+        if (isset($responseData['data'])) {
+            // Update semua KendaraanLog yang terkait menjadi draft
+            foreach ($responseData['data'] as $kendaraanId => $item) {
+                if (isset($item['log_id'])) {
+                    KendaraanLog::where('id', $item['log_id'])->update(['sk_status' => 'draft']);
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Surat Keputusan berhasil disimpan sebagai draft.',
+            'redirect' => route('admin.pengajuan.show', $pengajuan->id),
+            'data' => $responseData['data'] ?? [],
+        ]);
+    }
+
+    /**
+     * Publish (terbitkan) SK Draft:
+     * - Upload dokumen bertandatangan
+     * - Centang checkbox pernyataan
+     * - Ubah sk_status dari 'draft' ke 'terbit'
+     * - Visible to all
+     */
+    public function publishSk(Request $request, KendaraanLog $log)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png,heic,heif,docx|max:10240',
+            'pernyataan' => 'required|accepted',
+        ], [
+            'file.required' => 'Dokumen bertandatangan wajib diunggah.',
+            'pernyataan.required' => 'Anda harus mencentang pernyataan penerbitan.',
+            'pernyataan.accepted' => 'Anda harus mencentang pernyataan penerbitan.',
+        ]);
+
+        // Pastikan log ini memang SK draft
+        if ($log->sk_status !== 'draft' || !$log->sk_id) {
+            return redirect()->back()->with('error', 'Log ini bukan draft SK yang valid.');
+        }
+
+        $pengajuan = $log->kendaraan->pengajuan;
+        $this->authorizeBranch($pengajuan);
+
+        // Upload file ke storage
+        $filename = $request->file->getClientOriginalName();
+        $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+        Storage::disk('public')->put($storagePath, $request->file('file')->get());
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+
+        // Update SuratKeputusan record
+        $sk = SuratKeputusan::find($log->sk_id);
+        if ($sk) {
+            $sk->update([
+                'local_pdf_path' => $pdfUrlAbsolute,
+                'pdf_url' => $pdfUrlAbsolute,
+            ]);
+        }
+
+        // Attach file ke media library log
+        $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
+
+        // Update sk_status ke terbit
+        $log->update(['sk_status' => 'terbit']);
+
+        // Dispatch WhatsApp notification
+        if ($sk) {
+            $kendaraan = $log->kendaraan;
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp) {
+                try {
+                    $skType = match ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
+                        'Polda' => 'regident',
+                        'Bapenda' => 'pembebasan',
+                        'JR' => 'jr',
+                        default => 'default',
+                    };
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan: $pengajuan,
+                        kendaraan: $kendaraan,
+                        skType: $skType,
+                        pdfUrl: $pdfUrlAbsolute,
+                        localPdfPath: $localPdfPath,
+                        wpPhone: $wpUser->no_hp,
+                        wpName: $wpUser->name,
+                        nrkb: $kendaraan->nrkb,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Publish): ' . $e->getMessage());
+                }
+            }
+
+            // Cek apakah semua 3 role sudah publish SK → status kendaraan = selesai
+            $kendaraan->refresh();
+            $totalSkByUnitKerja = $kendaraan->suratKeputusans()
+                ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'JR'])
+                ->distinct('unit_kerja')
+                ->count('unit_kerja');
+
+            if ($kendaraan->status == 'diproses' && $totalSkByUnitKerja >= 3) {
+                $kendaraan->update(['status' => 'selesai']);
+                KendaraanLog::create([
+                    'kendaraan_id' => $kendaraan->id,
+                    'user_id' => Auth::id(),
+                    'aksi' => 'Pengajuan Selesai',
+                    'tipe' => 'system',
+                    'status_baru' => 'selesai',
+                    'catatan' => 'Pengajuan Selesai Setelah Ketiga Surat Keputusan Diterbitkan.',
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+            ->with('success', 'Surat Keputusan berhasil diterbitkan.');
     }
 
     /**

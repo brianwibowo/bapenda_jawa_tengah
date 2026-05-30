@@ -79,7 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/pengajuan/{pengajuan}/revisi', [PengajuanController::class, 'submitRevision'])
         ->name('pengajuan.revision.submit')
         ->middleware('permission:submit_revision');
-    Route::get('/pengajuan/{pengajuan}/pilih-sk', [PengajuanController::class, 'pilihSk'])->name('pengajuan.pilih_sk');
+
 
     Route::prefix('kendaraans')->group(function () {
         Route::post('/', [PengajuanController::class, 'storeKendaraan'])->name('kendaraan.store');
@@ -115,7 +115,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'destroy'])->name('pengajuan.destroy')->middleware('permission:delete_pengajuan_publik');
             Route::patch('/pengajuan/{pengajuan}/batch-update', [AdminPengajuanController::class, 'batchUpdateKendaraanStatus'])->name('pengajuan.batchUpdate')->middleware('permission:approve_status_pengajuan');
             Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
-            Route::get('/pengajuan/{pengajuan}/pilih-sk', [AdminPengajuanController::class, 'pilihSk'])->name('pengajuan.pilih_sk');
+            Route::post('/pengajuan/{pengajuan}/draft-sk', [AdminPengajuanController::class, 'storeDraftSk'])->name('pengajuan.draft_sk');
+            Route::post('/pengajuan/publish-sk/{log}', [AdminPengajuanController::class, 'publishSk'])->name('pengajuan.publish_sk');
             Route::post('/pengajuan/{pengajuan}/generate-sk-regident', [AdminPengajuanController::class, 'generateSkRegident'])->name('pengajuan.generate_sk_regident');
             Route::post('/pengajuan/{pengajuan}/generate-sk-pembebasan', [AdminPengajuanController::class, 'generateSkPembebasan'])->name('pengajuan.generate_sk_pembebasan');
             Route::post('/pengajuan/{pengajuan}/generate-sk-penghapusan-regident', [AdminPengajuanController::class, 'generateSkPenghapusanRegident'])->name('pengajuan.generate_sk_penghapusan_regident');

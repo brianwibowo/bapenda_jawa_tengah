@@ -126,9 +126,12 @@
                         </button>
                     @endif
 
-                    <a href="{{ route('admin.pengajuan.pilih_sk', $pengajuan->id) }}" class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;">
-                        <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
-                    </a>
+                    @if(!empty($skTypeOptions) && count($skTypeOptions) > 0)
+                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;"
+                                data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK">
+                            <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
+                        </button>
+                    @endif
                 @endif
 
                 {{-- Tombol Buat Aksi (Selalu Ada untuk Log - Admin & Wajib Pajak) --}}
@@ -154,7 +157,10 @@
                 </thead>
                 <tbody>
                     @php
-                        $allLogs = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->sortByDesc('created_at')->values();
+                        $currentUser = auth()->user();
+                        $allLogs = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)
+                            ->filter(fn($log) => $log->isVisibleToUser($currentUser))
+                            ->sortByDesc('created_at')->values();
                         $logPerPage = 7;
                         $logCurrentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage('log_page');
                         $logCurrentItems = $allLogs->forPage($logCurrentPage, $logPerPage);
@@ -184,7 +190,15 @@
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1 align-items-center">
-                                @if(in_array($log->tipe, ['komentar', 'admin']))
+                                @if($log->isSkDraft())
+                                    <span class="badge px-3 py-2" style="background-color: #6c757d; color: #fff;">
+                                        <i class="fas fa-pen-ruler me-1"></i>Draft SK
+                                    </span>
+                                @elseif($log->isSkPublished())
+                                    <span class="badge px-3 py-2" style="background-color: #198754; color: #fff;">
+                                        <i class="fas fa-stamp me-1"></i>Terbit
+                                    </span>
+                                @elseif(in_array($log->tipe, ['komentar', 'admin']))
                                     <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
                                 @elseif($log->status_baru === 'selesai' || $log->tipe === 'system')
                                     @php
@@ -219,6 +233,14 @@
                                         <a href="{{ route('pengajuan.log.show', [$pengajuan, $log->id]) }}" class="btn btn-sm btn-outline-info" title="Lihat Detail Log">
                                             <i class="fas fa-eye me-1"></i> Detail
                                         </a>
+                                    @endif
+                                    @if($log->isSkDraft() && $log->user && $log->user->unit_kerja === auth()->user()->unit_kerja)
+                                        <button class="btn btn-sm btn-success fw-semibold btn-publish-sk"
+                                                data-bs-toggle="modal" data-bs-target="#modalPublishSK"
+                                                data-log-id="{{ $log->id }}"
+                                                data-sk-id="{{ $log->sk_id }}">
+                                            <i class="fas fa-stamp me-1"></i>Terbitkan
+                                        </button>
                                     @endif
                                     @if (isset($isUpload) && (($log->sk_id && isset($isUpload['sk'][$log->sk_id])) || ($log->sp_id && isset($isUpload['sp'][$log->sp_id]))))
                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#upload{{ $log->sk_id ? 'SK' : 'SP' }}Modal" data-log-id="{{ $log->id }}" data-surat-id="{{ $log->sk_id ?? $log->sp_id }}">
@@ -787,4 +809,198 @@
             });
         }
     });
+</script>
+
+{{-- Modal: Pilih Jenis SK --}}
+@if(!empty($admin) && $admin && !empty($skTypeOptions))
+<div class="modal fade" id="modalPilihJenisSK" tabindex="-1" aria-labelledby="modalPilihJenisSKLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FEC014, #f0a500); border: none;">
+                <h5 class="modal-title fw-bold text-dark" id="modalPilihJenisSKLabel">
+                    <i class="fas fa-file-contract me-2"></i>Pilih Jenis Surat Keputusan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-muted mb-4">Pilih jenis SK yang akan dibuat untuk pengajuan ini:</p>
+                <div class="row g-3">
+                    @foreach($skTypeOptions as $option)
+                        <div class="col-6">
+                            <button type="button" class="btn w-100 py-4 fw-bold text-dark shadow-sm border-0 btn-pilih-sk-type"
+                                    style="background: linear-gradient(145deg, #fff8e1, #fff3cd); border-radius: 12px; transition: all 0.2s ease;"
+                                    data-target-modal="{{ $option['modal'] }}"
+                                    onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(254,192,20,0.3)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
+                                <i class="{{ $option['icon'] }} d-block text-center mb-2" style="font-size: 2rem; color: #b8860b;"></i>
+                                <span class="d-block text-center" style="font-size: 0.85rem; line-height: 1.3;">{{ $option['label'] }}</span>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Include existing SK modals (sebelumnya di pilih_sk, sekarang inline di sini) --}}
+@include('pengajuan.modals.sk_regident')
+@include('pengajuan.modals.sk_polda')
+@include('pengajuan.modals.sk_bapenda_pembebasan')
+@include('pengajuan.modals.sk_penghapusan_regident')
+@endif
+
+{{-- Modal: Upload & Terbitkan SK --}}
+@if(!empty($admin) && $admin)
+<div class="modal fade" id="modalPublishSK" tabindex="-1" aria-labelledby="modalPublishSKLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="formPublishSK" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="log_id" id="publishLogId">
+                <input type="hidden" name="sk_id" id="publishSkId">
+
+                <div class="modal-header" style="background: linear-gradient(135deg, #198754, #157347); border: none;">
+                    <h5 class="modal-title fw-bold text-white" id="modalPublishSKLabel">
+                        <i class="fas fa-stamp me-2"></i>Terbitkan Surat Keputusan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="alert alert-info border-0 d-flex align-items-start mb-4" style="border-radius: 10px;">
+                        <i class="fas fa-info-circle me-3 mt-1 fs-5"></i>
+                        <div>
+                            <strong>Informasi:</strong> Unggah dokumen SK yang telah ditandatangani secara resmi. Setelah diterbitkan, SK ini akan terlihat oleh seluruh instansi terkait.
+                        </div>
+                    </div>
+
+                    {{-- Upload Area --}}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Unggah Dokumen Bertandatangan
+                        </label>
+                        <div class="border rounded-3 p-4 text-center position-relative" id="publishDropZone"
+                             style="border: 2px dashed #dee2e6; border-radius: 12px !important; cursor: pointer; transition: all 0.2s ease; background: #f8f9fa;">
+                            <input type="file" name="file" id="publishFileInput" class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;"
+                                   accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.docx" required>
+                            <div id="publishDropContent">
+                                <i class="fas fa-cloud-upload-alt d-block mb-2" style="font-size: 2.5rem; color: #adb5bd;"></i>
+                                <p class="mb-1 fw-semibold text-dark">Seret file ke sini atau klik untuk memilih</p>
+                                <small class="text-muted">PDF, DOCX, JPG, PNG · Maks 10MB</small>
+                            </div>
+                            <div id="publishFilePreview" style="display: none;">
+                                <i class="fas fa-file-check d-block mb-2 text-success" style="font-size: 2rem;"></i>
+                                <p class="mb-0 fw-semibold text-success" id="publishFileName"></p>
+                                <small class="text-muted" id="publishFileSize"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Checkbox Pernyataan --}}
+                    <div class="form-check mb-3 p-3 rounded-3" style="background: #f0f9f4; border: 1px solid #c3e6cb;">
+                        <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishPernyataan" required>
+                        <label class="form-check-label fw-semibold text-dark" for="publishPernyataan" style="cursor: pointer;">
+                            Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang 
+                            <br>sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSK" disabled>
+                        <i class="fas fa-stamp me-1"></i> Terbitkan SK
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // === Pilih Jenis SK → buka modal input yang sesuai ===
+    document.querySelectorAll('.btn-pilih-sk-type').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetModal = this.getAttribute('data-target-modal');
+            // Tutup modal Pilih Jenis SK
+            const pilihModal = bootstrap.Modal.getInstance(document.getElementById('modalPilihJenisSK'));
+            if (pilihModal) pilihModal.hide();
+
+            // Buka modal target setelah jeda singkat
+            setTimeout(() => {
+                const target = document.querySelector(targetModal);
+                if (target) {
+                    const modal = new bootstrap.Modal(target);
+                    modal.show();
+                }
+            }, 350);
+        });
+    });
+
+    // === Publish SK Modal: Dynamic data binding ===
+    document.querySelectorAll('.btn-publish-sk').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const logId = this.getAttribute('data-log-id');
+            const skId = this.getAttribute('data-sk-id');
+            document.getElementById('publishLogId').value = logId;
+            document.getElementById('publishSkId').value = skId;
+
+            // Set form action URL
+            const form = document.getElementById('formPublishSK');
+            form.action = '{{ url("admin/pengajuan/publish-sk") }}/' + logId;
+
+            // Reset state
+            document.getElementById('publishPernyataan').checked = false;
+            document.getElementById('publishFileInput').value = '';
+            document.getElementById('publishDropContent').style.display = '';
+            document.getElementById('publishFilePreview').style.display = 'none';
+            document.getElementById('btnPublishSK').disabled = true;
+        });
+    });
+
+    // === File upload preview ===
+    const publishFileInput = document.getElementById('publishFileInput');
+    if (publishFileInput) {
+        publishFileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                document.getElementById('publishDropContent').style.display = 'none';
+                document.getElementById('publishFilePreview').style.display = '';
+                document.getElementById('publishFileName').textContent = file.name;
+                document.getElementById('publishFileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                checkPublishReady();
+            }
+        });
+
+        // Drag & drop
+        const dropZone = document.getElementById('publishDropZone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#198754'; dropZone.style.background = '#f0f9f4'; });
+            dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#dee2e6'; dropZone.style.background = '#f8f9fa'; });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#dee2e6';
+                dropZone.style.background = '#f8f9fa';
+                if (e.dataTransfer.files.length) {
+                    publishFileInput.files = e.dataTransfer.files;
+                    publishFileInput.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+    }
+
+    // === Checkbox toggle ===
+    const publishCheckbox = document.getElementById('publishPernyataan');
+    if (publishCheckbox) {
+        publishCheckbox.addEventListener('change', checkPublishReady);
+    }
+
+    function checkPublishReady() {
+        const hasFile = publishFileInput && publishFileInput.files.length > 0;
+        const hasCheck = publishCheckbox && publishCheckbox.checked;
+        const btn = document.getElementById('btnPublishSK');
+        if (btn) btn.disabled = !(hasFile && hasCheck);
+    }
+});
 </script>

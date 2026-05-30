@@ -2,8 +2,9 @@
 <div class="modal fade" id="modalSkPolda" tabindex="-1" aria-labelledby="modalSkPoldaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="{{ route('pengajuan.generate_sk_polda') }}" method="POST" target="_blank">
+            <form id="formSkPoldaDraft" method="POST">
                 @csrf
+                <input type="hidden" name="draft_mode" value="1">
                 <input type="hidden" name="pengajuan_id" value="{{ $pengajuan->id }}">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalSkPoldaLabel">Input Data SK POLDA</h5>
@@ -76,8 +77,8 @@
                 </div>
                 <div class="modal-footer" id="footerPreviewSkPolda" style="display:none;">
                     <button type="button" class="btn btn-warning" id="btnEditSkPolda">Kembali Edit</button>
-                    <button type="submit" class="btn btn-success" id="btnSubmitSkPolda">
-                        <i class="fas fa-paper-plane me-1"></i> Kirim & Simpan
+                    <button type="button" class="btn btn-success" id="btnSubmitSkPoldaDraft">
+                        <i class="fas fa-save me-1"></i> Simpan sebagai Draft
                     </button>
                 </div>
             </form>
@@ -85,14 +86,7 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-       const form = document.querySelector('#modalSkPolda form');
-
-       form.addEventListener('submit', function(e) {
-           setTimeout(() => {
-               window.location.href = '{{ route("admin.pengajuan.show", $pengajuan->id) }}';
-           }, 300);
-       });
-
+       const form = document.getElementById('formSkPoldaDraft');
        const formContainer = document.getElementById('formSkPoldaContainer');
        const previewContainer = document.getElementById('previewSkPoldaContainer');
        const footerForm = document.getElementById('footerFormSkPolda');
@@ -127,17 +121,13 @@
                return response.blob();
            })
            .then(blob => {
-               if (currentBlobUrl) {
-                   URL.revokeObjectURL(currentBlobUrl);
-               }
+               if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
                currentBlobUrl = URL.createObjectURL(blob);
                iframePreview.src = currentBlobUrl;
-               
                formContainer.style.display = 'none';
                footerForm.style.display = 'none';
                previewContainer.style.display = 'block';
                footerPreview.style.display = 'flex';
-               
                btn.disabled = false;
                btn.innerText = 'Lihat Preview';
            })
@@ -154,6 +144,45 @@
            footerPreview.style.display = 'none';
            formContainer.style.display = 'block';
            footerForm.style.display = 'flex';
+       });
+
+       // Submit as Draft (AJAX)
+       document.getElementById('btnSubmitSkPoldaDraft').addEventListener('click', function () {
+           if (!form.checkValidity()) {
+               form.reportValidity();
+               return;
+           }
+           const btn = this;
+           btn.disabled = true;
+           btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+
+           const formData = new FormData(form);
+           const url = `{{ route('admin.pengajuan.draft_sk', $pengajuan->id) }}`;
+
+           fetch(url, {
+               method: 'POST',
+               body: formData,
+               headers: {
+                   'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                   'Accept': 'application/json'
+               }
+           })
+           .then(response => response.json())
+           .then(data => {
+               if (data.success && data.redirect) {
+                   window.location.href = data.redirect;
+               } else {
+                   alert(data.message || 'Terjadi kesalahan saat menyimpan draft.');
+                   btn.disabled = false;
+                   btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
+               }
+           })
+           .catch(error => {
+               console.error('Draft save failed:', error);
+               alert('Gagal menyimpan draft. Silakan coba lagi.');
+               btn.disabled = false;
+               btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
+           });
        });
        
        document.getElementById('modalSkPolda').addEventListener('hidden.bs.modal', function () {

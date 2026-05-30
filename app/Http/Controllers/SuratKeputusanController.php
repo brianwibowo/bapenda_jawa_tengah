@@ -822,27 +822,35 @@ class SuratKeputusanController extends Controller
             ]);
 
             if (isset($data[$k->id]['log_id'])) {
-                KendaraanLog::where('id', $data[$k->id]['log_id'])->update(['sk_id' => $sk->id]);
+                $updateData = ['sk_id' => $sk->id];
+                // Jika draft mode, set sk_status=draft pada log
+                if ($request->has('draft_mode')) {
+                    $updateData['sk_status'] = 'draft';
+                }
+                KendaraanLog::where('id', $data[$k->id]['log_id'])->update($updateData);
             }
 
-            $totalSkByUnitKerja = $k->suratKeputusans()
-                ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'JR'])
-                ->distinct('unit_kerja')
-                ->count('unit_kerja');
+            // Hanya jalankan logic selesai jika BUKAN draft mode
+            if (!$request->has('draft_mode')) {
+                $totalSkByUnitKerja = $k->suratKeputusans()
+                    ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'JR'])
+                    ->distinct('unit_kerja')
+                    ->count('unit_kerja');
 
-            if ($k->status == 'diproses' && $totalSkByUnitKerja >= 3) {
-                $k->update(['status' => 'selesai']);
-                // Simpan log untuk status selesai.
-                $logSelesai = $this->logSuratActionByKendaraanId(
-                    $pengajuan,
-                    $k->id,
-                    'Pengajuan Selesai',
-                    'Pengajuan Selesai Setelah Ketiga Surat Keputusan Ditetapkan.'
-                );
-                // Record 1 second after the SK log so chronological order is explicit.
-                $logSelesai->created_at = $baseLogTime->copy()->addSecond();
-                $logSelesai->updated_at = $baseLogTime->copy()->addSecond();
-                $logSelesai->save();
+                if ($k->status == 'diproses' && $totalSkByUnitKerja >= 3) {
+                    $k->update(['status' => 'selesai']);
+                    // Simpan log untuk status selesai.
+                    $logSelesai = $this->logSuratActionByKendaraanId(
+                        $pengajuan,
+                        $k->id,
+                        'Pengajuan Selesai',
+                        'Pengajuan Selesai Setelah Ketiga Surat Keputusan Ditetapkan.'
+                    );
+                    // Record 1 second after the SK log so chronological order is explicit.
+                    $logSelesai->created_at = $baseLogTime->copy()->addSecond();
+                    $logSelesai->updated_at = $baseLogTime->copy()->addSecond();
+                    $logSelesai->save();
+                }
             }
 
             $data[$k->id]['sk_id'] = $sk->id; // Simpan ID SK yang baru dibuat untuk referensi jika diperlukan
