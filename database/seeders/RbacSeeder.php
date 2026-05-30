@@ -69,6 +69,14 @@ class RbacSeeder extends Seeder
 
             // Pemangku Kepentingan (Split)
             ['name' => 'view_menu_pengguna_stakeholder', 'group_name' => 'Pemangku Kepentingan'],
+
+            // Aturan Bisnis (Scoping & Otomasi)
+            ['name' => 'scoped_to_own_branch', 'group_name' => 'Aturan Bisnis'],
+            ['name' => 'auto_process_on_action', 'group_name' => 'Aturan Bisnis'],
+
+            // Revisi Berkas
+            ['name' => 'request_revision', 'group_name' => 'Revisi Berkas'],
+            ['name' => 'submit_revision', 'group_name' => 'Revisi Berkas'],
         ];
 
         // Bersihkan izin lama untuk menghindari duplikasi kotor saat seeder dijalankan ulang
@@ -98,13 +106,16 @@ class RbacSeeder extends Seeder
         $roleWp->syncPermissions([
             'view_dashboard', 'view_menu_buat_pengajuan', 'create_pengajuan_baru',
             'view_menu_daftar_pengajuan', 'edit_kendaraan_pengajuan_sendiri', 
-            'delete_kendaraan_pengajuan_sendiri', 'view_log_histori', 'view_own_sk'
+            'delete_kendaraan_pengajuan_sendiri', 'view_log_histori', 'view_own_sk',
+            'submit_revision'
         ]);
 
         // Samsat / Polres
         $roleSamsat->syncPermissions([
             'view_dashboard', 'view_menu_manajemen_pengajuan', 'approve_status_pengajuan',
-            'create_pdf_pengajuan', 'view_dokumen_surat_balasan', 'view_own_sk'
+            'create_pdf_pengajuan', 'view_dokumen_surat_balasan', 'view_own_sk',
+            'scoped_to_own_branch', 'auto_process_on_action',
+            'request_revision', 'submit_revision'
         ]);
 
         // Polda

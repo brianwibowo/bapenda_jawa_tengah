@@ -26,10 +26,14 @@
                 <li class="nav-item topbar-icon dropdown hidden-caret">
                     <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         @php $unreadCount = Auth::user()->unreadNotifications()->count(); @endphp
-                        <i class="fa fa-bell"></i>
-                        @if($unreadCount > 0)
-                            <span class="notification" id="notifBadge">{{ $unreadCount }}</span>
-                        @endif
+                        <div class="notification-icon-wrapper">
+                            <i class="fa fa-bell"></i>
+                            @if($unreadCount > 0)
+                                <span class="notification" id="notifBadge" data-real-count="{{ $unreadCount }}">
+                                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                                </span>
+                            @endif
+                        </div>
                     </a>
                     <ul class="dropdown-menu notif-box animated fadeIn" aria-labelledby="notifDropdown">
                         <li>

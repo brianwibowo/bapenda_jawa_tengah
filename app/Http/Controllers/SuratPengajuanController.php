@@ -919,9 +919,9 @@ class SuratPengajuanController extends Controller
     private function authorizeBranch(Pengajuan $pengajuan): void
     {
         $user = Auth::user();
-        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+        $isBranchScoped = $user->can('scoped_to_own_branch');
 
-        if ($isSamsat && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
+        if ($isBranchScoped && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
             abort(403, 'Akses ditolak: cabang berbeda.');
         }
     }

@@ -189,3 +189,45 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* ── Overrides for Navbar Notification Badge (Neat Multi-digit Support) ── */
+.notification-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navbar .navbar-nav .notification-icon-wrapper .notification {
+    position: absolute !important;
+    top: -5px !important;
+    right: -6px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff4d4d, #f25961) !important; /* Premium red gradient */
+    color: #ffffff !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    font-family: 'Public Sans', sans-serif !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    padding: 0 4px !important;
+    border-radius: 999px !important; /* Perfect pill style */
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    border: 1.5px solid #ffffff !important; /* Premium outline */
+    box-shadow: 0 2px 4px rgba(242, 89, 97, 0.4) !important;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    animation: badgeBounce 0.3s ease-out forwards;
+}
+
+@keyframes badgeBounce {
+    0% { transform: scale(0); }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.navbar .navbar-nav .notification-icon-wrapper:hover .notification {
+    transform: scale(1.1) !important;
+}

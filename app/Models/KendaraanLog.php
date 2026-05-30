@@ -52,7 +52,24 @@ class KendaraanLog extends Model implements HasMedia
         'catatan',
         'sp_id',
         'sk_id',
+        'revisi_fields',
+        'revisi_resolved_at',
     ];
+
+    protected $casts = [
+        'revisi_fields' => 'array',
+        'revisi_resolved_at' => 'datetime',
+    ];
+
+    /**
+     * Cek apakah log revisi ini masih menunggu response.
+     */
+    public function isRevisionPending(): bool
+    {
+        return $this->tipe === 'revisi'
+            && !empty($this->revisi_fields)
+            && is_null($this->revisi_resolved_at);
+    }
 
     /**
      * Relasi: Log ini milik Kendaraan mana.

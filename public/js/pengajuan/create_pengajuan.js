@@ -695,7 +695,11 @@ async function finalizePengajuan() {
     }
 
     window.removeEventListener('beforeunload', beforeUnloadHandler);
+    
+    // Simpan ID pengajuan sebelum draft storage di-clear
+    const tempPengajuanId = currentPengajuanId;
     clearDraftStorage();
+    
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = window.PengajuanConfig.routePengajuanStore;
@@ -709,7 +713,7 @@ async function finalizePengajuan() {
     const pengajuanInput = document.createElement('input');
     pengajuanInput.type = 'hidden';
     pengajuanInput.name = 'pengajuan_id';
-    pengajuanInput.value = currentPengajuanId;
+    pengajuanInput.value = tempPengajuanId;
     form.appendChild(pengajuanInput);
 
     document.body.appendChild(form);
@@ -807,7 +811,9 @@ function loadFromStorage() {
 }
 
 function addFileInput(button) {
-    const container = button.previousElementSibling;
+    // Button is now inside the label header row, the file-container is a sibling of the header row
+    const parentCol = button.closest('.col-md-6');
+    const container = parentCol.querySelector('.file-container');
     const fieldName = container.dataset.field;
     const accept = container.dataset.accept;
     const maxSize = container.dataset.maxSize;
@@ -831,7 +837,13 @@ function addFileInput(button) {
                 </div>
             `;
 
-    container.appendChild(fileInputGroup);
+    // Insert before the file-hint div
+    const fileHint = container.querySelector('.file-hint');
+    if (fileHint) {
+        container.insertBefore(fileInputGroup, fileHint);
+    } else {
+        container.appendChild(fileInputGroup);
+    }
     attachFileValidation(fileInputGroup.querySelector('.file-input'));
 }
 

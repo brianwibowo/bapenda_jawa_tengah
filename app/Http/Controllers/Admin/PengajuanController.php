@@ -38,16 +38,17 @@ class PengajuanController extends Controller
         $search = $request->query('search');
         $selectedCabang = $request->query('cabang_id');
         $user = Auth::user();
-        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+        $isBranchScoped = $user->can('scoped_to_own_branch');
+        $isSamsat = $isBranchScoped;
 
         $query = Pengajuan::with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
             ->withCount('kendaraans')
             ->latest('updated_at');
 
-        if ($isSamsat) {
-            // Samsat wajib terbatas ke cabang/wilayah sendiri.
+        if ($isBranchScoped) {
+            // User dengan permission ini hanya bisa lihat pengajuan dari cabangnya sendiri.
             if (!$user->cabang_id) {
-                abort(403, 'Akun Samsat belum ditetapkan ke cabang/wilayah.');
+                abort(403, 'Akun Anda belum ditetapkan ke cabang/wilayah.');
             }
 
             $query->where('cabang_id', $user->cabang_id);
@@ -302,9 +303,9 @@ class PengajuanController extends Controller
     private function authorizeBranch(Pengajuan $pengajuan): void
     {
         $user = Auth::user();
-        $isSamsat = $user->hasRole('samsat') || strcasecmp((string) $user->unit_kerja, 'Samsat') === 0;
+        $isBranchScoped = $user->can('scoped_to_own_branch');
 
-        if ($isSamsat && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
+        if ($isBranchScoped && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
             abort(403, 'Akses ditolak: cabang berbeda.');
         }
     }
@@ -312,13 +313,27 @@ class PengajuanController extends Controller
     {
         $this->authorizeBranch($pengajuan);
 
-        $request->validate([
+        $rules = [
             'kendaraan_id' => 'required|exists:kendaraans,id',
             'tipe' => 'required|in:komentar,revisi,catatan_admin,status_pengajuan,status_diproses,status_selesai,status_ditolak',
             'status_baru' => 'nullable|string',
             'catatan' => 'nullable|string|max:1000',
             'lampiran.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,heic,heif,doc,docx|max:5120',
-        ]);
+        ];
+
+        // Validasi tambahan: jika tipe = revisi, wajib pilih bagian yang direvisi
+        if ($request->tipe === 'revisi') {
+            $rules['revisi_fields'] = 'required|array|min:1';
+            $rules['revisi_fields.*'] = 'string|in:nama_pemilik,nik_pemilik,alamat_pemilik,telp_pemilik,email_pemilik,nrkb,merk_kendaraan,tipe_kendaraan,jenis_kendaraan,model_kendaraan,tahun_pembuatan,isi_silinder,nomor_rangka,nomor_mesin,warna_kendaraan,jenis_bahan_bakar,warna_tnkb,nomor_bpkb,surat_permohonan,surat_pernyataan,ktp,bpkb,tbpkp,cek_fisik,foto_ranmor,stnk';
+        }
+
+        $request->validate($rules);
+
+        // Cek permission RBAC untuk revisi
+        $adminUser = Auth::user();
+        if ($request->tipe === 'revisi' && !$adminUser->can('request_revision')) {
+            abort(403, 'Anda tidak memiliki izin untuk meminta revisi.');
+        }
 
         $kendaraan = Kendaraan::findOrFail($request->kendaraan_id);
 
@@ -337,9 +352,9 @@ class PengajuanController extends Controller
             $resolvedTipe = 'catatan_admin'; // Normalkan tipe ke catatan_admin
         }
 
-        $adminUser = Auth::user();
         if ($resolvedTipe === 'revisi') {
-            $aksiText = "Admin {$adminUser->name} meminta revisi dokumen";
+            $fieldLabels = $this->getRevisiFieldLabels($request->revisi_fields);
+            $aksiText = "Admin {$adminUser->name} meminta revisi: " . implode(', ', $fieldLabels);
         } elseif ($resolvedTipe === 'komentar') {
             $aksiText = "Admin {$adminUser->name} menambahkan komentar";
         } else {
@@ -351,14 +366,21 @@ class PengajuanController extends Controller
         }
 
         // 1. Buat Log
-        $log = KendaraanLog::create([
+        $logData = [
             'kendaraan_id' => $kendaraan->id,
             'user_id' => $adminUser->id,
             'aksi' => $aksiText,
             'tipe' => $resolvedTipe,
             'status_baru' => $resolvedStatusBaru,
             'catatan' => $request->catatan,
-        ]);
+        ];
+
+        // Simpan bagian revisi jika tipe = revisi
+        if ($resolvedTipe === 'revisi' && $request->has('revisi_fields')) {
+            $logData['revisi_fields'] = $request->revisi_fields;
+        }
+
+        $log = KendaraanLog::create($logData);
 
         // 2. Handle Upload Lampiran Diskusi/Revisi (Multi-file)
         if ($request->hasFile('lampiran')) {
@@ -369,18 +391,58 @@ class PengajuanController extends Controller
             }
         }
 
-        // 3. Auto-update status kendaraan ke 'diproses' jika Samsat melakukan
-        //    aksi catatan_admin atau revisi dan kendaraan masih berstatus 'pengajuan'.
-        $isSamsat = $adminUser->hasRole('samsat')
-            || strcasecmp((string) $adminUser->unit_kerja, 'Samsat') === 0;
+        // 3. Auto-update status kendaraan ke 'diproses' jika user dengan permission
+        //    auto_process_on_action melakukan aksi catatan_admin atau revisi
+        //    dan kendaraan masih berstatus 'pengajuan'.
+        $canAutoProcess = $adminUser->can('auto_process_on_action');
 
-        if ($isSamsat
+        if ($canAutoProcess
             && $kendaraan->status === 'pengajuan'
             && in_array($resolvedTipe, ['catatan_admin', 'revisi'])) {
             $kendaraan->update(['status' => 'diproses']);
         }
 
         return back()->with('success', 'Catatan admin berhasil disimpan ke log.');
+    }
+
+    /**
+     * Helper: Konversi revisi_fields key ke label yang readable.
+     */
+    private function getRevisiFieldLabels(array $fields): array
+    {
+        $map = [
+            // Identitas Pemilik
+            'nama_pemilik' => 'Nama Pemilik',
+            'nik_pemilik' => 'NIK Pemilik',
+            'alamat_pemilik' => 'Alamat Pemilik',
+            'telp_pemilik' => 'Telp Pemilik',
+            'email_pemilik' => 'Email Pemilik',
+            // Identitas Kendaraan
+            'nrkb' => 'NRKB',
+            'merk_kendaraan' => 'Merk',
+            'tipe_kendaraan' => 'Tipe',
+            'jenis_kendaraan' => 'Jenis',
+            'model_kendaraan' => 'Model',
+            'tahun_pembuatan' => 'Tahun Pembuatan',
+            'isi_silinder' => 'Isi Silinder',
+            'nomor_rangka' => 'No. Rangka',
+            'nomor_mesin' => 'No. Mesin',
+            'warna_kendaraan' => 'Warna Kendaraan',
+            'jenis_bahan_bakar' => 'Bahan Bakar',
+            'warna_tnkb' => 'Warna TNKB',
+            'nomor_bpkb' => 'No. BPKB',
+            // Dokumen
+            'surat_permohonan' => 'Surat Permohonan',
+            'surat_pernyataan' => 'Surat Pernyataan',
+            'ktp' => 'KTP',
+            'bpkb' => 'BPKB',
+            'tbpkp' => 'TBPKP',
+            'cek_fisik' => 'Cek Fisik',
+            'foto_ranmor' => 'Foto Kendaraan',
+            'stnk' => 'STNK',
+        ];
+
+        return array_map(fn($f) => $map[$f] ?? $f, $fields);
     }
 
     /**

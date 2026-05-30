@@ -76,6 +76,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/pengajuan/{pengajuan}', [PengajuanController::class, 'destroy'])->name('pengajuan.destroy');
     Route::get('/pengajuan/{pengajuan}/log/{logId}', [PengajuanController::class, 'showLog'])->name('pengajuan.log.show');
     Route::post('/pengajuan/{pengajuan}/log', [PengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
+    Route::post('/pengajuan/{pengajuan}/revisi', [PengajuanController::class, 'submitRevision'])
+        ->name('pengajuan.revision.submit')
+        ->middleware('permission:submit_revision');
     Route::get('/pengajuan/{pengajuan}/pilih-sk', [PengajuanController::class, 'pilihSk'])->name('pengajuan.pilih_sk');
 
     Route::prefix('kendaraans')->group(function () {

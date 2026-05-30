@@ -93,6 +93,45 @@
                                 <td class="text-muted">Ringkasan Log</td>
                                 <td class="fw-bold text-dark">{{ $log->aksi }}</td>
                             </tr>
+                            @if($log->tipe === 'revisi' && !empty($log->revisi_fields) && is_array($log->revisi_fields))
+                            <tr>
+                                <td class="text-muted">Bagian Revisi</td>
+                                <td>
+                                    @php
+                                        $revisiLabelMap = [
+                                            'identitas_pemilik' => 'Identitas Pemilik',
+                                            'identitas_kendaraan' => 'Identitas Kendaraan',
+                                            'surat_permohonan' => 'Surat Permohonan',
+                                            'surat_pernyataan' => 'Surat Pernyataan',
+                                            'ktp' => 'KTP', 'bpkb' => 'BPKB', 'tbpkp' => 'TBPKP',
+                                            'cek_fisik' => 'Cek Fisik', 'foto_ranmor' => 'Foto Kendaraan', 'stnk' => 'STNK',
+                                        ];
+                                    @endphp
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach($log->revisi_fields as $rf)
+                                            <span class="badge bg-warning text-dark px-3 py-2">
+                                                <i class="fas fa-pen me-1"></i>{{ $revisiLabelMap[$rf] ?? $rf }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Status Revisi</td>
+                                <td>
+                                    @if($log->revisi_resolved_at)
+                                        <span class="badge bg-success px-3 py-2">
+                                            <i class="fas fa-check-circle me-1"></i>Sudah Direvisi
+                                            <small class="ms-1">({{ $log->revisi_resolved_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }})</small>
+                                        </span>
+                                    @else
+                                        <span class="badge bg-danger px-3 py-2">
+                                            <i class="fas fa-clock me-1"></i>Menunggu Revisi
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endif
                         </table>
 
                         <div class="card bg-light border-0 mb-4 shadow-sm" style="border-radius: 0.75rem;">
