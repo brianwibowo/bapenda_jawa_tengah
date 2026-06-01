@@ -22,7 +22,7 @@ class PengajuanController extends Controller
     private function normalizeUnitKerja(?string $unitKerja): string
     {
         return match (strtolower(trim((string) $unitKerja))) {
-            'jr', 'jasa raharja', 'jasa_raharja' => 'JR',
+            'jr', 'jasa raharja', 'jasa_raharja' => 'Jasa Raharja',
             'bapenda' => 'Bapenda',
             'polda' => 'Polda',
             'samsat' => 'Samsat',
@@ -91,7 +91,6 @@ class PengajuanController extends Controller
     public function show(Pengajuan $pengajuan)
     {
         $this->authorizeBranch($pengajuan);
-
         $pengajuan->load([
             'kendaraans',
             'kendaraans.media',
@@ -134,7 +133,7 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSP'] = true;
         }
         // Jika sudah fully approved tapi belum ada SK
-        elseif ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || ($pengajuan->getStep() == 3)) && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty()) {
+        elseif ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || $progress > 6) && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","Jasa Raharja"])) {
             $permissionSurat['canAjukanSK'] = true;
         }
 
@@ -143,7 +142,6 @@ class PengajuanController extends Controller
             "sp" => []
         ];
 
-        
         foreach($pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->values() as $log){
             $user_log = User::find($log->user_id);
             if ((!$log->sk_id && !$log->sp_id) || ($user_log && !($user_log->unit_kerja == $user->unit_kerja))) continue;
@@ -158,48 +156,48 @@ class PengajuanController extends Controller
                 $sp = SuratPengajuan::findOrFail($log->sp_id);
                 if (!$sp->local_pdf_path) {
                     $isUpload['sp'][$log->sp_id] = true;
-                    }
                 }
+            }
                 
+        }
+        
+        foreach($pengajuan->kendaraans as $kendaraan){
+            // Existing current Unit Kerja, untuk permissionSurat
+            $exisitingSkIds = $kendaraan->suratKeputusans()
+            ->where('unit_kerja', $this->normalizeUnitKerja($user->unit_kerja))
+            ->first();
+
+            if (!$exisitingSkIds && $progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || $progress > 6) && $pengajuan->isFullyApprovedByAll() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","Jasa Raharja"])) {
+                $permissionSurat['canAjukanSK'] = true;
             }
-                    
-            foreach($pengajuan->kendaraans as $kendaraan){
-                // Existing current Unit Kerja, untuk permissionSurat
-                $exisitingSkIds = $kendaraan->suratKeputusans()
-                ->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))
-                ->first();
+        }
 
-                if (!$exisitingSkIds && $progress >= 6) {
-                    $permissionSurat['canAjukanSK'] = true;
-                }
-            }
-
-            // Mapping jenis SK per role untuk modal "Pilih Jenis SK"
-            $skTypeOptions = [];
-            $normalizedUK = $this->normalizeUnitKerja($user->unit_kerja);
-            switch ($normalizedUK) {
-                case 'Polda':
-                    $skTypeOptions = [
-                        ['key' => 'sk_regident', 'label' => 'SK Penghapusan Regident Polda', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkRegident'],
-                        ['key' => 'sk_polda', 'label' => 'SK Polda', 'icon' => 'fas fa-shield-alt', 'modal' => '#modalSkPolda'],
-                    ];
-                    break;
-                case 'Bapenda':
-                    $skTypeOptions = [
-                        ['key' => 'sk_bapenda_pembebasan', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'],
-                        ['key' => 'sk_penghapusan_regident', 'label' => 'SK Penghapusan Regident Bapenda', 'icon' => 'fas fa-file-excel', 'modal' => '#modalSkPenghapusanRegident'],
-                    ];
-                    break;
-                case 'JR':
-                    $skTypeOptions = [
-                        ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'],
-                        ['key' => 'sk_balasan_jr', 'label' => 'Surat Balasan Jasa Raharja', 'icon' => 'fas fa-envelope', 'modal' => '#modalSkBalasanJR'],
-                    ];
-                    break;
-            }
+        // Mapping jenis SK per role untuk modal "Pilih Jenis SK"
+        $skTypeOptions = [];
+        $normalizedUK = $this->normalizeUnitKerja($user->unit_kerja);
+        switch ($normalizedUK) {
+            case 'Polda':
+                $skTypeOptions = [
+                    ['key' => 'sk_regident', 'label' => 'SK Penghapusan Regident Polda', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkRegident'],
+                    ['key' => 'sk_polda', 'label' => 'SK Polda', 'icon' => 'fas fa-shield-alt', 'modal' => '#modalSkPolda'],
+                ];
+                break;
+            case 'Bapenda':
+                $skTypeOptions = [
+                    ['key' => 'sk_bapenda_pembebasan', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'],
+                    ['key' => 'sk_penghapusan_regident', 'label' => 'SK Penghapusan Regident Bapenda', 'icon' => 'fas fa-file-excel', 'modal' => '#modalSkPenghapusanRegident'],
+                ];
+                break;
+            case 'Jasa Raharja':
+                $skTypeOptions = [
+                    ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'],
+                    ['key' => 'sk_balasan_jr', 'label' => 'Surat Balasan Jasa Raharja', 'icon' => 'fas fa-envelope', 'modal' => '#modalSkBalasanJR'],
+                ];
+                break;
+        }
 
 
-            return view('admin.pengajuan.show', compact(
+        return view('admin.pengajuan.show', compact(
             'pengajuan',
             'suratkeputusan',
             'suratpengajuan',
@@ -601,7 +599,7 @@ class PengajuanController extends Controller
                     $skType = match ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
                         'Polda' => 'regident',
                         'Bapenda' => 'pembebasan',
-                        'JR' => 'jr',
+                        'Jasa Raharja' => 'jr',
                         default => 'default',
                     };
                     SendWhatsAppNotification::dispatch(
@@ -622,7 +620,7 @@ class PengajuanController extends Controller
             // Cek apakah semua 3 role sudah publish SK → status kendaraan = selesai
             $kendaraan->refresh();
             $totalSkByUnitKerja = $kendaraan->suratKeputusans()
-                ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'JR'])
+                ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'Jasa Raharja'])
                 ->distinct('unit_kerja')
                 ->count('unit_kerja');
 
