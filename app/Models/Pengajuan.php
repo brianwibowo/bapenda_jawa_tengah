@@ -177,13 +177,28 @@ class Pengajuan extends Model implements HasMedia
             $suratTerpenuhi++;
         }
         // Cek Surat Keputusan dari Polda
-        if ($this->suratKeputusans()->where('unit_kerja', 'Polda')->exists()) {
+        $totalKendaraan = $this->kendaraans->count();
+        $totalSkPolda = 0;
+        $totalSkBapenda = 0;
+        $totalSkJR = 0;
+
+        foreach ($this->kendaraans as $k){
+            $curSkPolda = $k->suratKeputusans()->where('unit_kerja', 'Polda')->first();
+            $curSkBapenda = $k->suratKeputusans()->where('unit_kerja', 'Bapenda')->first();
+            $curSkJR = $k->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->first();
+
+            if ($curSkPolda && $curSkPolda->local_pdf_path) $totalSkPolda++;
+            if ($curSkBapenda && $curSkBapenda->local_pdf_path) $totalSkBapenda++;
+            if ($curSkJR && $curSkJR->local_pdf_path) $totalSkJR++;
+        }
+
+        if ($totalSkPolda == $totalKendaraan) {
             $suratTerpenuhi++;
         }
-        if ($this->suratKeputusans()->where('unit_kerja', 'Bapenda')->exists()) {
+        if ($totalSkBapenda == $totalKendaraan) {
             $suratTerpenuhi++;
         }
-        if ($this->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->exists()) {
+        if ($totalSkJR == $totalKendaraan) {
             $suratTerpenuhi++;
         }
 

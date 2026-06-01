@@ -147,7 +147,7 @@ class SuratKeputusanController extends Controller
                 "jr" => [
                     'view' => 'form.create_sk',  // Dummy — sama dengan default, ganti dengan form JR yang sesungguhnya
                     'mode' => 'modal',
-                    'role' => ['jr'],
+                    'role' => ['jasa_raharja'],
                     'permission' => 'create_sk',
                     'footer' => [
                         'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
@@ -334,7 +334,7 @@ class SuratKeputusanController extends Controller
 
             // Jika bukan preview, cek apakah SK JR sudah ada untuk kendaraan ini
             if (!$request->has('preview')) {
-                $existingSk = $k->suratKeputusans()->where('unit_kerja', 'JR')->first();
+                $existingSk = $k->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->first();
                 if ($existingSk) {
                     $arrayResult[$k->id]['pdf_url']        = $existingSk->pdf_url;
                     $arrayResult[$k->id]['local_pdf_path'] = $existingSk->local_pdf_path;
@@ -459,10 +459,10 @@ class SuratKeputusanController extends Controller
             
             //Cek Kendaraan id ini apakah sudah punya SK Pembebasan dari Polda, jika sudah maka skip proses pembuatan PDF dan log untuk kendaraan ini, tapi tetap simpan data PDF kosong dan URL null di array result agar konsisten dengan kendaraan lain yang diproses
             if (!$request->has('preview')) {
-                $existingSkBapenda = $k->suratKeputusans()->where('unit_kerja', 'Polda')->first();
-                if ($existingSkBapenda) {
-                    $arrayResult[$k->id]['pdf_url'] = $existingSkBapenda->pdf_url;
-                    $arrayResult[$k->id]['local_pdf_path'] = $existingSkBapenda->local_pdf_path;
+                $existingSkPolda = $k->suratKeputusans()->where('unit_kerja', 'Polda')->first();
+                if ($existingSkPolda) {
+                    $arrayResult[$k->id]['pdf_url'] = $existingSkPolda->pdf_url;
+                    $arrayResult[$k->id]['local_pdf_path'] = $existingSkPolda->local_pdf_path;
                     continue; // Skip pembuatan PDF dan log untuk kendaraan ini
                 }
             }
@@ -785,7 +785,7 @@ class SuratKeputusanController extends Controller
                 $data = $this->generateSkBapenda($request, $pengajuan);
                 break;
             case 'JR':
-                $unitKerja = 'JR';
+                $unitKerja = 'Jasa Raharja';
                 $data = $this->generateSkJR($request, $pengajuan);
                 break;
             default:
@@ -833,7 +833,7 @@ class SuratKeputusanController extends Controller
             // Hanya jalankan logic selesai jika BUKAN draft mode
             if (!$request->has('draft_mode')) {
                 $totalSkByUnitKerja = $k->suratKeputusans()
-                    ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'JR'])
+                    ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'Jasa Raharja'])
                     ->distinct('unit_kerja')
                     ->count('unit_kerja');
 

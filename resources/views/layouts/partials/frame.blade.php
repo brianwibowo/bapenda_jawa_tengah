@@ -373,7 +373,6 @@
                         } else {
                             // Tidak ada PDF → tutup modal, tampilkan pesan
                             $('#ViewerModal').modal('hide');
-                            if (result.message) alert(result.message);
                             // Reset state agar bisa dibuka ulang
                             _frameState.rendered = false;
                             window.location.reload();

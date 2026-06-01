@@ -420,7 +420,7 @@ class SuratPengajuanController extends Controller
 
         // Generate PDF
         $pdf = Pdf::loadView('pdf.sp_polda2bapendaNjr', $dataPdf)->setPaper('a4', 'portrait');
-
+        
         if ($request->has('preview')) {
             $previewDir = 'sp/preview';
             $prefix = Auth::id() . '_sp_polda_';
@@ -436,7 +436,6 @@ class SuratPengajuanController extends Controller
             $filename = 'SP_POLDA_' . time() . '.pdf';
             $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
         }
-
         Storage::disk('public')->put($storagePath, $pdf->output());
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
         $localPdfPath = Storage::disk('public')->path($storagePath);
@@ -567,14 +566,12 @@ class SuratPengajuanController extends Controller
         $this->authorizeBranch($pengajuan);
 
         $kendaraans = $pengajuan->kendaraans;
-
         if ($kendaraans->isEmpty()) {
             return response()->json(['error' => 'Data kendaraan tidak ditemukan pada pengajuan ini.'], 404);
         }
 
         $unitKerja = $this->normalizeUnitKerja($user->unit_kerja);
         $data = [];
-
         if ($unitKerja == "Samsat") {
             // Dummy default data
             $data = $this->generateSPDefault($request, $pengajuan);
@@ -583,7 +580,6 @@ class SuratPengajuanController extends Controller
         } else {
             return response()->json(['error' => 'Aksi tidak valid untuk unit kerja saat ini.'], 403);
         }
-
         if ($request->has('preview')) {
             return response()->json([
                 'message' => 'Preview Surat Pengajuan',
@@ -592,7 +588,6 @@ class SuratPengajuanController extends Controller
                 ]
             ]);
         }
-
         // Final Submission Flow
         $baseLogTime = now();
 
@@ -641,7 +636,6 @@ class SuratPengajuanController extends Controller
                 );
             }
         }
-
         return response()->json(['message' => 'Surat Pengajuan berhasil diajukan.', 'data' => $data]);
     }
 
