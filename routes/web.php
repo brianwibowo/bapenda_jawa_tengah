@@ -120,6 +120,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/pengajuan/{pengajuan}/generate-sk-regident', [AdminPengajuanController::class, 'generateSkRegident'])->name('pengajuan.generate_sk_regident');
             Route::post('/pengajuan/{pengajuan}/generate-sk-pembebasan', [AdminPengajuanController::class, 'generateSkPembebasan'])->name('pengajuan.generate_sk_pembebasan');
             Route::post('/pengajuan/{pengajuan}/generate-sk-penghapusan-regident', [AdminPengajuanController::class, 'generateSkPenghapusanRegident'])->name('pengajuan.generate_sk_penghapusan_regident');
+            Route::post('/pengajuan/{pengajuan}/generate-sk-jasa-raharja', [AdminPengajuanController::class, 'generateSkJasaRaharja'])->name('pengajuan.generate_sk_jasa_raharja');
         });
 
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
