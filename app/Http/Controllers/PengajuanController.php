@@ -395,6 +395,148 @@ class PengajuanController extends Controller
     }
 
     /**
+     * Kirim berkas revisi dari Wajib Pajak
+     */
+    public function submitRevision(Request $request, Pengajuan $pengajuan)
+    {
+        if (Auth::id() !== $pengajuan->user_id) {
+            abort(403, 'Anda tidak diizinkan melakukan tindakan ini.');
+        }
+
+        $request->validate([
+            'revision_log_id' => 'required|exists:kendaraan_logs,id',
+            'kendaraan_id' => 'required|exists:kendaraans,id',
+        ]);
+
+        $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
+        if (!$kendaraan) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan.');
+        }
+
+        $revisionLog = KendaraanLog::where('id', $request->revision_log_id)
+            ->where('kendaraan_id', $kendaraan->id)
+            ->first();
+        if (!$revisionLog || !$revisionLog->isRevisionPending()) {
+            return back()->with('error', 'Log permintaan revisi tidak valid atau sudah diselesaikan.');
+        }
+
+        // Update data Pemilik jika dikirim dan ada di revisi_fields
+        $pemilik = $kendaraan->pemilik;
+        $pemilikUpdated = false;
+        $pemilikFields = ['nama_pemilik', 'nik_pemilik', 'alamat_pemilik', 'telp_pemilik', 'email_pemilik'];
+        $pemilikDataToUpdate = [];
+
+        foreach ($pemilikFields as $field) {
+            if ($request->has($field) && in_array($field, $revisionLog->revisi_fields)) {
+                $pemilikDataToUpdate[$field] = $request->input($field);
+                $pemilikUpdated = true;
+            }
+        }
+        if ($pemilik && $pemilikUpdated) {
+            $pemilik->update($pemilikDataToUpdate);
+        }
+
+        // Update data Kendaraan jika dikirim dan ada di revisi_fields
+        $kendaraanUpdated = false;
+        $kendaraanFields = [
+            'nrkb', 'merk_kendaraan', 'tipe_kendaraan', 'jenis_kendaraan', 'model_kendaraan',
+            'tahun_pembuatan', 'isi_silinder', 'nomor_rangka', 'nomor_mesin', 'warna_kendaraan',
+            'jenis_bahan_bakar', 'warna_tnkb', 'nomor_bpkb'
+        ];
+        $kendaraanDataToUpdate = [];
+
+        foreach ($kendaraanFields as $field) {
+            if ($request->has($field) && in_array($field, $revisionLog->revisi_fields)) {
+                $kendaraanDataToUpdate[$field] = $request->input($field);
+                $kendaraanUpdated = true;
+            }
+        }
+        if ($kendaraanUpdated) {
+            $kendaraan->update($kendaraanDataToUpdate);
+        }
+
+        // Update dokumen jika dikirim dan ada di revisi_fields
+        $kategoriDokumen = [
+            'surat_permohonan',
+            'surat_pernyataan',
+            'ktp',
+            'bpkb',
+            'tbpkp',
+            'cek_fisik',
+            'foto_ranmor',
+            'stnk'
+        ];
+
+        foreach ($kategoriDokumen as $kategori) {
+            $inputName = 'doc_' . $kategori;
+            if ($request->hasFile($inputName) && in_array($kategori, $revisionLog->revisi_fields)) {
+                $kendaraan->clearMediaCollection($kategori);
+                $kendaraan->addMedia($request->file($inputName))->toMediaCollection($kategori);
+            }
+        }
+
+        // Mark log revisi sebagai terselesaikan
+        $revisionLog->update([
+            'revisi_resolved_at' => now(),
+        ]);
+
+        // Buat log aktivitas baru untuk mencatat revisi diserahkan
+        $map = [
+            'nama_pemilik' => 'Nama Pemilik',
+            'nik_pemilik' => 'NIK Pemilik',
+            'alamat_pemilik' => 'Alamat Pemilik',
+            'telp_pemilik' => 'Telp Pemilik',
+            'email_pemilik' => 'Email Pemilik',
+            'nrkb' => 'NRKB',
+            'merk_kendaraan' => 'Merk',
+            'tipe_kendaraan' => 'Tipe',
+            'jenis_kendaraan' => 'Jenis',
+            'model_kendaraan' => 'Model',
+            'tahun_pembuatan' => 'Tahun Pembuatan',
+            'isi_silinder' => 'Isi Silinder',
+            'nomor_rangka' => 'No. Rangka',
+            'nomor_mesin' => 'No. Mesin',
+            'warna_kendaraan' => 'Warna Kendaraan',
+            'jenis_bahan_bakar' => 'Bahan Bakar',
+            'warna_tnkb' => 'Warna TNKB',
+            'nomor_bpkb' => 'No. BPKB',
+            'surat_permohonan' => 'Surat Permohonan',
+            'surat_pernyataan' => 'Surat Pernyataan',
+            'ktp' => 'KTP',
+            'bpkb' => 'BPKB',
+            'tbpkp' => 'TBPKP',
+            'cek_fisik' => 'Cek Fisik',
+            'foto_ranmor' => 'Foto Kendaraan',
+            'stnk' => 'STNK',
+        ];
+
+        $revisedList = [];
+        foreach ($revisionLog->revisi_fields as $f) {
+            $inputName = in_array($f, $kategoriDokumen) ? 'doc_' . $f : $f;
+            if ($request->has($inputName) || $request->hasFile($inputName)) {
+                $revisedList[] = $map[$f] ?? $f;
+            }
+        }
+
+        $revisedFieldsStr = implode(', ', $revisedList);
+        $aksiText = "Revisi diserahkan oleh Wajib Pajak: {$revisedFieldsStr}";
+
+        // Kembalikan status kendaraan ke 'pengajuan' agar dapat diverifikasi ulang
+        $kendaraan->update(['status' => 'pengajuan']);
+
+        KendaraanLog::create([
+            'kendaraan_id' => $kendaraan->id,
+            'user_id' => Auth::id(),
+            'tipe' => 'system',
+            'aksi' => $aksiText,
+            'status_baru' => 'pengajuan',
+            'catatan' => 'Berkas revisi telah berhasil diunggah / diperbarui oleh Wajib Pajak.',
+        ]);
+
+        return back()->with('success', 'Revisi berkas berhasil dikirim.');
+    }
+
+    /**
      * (Opsional) Hapus bundel pengajuan jika masih draft.
      */
     public function destroy(Pengajuan $pengajuan)
