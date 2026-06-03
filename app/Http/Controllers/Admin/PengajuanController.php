@@ -137,30 +137,6 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSK'] = true;
         }
 
-        $isUpload = [
-            "sk" => [],
-            "sp" => []
-        ];
-
-        foreach($pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->values() as $log){
-            $user_log = User::find($log->user_id);
-            if ((!$log->sk_id && !$log->sp_id) || ($user_log && !($user_log->unit_kerja == $user->unit_kerja))) continue;
-
-            if ($log->sk_id) {
-                $sk = SuratKeputusan::findOrFail($log->sk_id);
-                if (!$sk->local_pdf_path) {
-                    $isUpload['sk'][$log->sk_id] = true;
-                }
-            }
-            if ($log->sp_id) {
-                $sp = SuratPengajuan::findOrFail($log->sp_id);
-                if (!$sp->local_pdf_path) {
-                    $isUpload['sp'][$log->sp_id] = true;
-                }
-            }
-                
-        }
-        
         foreach($pengajuan->kendaraans as $kendaraan){
             // Existing current Unit Kerja, untuk permissionSurat
             $exisitingSkIds = $kendaraan->suratKeputusans()
@@ -176,6 +152,11 @@ class PengajuanController extends Controller
         $skTypeOptions = [];
         $normalizedUK = $this->normalizeUnitKerja($user->unit_kerja);
         switch ($normalizedUK) {
+            case 'Samsat':
+                $skTypeOptions = [
+                    ['key' => 'sk_default', 'label' => 'SK Default', 'icon' => 'fas fa-file', 'modal' => '#modalSkDefault'],
+                ];
+                break;
             case 'Polda':
                 $skTypeOptions = [
                     ['key' => 'sk_regident', 'label' => 'SK Penghapusan Regident Polda', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkRegident'],
@@ -191,7 +172,6 @@ class PengajuanController extends Controller
             case 'Jasa Raharja':
                 $skTypeOptions = [
                     ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'],
-                    ['key' => 'sk_balasan_jr', 'label' => 'Surat Balasan Jasa Raharja', 'icon' => 'fas fa-envelope', 'modal' => '#modalSkBalasanJR'],
                 ];
                 break;
         }
@@ -203,8 +183,8 @@ class PengajuanController extends Controller
             'suratpengajuan',
             'progress',
             'permissionSurat',
-            'isUpload',
-            'skTypeOptions'
+            'skTypeOptions',
+            'lastSp'
         ));
     }
 
@@ -639,6 +619,79 @@ class PengajuanController extends Controller
 
         return redirect()->route('admin.pengajuan.show', $pengajuan->id)
             ->with('success', 'Surat Keputusan berhasil diterbitkan.');
+    }
+
+    /**
+     * Publish (terbitkan) SP Draft:
+     * - Upload dokumen bertandatangan
+     * - Centang checkbox pernyataan
+     * - Ubah sp_status dari 'draft' ke 'terbit'
+     */
+    public function publishSp(Request $request, KendaraanLog $log)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png,heic,heif,docx|max:10240',
+            'pernyataan' => 'required|accepted',
+        ], [
+            'file.required' => 'Dokumen bertandatangan wajib diunggah.',
+            'pernyataan.required' => 'Anda harus mencentang pernyataan penerbitan.',
+            'pernyataan.accepted' => 'Anda harus mencentang pernyataan penerbitan.',
+        ]);
+
+        // Pastikan log ini memang SP draft
+        if ($log->sp_status !== 'draft' || !$log->sp_id) {
+            return redirect()->back()->with('error', 'Log ini bukan draft SP yang valid.');
+        }
+
+        $pengajuan = $log->kendaraan->pengajuan;
+        $this->authorizeBranch($pengajuan);
+
+        // Upload file ke storage
+        $filename = $request->file->getClientOriginalName();
+        $storagePath = 'sp/' . Str::uuid() . '_' . $filename;
+        Storage::disk('public')->put($storagePath, $request->file('file')->get());
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+
+        // Update SuratPengajuan record
+        $sp = SuratPengajuan::find($log->sp_id);
+        if ($sp) {
+            $sp->update([
+                'local_pdf_path' => $pdfUrlAbsolute,
+                'pdf_url' => $pdfUrlAbsolute,
+            ]);
+        }
+
+        // Attach file ke media library log
+        $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
+
+        // Update sp_status ke terbit
+        $log->update(['sp_status' => 'terbit']);
+
+        // Dispatch WhatsApp notification
+        if ($sp) {
+            $kendaraan = $log->kendaraan;
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp) {
+                try {
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan: $pengajuan,
+                        kendaraan: $kendaraan,
+                        skType: 'sp_publish',
+                        pdfUrl: $pdfUrlAbsolute,
+                        localPdfPath: $localPdfPath,
+                        wpPhone: $wpUser->no_hp,
+                        wpName: $wpUser->name,
+                        nrkb: $kendaraan->nrkb,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Publish): ' . $e->getMessage());
+                }
+            }
+        }
+
+        return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+            ->with('success', 'Surat Pengajuan berhasil diterbitkan.');
     }
 
     /**

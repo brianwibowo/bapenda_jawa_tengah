@@ -88,50 +88,6 @@ class SuratPengajuanController extends Controller
                         'back' => false,
                     ]
                 ]
-            ],
-            'form' => [
-                'default' => [
-                    'view' => 'form.create_sp',
-                    'mode' => 'modal',
-                    'permission' => self::determinePermission($user, $progress),
-                    'footer' => self::buildFooter($user, $pengajuan, $lastSp, $progress)
-                ],
-                'polda' => [
-                    'view' => 'form.sp_polda',
-                    'mode' => 'modal',
-                    'role' => ['polda'],
-                    'permission' => ['create_pdf_pengajuan_bapenda_jr'],
-                    'footer' => [
-                        'accept' => [
-                            'label' => 'Setujui',
-                            'class' => 'btn-success',
-                            'route' => [
-                                'name' => 'admin.pengajuan.ajukan',
-                                'middleware' => 'signed'
-                            ]
-                        ],
-                        'reject' => false,
-                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
-                    ]
-                ],
-                'bapenda' => [
-                    'view' => 'form.sp_penghapusan_regident_bapenda',
-                    'mode' => 'modal',
-                    'role' => ['bapenda', 'jasa_raharja'],
-                    'permission' => ['create_pdf_balasan_polda'],
-                    'footer' => [
-                        'accept' => [
-                            'label' => 'Setujui',
-                            'class' => 'btn-success',
-                            'route' => [
-                                'name' => 'admin.pengajuan.ajukan',
-                                'middleware' => 'signed'
-                            ]
-                        ],
-                        'reject' => false,
-                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
-                    ]
-                ]
             ]
         ];
 
@@ -590,6 +546,8 @@ class SuratPengajuanController extends Controller
         }
         // Final Submission Flow
         $baseLogTime = now();
+        // Determine draft mode: Samsat (default) = no draft, Polda (non-default) = draft
+        $isDraft = ($unitKerja !== 'Samsat');
 
         if ($unitKerja == 'Polda') {
             $sp = SuratPengajuan::create([
@@ -604,7 +562,7 @@ class SuratPengajuanController extends Controller
             ]);
 
             foreach ($kendaraans as $k) {
-                $this->logSuratActionByKendaraanId(
+                $log = $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
                     'SP Polda berhasil diterbitkan',
@@ -612,6 +570,9 @@ class SuratPengajuanController extends Controller
                     $data['local_pdf_path'] ?? null,
                     $sp->id
                 );
+                if ($isDraft) {
+                    $log->update(['sp_status' => 'draft']);
+                }
             }
         } else {
             $sp = SuratPengajuan::create([
@@ -626,7 +587,7 @@ class SuratPengajuanController extends Controller
             ]);
 
             foreach ($kendaraans as $k) {
-                $this->logSuratActionByKendaraanId(
+                $log = $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
                     'Surat Pengajuan berhasil dibuat',
@@ -634,9 +595,16 @@ class SuratPengajuanController extends Controller
                     $data['local_pdf_path'] ?? null,
                     $sp->id
                 );
+                // Samsat default: no draft (langsung terbit)
             }
         }
-        return response()->json(['message' => 'Surat Pengajuan berhasil diajukan.', 'data' => $data]);
+
+        $successMsg = $isDraft
+            ? 'Surat Pengajuan berhasil disimpan sebagai draft.'
+            : 'Surat Pengajuan berhasil diajukan.';
+
+        return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+            ->with('success', $successMsg);
     }
 
     public function tolak(Request $request, SuratPengajuan $surat)
@@ -764,7 +732,7 @@ class SuratPengajuanController extends Controller
             $surat->save();
 
             foreach ($pengajuan->kendaraans as $k) {
-                $this->logSuratActionByKendaraanId(
+                $log = $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
                     $instansiUser == "Bapenda" ? 'SP Balasan Penghapusan Regident berhasil diterbitkan' : 'SP Balasan berhasil diterbitkan',
@@ -772,6 +740,8 @@ class SuratPengajuanController extends Controller
                     $data['local_pdf_path'] ?? null,
                     $surat->id
                 );
+                // Non-default SP respond: always draft
+                $log->update(['sp_status' => 'draft']);
             }
 
             // Jika semua instansi sudah approved, ubah status kendaraan ke diproses
@@ -792,7 +762,8 @@ class SuratPengajuanController extends Controller
                 }
             }
 
-            return response()->json(['message' => 'Surat Pengajuan berhasil disetujui.', 'data' => $data]);
+            return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+                ->with('success', 'Surat Pengajuan berhasil disimpan sebagai draft.');
         }
 
         // ── KELOMPOK REDIRECT FLOW (NON-AJAX / FALLBACK) ──

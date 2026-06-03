@@ -51,6 +51,7 @@ class KendaraanLog extends Model implements HasMedia
         'status_baru',
         'catatan',
         'sp_id',
+        'sp_status',
         'sk_id',
         'sk_status',
         'revisi_fields',
@@ -79,16 +80,33 @@ class KendaraanLog extends Model implements HasMedia
     }
 
     /**
+     * Cek apakah log ini adalah SP Draft (belum diterbitkan).
+     */
+    public function isSpDraft(): bool
+    {
+        return $this->sp_status === 'draft';
+    }
+
+    /**
+     * Cek apakah log ini adalah SP yang sudah diterbitkan.
+     */
+    public function isSpPublished(): bool
+    {
+        return $this->sp_status === 'terbit';
+    }
+
+    /**
      * Cek apakah log ini visible untuk user tertentu.
      * Draft SK hanya visible ke unit_kerja pembuat.
      * Log lainnya visible to all.
      */
     public function isVisibleToUser($user): bool
     {
-        if ($this->sk_status !== 'draft') {
-            return true; // null atau 'terbit' → visible to all
+        // Jika bukan draft (null atau 'terbit'), visible to all
+        if ($this->sk_status !== 'draft' && $this->sp_status !== 'draft') {
+            return true;
         }
-        // Draft SK: hanya visible jika unit_kerja viewer = unit_kerja pembuat log
+        // Draft SK/SP: hanya visible jika unit_kerja viewer = unit_kerja pembuat log
         $creator = $this->user;
         if (!$creator || !$user) return false;
         return $creator->unit_kerja === $user->unit_kerja;

@@ -97,32 +97,20 @@
         <div class="mb-3 d-flex justify-content-end align-items-center">
             <div class="d-flex justify-content-end gap-2 w-100">
                 @if(!empty($admin) && $admin)
-                    @php
-                    $isAdmin = !empty($admin) && $admin;
-                    $hasSuratAction = $isAdmin && isset($permissionSurat);
-                    $type = '';
-                    $label = '';
-                    if ($hasSuratAction) {
-                        if (!empty($permissionSurat['canAjukanSP'])) {
-                            $type = 'sp';
-                            $label = 'Buat Pengajuan ke ' . (Auth::user()->unit_kerja == 'Samsat' ? 'Polda' : 'Bapenda/Jasa Raharja');
-                        } elseif (!empty($permissionSurat['canRespondSP'])) {
-                            $type = 'sp';
-                            $label = 'Review & Balas SP';
-                        } elseif (!empty($permissionSurat['canAjukanSK'])) {
-                            $type = 'sk';
-                            $label = 'Terbitkan Surat Keputusan';
-                        } else {
-                            $hasSuratAction = false;
-                        }
-                    }
-                    @endphp
-
-                    {{-- Tombol Dinamis SP/SK (Hanya Admin) --}}
-                    @if($hasSuratAction)
-                        <button class="btn btn-outline-primary" 
-                                onclick="openSecureFrame('{{ $type }}', 'form', {{ $pengajuan->id }})">
-                            <i class="fas fa-file-signature me-1"></i> {{ $label }}
+                    {{-- Tombol Dinamis SP (Hanya Admin) — Standalone Modal --}}
+                    @if(!empty($permissionSurat['canAjukanSP']))
+                        @if(Auth::user()->unit_kerja == 'Samsat')
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpDefault">
+                                <i class="fas fa-paper-plane me-1"></i> Buat Pengajuan ke Polda
+                            </button>
+                        @else
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpPolda">
+                                <i class="fas fa-file-signature me-1"></i> Buat Pengajuan ke Bapenda/Jasa Raharja
+                            </button>
+                        @endif
+                    @elseif(!empty($permissionSurat['canRespondSP']))
+                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalSpBapendaJr">
+                            <i class="fas fa-reply me-1"></i> Review & Balas SP
                         </button>
                     @endif
 
@@ -241,12 +229,15 @@
                                                 data-bs-toggle="modal" data-bs-target="#modalPublishSK"
                                                 data-log-id="{{ $log->id }}"
                                                 data-sk-id="{{ $log->sk_id }}">
-                                            <i class="fas fa-stamp me-1"></i>Terbitkan
+                                            <i class="fas fa-stamp me-1"></i>Terbitkan SK
                                         </button>
                                     @endif
-                                    @if (isset($isUpload) && (($log->sk_id && isset($isUpload['sk'][$log->sk_id])) || ($log->sp_id && isset($isUpload['sp'][$log->sp_id]))))
-                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#upload{{ $log->sk_id ? 'SK' : 'SP' }}Modal" data-log-id="{{ $log->id }}" data-surat-id="{{ $log->sk_id ?? $log->sp_id }}">
-                                            <i class="fas fa-file-contract me-1"></i>Upload
+                                    @if($log->isSpDraft() && $log->user && $log->user->unit_kerja === auth()->user()->unit_kerja)
+                                        <button class="btn btn-sm btn-success fw-semibold btn-publish-sp"
+                                                data-bs-toggle="modal" data-bs-target="#modalPublishSP"
+                                                data-log-id="{{ $log->id }}"
+                                                data-sp-id="{{ $log->sp_id }}">
+                                            <i class="fas fa-stamp me-1"></i>Terbitkan SP
                                         </button>
                                     @endif
                                     {{-- Tombol Kirim Revisi — muncul jika log ini revisi pending & user punya permission --}}
@@ -850,6 +841,13 @@
 @include('pengajuan.modals.sk_polda')
 @include('pengajuan.modals.sk_bapenda_pembebasan')
 @include('pengajuan.modals.sk_penghapusan_regident')
+@include('pengajuan.modals.sk_default')
+@include('pengajuan.modals.sk_jr')
+
+{{-- Include SP modals --}}
+@include('pengajuan.modals.sp_default')
+@include('pengajuan.modals.sp_polda')
+@include('pengajuan.modals.sp_bapenda_jr')
 @endif
 
 {{-- Modal: Upload & Terbitkan SK --}}
@@ -911,6 +909,73 @@
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSK" disabled>
                         <i class="fas fa-stamp me-1"></i> Terbitkan SK
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Modal: Upload & Terbitkan SP --}}
+@if(!empty($admin) && $admin)
+<div class="modal fade" id="modalPublishSP" tabindex="-1" aria-labelledby="modalPublishSPLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="formPublishSP" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="log_id" id="publishSpLogId">
+                <input type="hidden" name="sp_id" id="publishSpId">
+
+                <div class="modal-header" style="background: linear-gradient(135deg, #0d6efd, #0a58ca); border: none;">
+                    <h5 class="modal-title fw-bold text-white" id="modalPublishSPLabel">
+                        <i class="fas fa-stamp me-2"></i>Terbitkan Surat Pengajuan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="alert alert-info border-0 d-flex align-items-start mb-4" style="border-radius: 10px;">
+                        <i class="fas fa-info-circle me-3 mt-1 fs-5"></i>
+                        <div>
+                            <strong>Informasi:</strong> Unggah dokumen SP yang telah ditandatangani secara resmi. Setelah diterbitkan, SP ini akan terlihat oleh seluruh instansi terkait.
+                        </div>
+                    </div>
+
+                    {{-- Upload Area --}}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Unggah Dokumen Bertandatangan
+                        </label>
+                        <div class="border rounded-3 p-4 text-center position-relative" id="publishSpDropZone"
+                             style="border: 2px dashed #dee2e6; border-radius: 12px !important; cursor: pointer; transition: all 0.2s ease; background: #f8f9fa;">
+                            <input type="file" name="file" id="publishSpFileInput" class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;"
+                                   accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.docx" required>
+                            <div id="publishSpDropContent">
+                                <i class="fas fa-cloud-upload-alt d-block mb-2" style="font-size: 2.5rem; color: #adb5bd;"></i>
+                                <p class="mb-1 fw-semibold text-dark">Seret file ke sini atau klik untuk memilih</p>
+                                <small class="text-muted">PDF, DOCX, JPG, PNG · Maks 10MB</small>
+                            </div>
+                            <div id="publishSpFilePreview" style="display: none;">
+                                <i class="fas fa-file-check d-block mb-2 text-success" style="font-size: 2rem;"></i>
+                                <p class="mb-0 fw-semibold text-success" id="publishSpFileName"></p>
+                                <small class="text-muted" id="publishSpFileSize"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Checkbox Pernyataan --}}
+                    <div class="form-check mb-3 p-3 rounded-3" style="background: #e8f0fe; border: 1px solid #b6d4fe;">
+                        <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishSpPernyataan" required>
+                        <label class="form-check-label fw-semibold text-dark" for="publishSpPernyataan" style="cursor: pointer;">
+                            Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang 
+                            <br>sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSP" disabled>
+                        <i class="fas fa-stamp me-1"></i> Terbitkan SP
                     </button>
                 </div>
             </form>
@@ -1002,6 +1067,73 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasFile = publishFileInput && publishFileInput.files.length > 0;
         const hasCheck = publishCheckbox && publishCheckbox.checked;
         const btn = document.getElementById('btnPublishSK');
+        if (btn) btn.disabled = !(hasFile && hasCheck);
+    }
+
+    // === Publish SP Modal: Dynamic data binding ===
+    document.querySelectorAll('.btn-publish-sp').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const logId = this.getAttribute('data-log-id');
+            const spId = this.getAttribute('data-sp-id');
+            document.getElementById('publishSpLogId').value = logId;
+            document.getElementById('publishSpId').value = spId;
+
+            // Set form action URL
+            const form = document.getElementById('formPublishSP');
+            form.action = '{{ url("admin/pengajuan/publish-sp") }}/' + logId;
+
+            // Reset state
+            const spPernyataan = document.getElementById('publishSpPernyataan');
+            const spFileInput = document.getElementById('publishSpFileInput');
+            if (spPernyataan) spPernyataan.checked = false;
+            if (spFileInput) spFileInput.value = '';
+            document.getElementById('publishSpDropContent').style.display = '';
+            document.getElementById('publishSpFilePreview').style.display = 'none';
+            document.getElementById('btnPublishSP').disabled = true;
+        });
+    });
+
+    // === SP File upload preview ===
+    const publishSpFileInput = document.getElementById('publishSpFileInput');
+    if (publishSpFileInput) {
+        publishSpFileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                document.getElementById('publishSpDropContent').style.display = 'none';
+                document.getElementById('publishSpFilePreview').style.display = '';
+                document.getElementById('publishSpFileName').textContent = file.name;
+                document.getElementById('publishSpFileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                checkPublishSpReady();
+            }
+        });
+
+        // Drag & drop for SP
+        const spDropZone = document.getElementById('publishSpDropZone');
+        if (spDropZone) {
+            spDropZone.addEventListener('dragover', (e) => { e.preventDefault(); spDropZone.style.borderColor = '#0d6efd'; spDropZone.style.background = '#e8f0fe'; });
+            spDropZone.addEventListener('dragleave', () => { spDropZone.style.borderColor = '#dee2e6'; spDropZone.style.background = '#f8f9fa'; });
+            spDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                spDropZone.style.borderColor = '#dee2e6';
+                spDropZone.style.background = '#f8f9fa';
+                if (e.dataTransfer.files.length) {
+                    publishSpFileInput.files = e.dataTransfer.files;
+                    publishSpFileInput.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+    }
+
+    // === SP Checkbox toggle ===
+    const publishSpCheckbox = document.getElementById('publishSpPernyataan');
+    if (publishSpCheckbox) {
+        publishSpCheckbox.addEventListener('change', checkPublishSpReady);
+    }
+
+    function checkPublishSpReady() {
+        const hasFile = publishSpFileInput && publishSpFileInput.files.length > 0;
+        const hasCheck = publishSpCheckbox && publishSpCheckbox.checked;
+        const btn = document.getElementById('btnPublishSP');
         if (btn) btn.disabled = !(hasFile && hasCheck);
     }
 });

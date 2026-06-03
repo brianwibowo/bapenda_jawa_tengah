@@ -101,64 +101,6 @@ class SuratKeputusanController extends Controller
                     ]
                 ],
             ],
-            'form' => [
-                "default"  => [
-                    'view' => 'form.create_sk',
-                    'mode' => 'modal',
-                    'role' => ['admin'],
-                    'permission' => 'create_sk',
-                    'footer' => [
-                        'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
-                            'name' => 'admin.pengajuan.buat_sk',
-                            'middleware' => 'signed'
-                        ]],
-                        'reject' => false,
-                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
-                    ]
-                ],
-                "polda2bapenda&jr" => [
-                    'view' => 'form.sk_regident',
-                    'mode' => 'modal',
-                    'role' => ['polda'],
-                    'permission' => 'create_sk',
-                    'footer' => [
-                        'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
-                            'name' => 'admin.pengajuan.buat_sk',
-                            'middleware' => 'signed'
-                        ]],
-                        'reject' => false,
-                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
-                    ]
-                ],
-                "bapenda" => [
-                    'view' => 'form.sk_bapenda_pembebasan',
-                    'mode' => 'modal',
-                    'role' => ['bapenda'],
-                    'permission' => 'create_sk',
-                    'footer' => [
-                        'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
-                            'name' => 'admin.pengajuan.buat_sk',
-                            'middleware' => 'signed'
-                        ]],
-                        'reject' => false,
-                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
-                    ]
-                ],
-                "jr" => [
-                    'view' => 'form.create_sk',  // Dummy — sama dengan default, ganti dengan form JR yang sesungguhnya
-                    'mode' => 'modal',
-                    'role' => ['jasa_raharja'],
-                    'permission' => 'create_sk',
-                    'footer' => [
-                        'accept' => ['label' => 'Setujui', 'class' => 'btn-success', 'route'=> [
-                            'name' => 'admin.pengajuan.buat_sk',
-                            'middleware' => 'signed'
-                        ]],
-                        'reject' => false,
-                        'back' => ['label' => 'Kembali', 'class' => 'btn-secondary'],
-                    ]
-                ],
-            ]
         ];
 
         $config = $registries[$type] ?? abort(404);
@@ -774,19 +716,31 @@ class SuratKeputusanController extends Controller
         }
         
         $data = [];
+        $isDraft = false;
 
         switch ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
+            case 'Samsat':
+                $unitKerja = 'Samsat';
+                $data = $this->generateSkDefault($request, $pengajuan);
+                // Samsat default → no draft, langsung terbit
+                $isDraft = false;
+                break;
             case 'Polda':
                 $unitKerja = 'Polda';
                 $data = $this->generateSkRegident($request, $pengajuan);
+                $isDraft = true; // Non-default → draft
                 break;
             case 'Bapenda':
                 $unitKerja = 'Bapenda';
                 $data = $this->generateSkBapenda($request, $pengajuan);
+                // Draft only if TTD basah; TTD elektronik → langsung terbit
+                $isDraft = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah';
                 break;
             case 'JR':
                 $unitKerja = 'Jasa Raharja';
                 $data = $this->generateSkJR($request, $pengajuan);
+                // JR default → no draft, langsung terbit
+                $isDraft = false;
                 break;
             default:
                 $unitKerja = 'Unit Kerja Lain';
@@ -823,15 +777,14 @@ class SuratKeputusanController extends Controller
 
             if (isset($data[$k->id]['log_id'])) {
                 $updateData = ['sk_id' => $sk->id];
-                // Jika draft mode, set sk_status=draft pada log
-                if ($request->has('draft_mode')) {
+                if ($isDraft) {
                     $updateData['sk_status'] = 'draft';
                 }
                 KendaraanLog::where('id', $data[$k->id]['log_id'])->update($updateData);
             }
 
             // Hanya jalankan logic selesai jika BUKAN draft mode
-            if (!$request->has('draft_mode')) {
+            if (!$isDraft) {
                 $totalSkByUnitKerja = $k->suratKeputusans()
                     ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'Jasa Raharja'])
                     ->distinct('unit_kerja')
@@ -856,7 +809,11 @@ class SuratKeputusanController extends Controller
             $data[$k->id]['sk_id'] = $sk->id; // Simpan ID SK yang baru dibuat untuk referensi jika diperlukan
         }
 
-        return response()->json(['message' => 'Surat Keputusan berhasil diajukan.', 'data' => $data]);
+        $successMsg = $isDraft
+            ? 'Surat Keputusan berhasil disimpan sebagai draft.'
+            : 'Surat Keputusan berhasil diterbitkan.';
+
+        return response()->json(['message' => $successMsg, 'data' => $data]);
 
     }
 

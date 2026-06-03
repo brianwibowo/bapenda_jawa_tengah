@@ -22,11 +22,10 @@
     // ─────────────────────────────────────────────────────────────────────────
     // State cache: menyimpan hasil fetch terakhir agar modal tidak re-fetch
     // saat dibuka kembali dengan parameter yang sama.
-    // State di-reset hanya ketika: (a) parameter berbeda, (b) ada submit baru.
     // ─────────────────────────────────────────────────────────────────────────
     var _frameState = {
         key:        null,   // "<type>:<category>:<id>"
-        mode:       null,   // 'modal' | 'iframe'
+        mode:       null,   // 'iframe'
         data:       null,   // response dari /api/frame-access
         pdfUrl:     null,   // diisi setelah submit berhasil → switch ke iframe
         rendered:   false,  // apakah sudah pernah dirender
@@ -76,14 +75,7 @@
             iframe.style.height = '100%';
         }
         const modalBody = document.querySelector('#ViewerModal .modal-body');
-
-        // Sembunyikan form jika ada (tidak perlu di-clear/dihapus dari DOM agar bisa Kembali Edit)
-        const injectedForm = document.getElementById('frameForm');
-        if (injectedForm) {
-            injectedForm.style.display = 'none';
-        } else {
-            modalBody.innerHTML = '';
-        }
+        modalBody.innerHTML = '';
 
         modalBody.style.overflowY = 'hidden';
         modalBody.style.maxHeight = '';
@@ -155,247 +147,49 @@
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Render modal (inject HTML form) — hanya dipanggil sekali per state
+    // openPdfViewer — public API for standalone modals to open PDF preview
+    // Options: { title, onBack, onClose }
     // ─────────────────────────────────────────────────────────────────────────
-    function _renderModal(accessUrl, submitUrl, footerConfig, footerCallbacks) {
-        fetch(accessUrl)
-        .then(r => r.text())
-        .then(html => {
-            const parser        = new DOMParser();
-            const doc           = parser.parseFromString(html, 'text/html');
-            const bodyContent   = doc.querySelector('[data-frame-body]');
-            const scriptContent = doc.querySelectorAll('[data-form-script]');
-            const iframe        = document.getElementById('iframe');
+    function openPdfViewer(pdfUrl, options = {}) {
+        const title = options.title || 'Preview Dokumen';
+        document.getElementById('ModalTitle').textContent = title;
 
-            if (!bodyContent) {
-                $('#Loading').hide();
-                document.querySelector('#ViewerModal .modal-body').innerHTML =
-                    '<div class="p-4 text-danger">Konten form tidak ditemukan.</div>';
-                return;
-            }
+        _renderIframe(pdfUrl, {
+            'accept': false,
+            'reject': false,
+            'back': options.onBack ? {
+                'label': 'Kembali',
+                'class': 'btn-warning',
+                'action': function() {
+                    $('#ViewerModal').modal('hide');
+                    if (typeof options.onClose === 'function') options.onClose();
+                    if (typeof options.onBack === 'function') options.onBack();
+                }
+            } : false
+        }, {});
 
-            const modalBody = document.querySelector('#ViewerModal .modal-body');
-            modalBody.innerHTML   = '';
-            modalBody.style.overflowY = 'auto';
-            modalBody.style.maxHeight = '';
-            modalBody.style.padding   = '1.5rem';
-
-            const form = doc.getElementById('frameForm');
-            if (form) {
-                form.action = submitUrl; // Set form action to signed submit URL
-                modalBody.appendChild(document.adoptNode(form));
-                const footerInForm = modalBody.querySelector('[data-frame-footer]');
-                if (footerInForm) footerInForm.remove();
-            } else {
-                modalBody.appendChild(document.adoptNode(bodyContent));
-            }
-
-            // Re-run injected scripts
-            modalBody.querySelectorAll('script').forEach(old => {
-                const s = document.createElement('script');
-                if (old.src) s.src = old.src; else s.textContent = old.textContent;
-                document.body.appendChild(s);
-                old.remove();
-            });
-
-            // Re-run any additional scripts marked with data-frame-script
-            scriptContent.forEach(old => {
-                const s = document.createElement('script');
-                if (old.src) s.src = old.src; else s.textContent = old.textContent;
-                document.body.appendChild(s);
-                old.remove();
-            }); 
-
-            // Footer: Batal + Lihat Preview
+        // Add close button if no back button
+        if (!options.onBack) {
             $('.modal-footer').html(`
-                <button type="button" class="btn btn-secondary" id="frameFormCancelBtn">Batal</button>
-                <button type="button" class="btn btn-primary" id="frameFormPreviewBtn">Lihat Preview</button>
+                <button type="button" class="btn btn-secondary" onclick="$('#ViewerModal').modal('hide')">
+                    Tutup
+                </button>
             `);
+        }
 
-            // Submit handler
-            const injectedForm = document.getElementById('frameForm');
-            
-            function bindFormFooterListeners() {
-                const cancelBtn = document.getElementById('frameFormCancelBtn');
-                if (cancelBtn) {
-                    cancelBtn.addEventListener('click', function () {
-                        $('#ViewerModal').modal('hide');
-                    });
-                }
+        $('#ViewerModal').modal('show');
 
-                const previewBtn = document.getElementById('frameFormPreviewBtn');
-                if (previewBtn && injectedForm) {
-                    previewBtn.addEventListener('click', function() {
-                        if (!injectedForm.checkValidity()) {
-                            injectedForm.reportValidity();
-                            return;
-                        }
-
-                        previewBtn.disabled = true;
-                        previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
-
-                        const formData = new FormData(injectedForm);
-                        formData.append('preview', '1');
-
-                        fetch(submitUrl, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(res => {
-                            if (!res.ok) return res.json().then(err => { throw err; });
-                            return res.json();
-                        })
-                        .then(result => {
-                            console.log('[Frame] Preview result:', result);
-                            let pdfUrl = null;
-                            if (result.data) {
-                                if (result.data.pdf_url) {
-                                    pdfUrl = result.data.pdf_url;
-                                } else {
-                                    const firstKey = Object.keys(result.data)[0];
-                                    if (firstKey && result.data[firstKey]) {
-                                        pdfUrl = result.data[firstKey].pdf_url || result.data[firstKey];
-                                    }
-                                }
-                            }
-
-                            if (pdfUrl) {
-                                // Render iframe dengan pdf_url menggunakan _renderIframe agar konsisten dan dinamis
-                                _renderIframe(pdfUrl, {
-                                    'accept' : {
-                                        'label' : 'Kirim & Simpan',
-                                        'class' : 'btn-success',
-                                        'action' : function() {
-                                            // Trigger form submission
-                                            injectedForm.dispatchEvent(new Event('submit', { cancelable: true }));
-                                        }
-                                    },
-                                    'reject' : false,
-                                    'back' : {
-                                        'label' : 'Kembali Edit',
-                                        'class' : 'btn-warning',
-                                        'action' : function() {
-                                            let iframe = document.getElementById('iframe');
-                                            if (iframe) {
-                                                iframe.onload = null;
-                                                $(iframe).hide();
-                                                iframe.src = '';
-                                            }
-                                            injectedForm.style.display = 'block';
-                                            modalBody.style.padding = '1.5rem';
-                                            modalBody.style.overflowY = 'auto';
-
-                                            // Kembalikan footer form semula
-                                            $('.modal-footer').html(`
-                                                <button type="button" class="btn btn-secondary" id="frameFormCancelBtn">Batal</button>
-                                                <button type="button" class="btn btn-primary" id="frameFormPreviewBtn">Lihat Preview</button>
-                                            `);
-                                            // Bind ulang listener
-                                            bindFormFooterListeners();
-                                        }
-                                    }
-                                }, footerCallbacks);
-                            } else {
-                                alert('Gagal memuat preview PDF.');
-                            }
-                            previewBtn.disabled = false;
-                            previewBtn.innerHTML = 'Lihat Preview';
-                        })
-                        .catch(err => {
-                            previewBtn.disabled = false;
-                            previewBtn.innerHTML = 'Lihat Preview';
-                            console.error('[Frame] Preview error:', err);
-                            alert('Gagal memuat preview PDF: ' + (err.message || JSON.stringify(err)));
-                        });
-                    });
-                }
-            }
-
-            bindFormFooterListeners();
-
-            if (injectedForm) {
-                injectedForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const submitBtn = document.getElementById('frameFormSubmitBtn');
-                    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...'; }
-
-                    fetch(submitUrl, {
-                        method:  'POST',
-                        body:    new FormData(injectedForm),
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
-                    })
-                    .then(res => {
-                        if (!res.ok) return res.json().then(err => { throw err; });
-                        return res.json();
-                    })
-                    .then(result => {
-                        console.log('[Frame] Submit result:', result);
-
-                        // ── Ambil pdf_url dari result.data atau kendaraan pertama ──
-                        let pdfUrl = null;
-                        if (result.data) {
-                            if (result.data.pdf_url) {
-                                pdfUrl = result.data.pdf_url;
-                            } else {
-                                const firstKey = Object.keys(result.data)[0];
-                                if (firstKey && result.data[firstKey]) {
-                                    pdfUrl = result.data[firstKey].pdf_url || null;
-                                }
-                            }
-                        }
-
-                        if (pdfUrl) {
-                            // ── Transisi: modal → iframe PDF ──
-                            _frameState.pdfUrl   = pdfUrl;
-                            _frameState.mode     = 'iframe';
-                            _frameState.rendered = true;  // preserve state baru (iframe)
-
-                            // Perbarui title modal
-                            document.getElementById('ModalTitle').textContent = 'Preview Surat Keputusan';
-
-                            // Render iframe dengan pdf_url
-                            _renderIframe(pdfUrl, {
-                                'accept' : {
-                                    'label' : 'Selesai',
-                                    'class' : 'btn-success',
-                                    'action' : function() {
-                                        $('#ViewerModal').modal('hide');
-                                        window.location.reload();
-                                    }
-                                },
-                                'reject' : false,
-                                'back' : false,
-                            }, footerCallbacks);
-                        } else {
-                            // Tidak ada PDF → tutup modal, tampilkan pesan
-                            $('#ViewerModal').modal('hide');
-                            // Reset state agar bisa dibuka ulang
-                            _frameState.rendered = false;
-                            window.location.reload();
-                        }
-                    })
-                    .catch(err => {
-                        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Kirim & Simpan'; }
-                        console.error('[Frame] Submit error:', err);
-                        alert('Gagal mengajukan: ' + (err.message || JSON.stringify(err)));
-                    });
-                });
-            }
-
-            $('#Loading').hide();
-        })
-        .catch(() => {
-            $('#Loading').hide();
-            alert('Gagal memuat formulir. Silakan coba lagi.');
-        });
+        // Clean up on modal hide
+        const modalEl = document.getElementById('ViewerModal');
+        const handleHide = function() {
+            if (typeof options.onClose === 'function') options.onClose();
+            modalEl.removeEventListener('hidden.bs.modal', handleHide);
+        };
+        modalEl.addEventListener('hidden.bs.modal', handleHide);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // openSecureFrame — entry point utama
+    // openSecureFrame — entry point for iframe-only PDF viewing
     // Preserve: jika key sama dan sudah rendered, langsung tampilkan ulang
     // ─────────────────────────────────────────────────────────────────────────
     function openSecureFrame(type, category, id, footer={}) {
@@ -405,8 +199,7 @@
         if (_frameState.key === key && _frameState.rendered) {
             $('#ViewerModal').modal('show');
 
-            if (_frameState.mode === 'iframe' && _frameState.pdfUrl) {
-                // Langsung render ulang iframe (src sudah di-set sebelumnya)
+            if (_frameState.pdfUrl) {
                 let iframe = document.getElementById('iframe');
                 if (!iframe) {
                     iframe = document.createElement('iframe');
@@ -416,7 +209,6 @@
                     iframe.style.height = '100%';
                 }
                 const modalBody = document.querySelector('#ViewerModal .modal-body');
-                // Pastikan iframe ada di dalam modal-body
                 if (!modalBody.contains(iframe)) {
                     modalBody.innerHTML = '';
                     modalBody.style = '';
@@ -425,7 +217,6 @@
                 $('#Loading').hide();
                 $(iframe).show();
             }
-            // Untuk mode modal yang masih rendered, kontennya sudah di DOM
             return;
         }
 
@@ -475,14 +266,8 @@
 
             _frameState.mode = data.mode || 'iframe';
             _frameState.data = data;
-
-            if (_frameState.mode === 'modal') {
-                _frameState.rendered = true;
-                _renderModal(data.access_url, data.submit_url, data.footer, footer);
-            } else {
-                _frameState.rendered = true;
-                _renderIframe(data.access_url, data.footer, footer);
-            }
+            _frameState.rendered = true;
+            _renderIframe(data.access_url, data.footer, footer);
         })
         .catch(() => alert('Akses ditolak atau sesi berakhir.'));
     }

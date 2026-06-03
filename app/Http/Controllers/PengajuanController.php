@@ -26,11 +26,11 @@ class PengajuanController extends Controller
      */
     public function index(Request $request)
     {
-            $query = Pengajuan::where('user_id', Auth::id())
-                ->with('kendaraans:id,pengajuan_id,status')
-                ->with('cabang:id,nama,wilayah')
-                ->withCount('kendaraans')
-                ->latest();
+        $query = Pengajuan::where('user_id', Auth::id())
+            ->with('kendaraans:id,pengajuan_id,status')
+            ->with('cabang:id,nama,wilayah')
+            ->withCount('kendaraans')
+            ->latest();
 
         // Filter: search by nomor_pengajuan
         if ($request->filled('q')) {
@@ -336,11 +336,12 @@ class PengajuanController extends Controller
             'suratPengajuan',
             'suratKeputusans'
         ]);
-
+        error_log("Test");
         // Urutkan kendaraan berdasarkan created_at (yang pertama dibuat = nomor 1)
         $pengajuan->kendaraans = $pengajuan->kendaraans->sortBy('created_at')->values();
 
         $progress = $pengajuan->getTotalSurat();
+        error_log("Test");
 
         // 3. Tampilkan view
         return view('pengajuan.show', compact('pengajuan', 'progress'));
