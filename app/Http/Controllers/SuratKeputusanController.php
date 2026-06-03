@@ -301,90 +301,190 @@ class SuratKeputusanController extends Controller
 
         return $arrayResult;
     }
-    public function generateSkJR(Request $request, Pengajuan $pengajuan)
-    {
-        $request->validate([
-            'kendaraan_id' => ['required',
-                function($attribute, $value, $fail) {
-                    if ($value === 'all') return;
-                    if (!\App\Models\Kendaraan::where('id', $value)->exists()) {
-                        $fail('Kendaraan tidak ditemukan.');
-                    }
-                },
-            ],
-        ]);
 
-        // Ambil data kendaraan berdasarkan pilihan dari form modal
-        $kendaraan = $request->kendaraan_id === 'all'
-            ? $pengajuan->kendaraans()->with('pemilik')->get()
-            : $pengajuan->kendaraans()->with('pemilik')->where('id', $request->kendaraan_id)->get();
-
-        if ($kendaraan->isEmpty()) {
-            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
-        }
-
-        $arrayResult = [];
-
-        foreach ($kendaraan as $k) {
-            $arrayResult[$k->id] = [
-                'data'           => [],
-                'pdf_url'        => null,
-                'local_pdf_path' => null,
-            ];
-
-            // Jika bukan preview, cek apakah SK JR sudah ada untuk kendaraan ini
-            if (!$request->has('preview')) {
-                $existingSk = $k->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->first();
-                if ($existingSk) {
-                    $arrayResult[$k->id]['pdf_url']        = $existingSk->pdf_url;
-                    $arrayResult[$k->id]['local_pdf_path'] = $existingSk->local_pdf_path;
-                    continue;
+/**
+ * Generate PDF Surat Keputusan Jasa Raharja (Pembebasan SWDKLLJ)
+ * Mengikuti pola: arrayResult per kendaraan, preview mode, draft mode, WA dispatch
+ */
+public function generateSkJasaRaharja(Request $request, Pengajuan $pengajuan)
+{
+    $request->validate([
+        'kendaraan_id' => ['required', 
+            function($attribute, $value, $fail) {
+                if ($value === 'all') return;
+                if (!\App\Models\Kendaraan::where('id', $value)->exists()) {
+                    $fail('Kendaraan tidak ditemukan.');
                 }
-            }
+            },
+        ],
+        'tanggal_surat_permohonan' => 'required',
+        'nomor_surat_regident' => 'required',
+        'tanggal_surat_regident' => 'required',
+        'nomor_surat_bapenda' => 'nullable',
+        'tanggal_surat_bapenda' => 'nullable',
+        'nomor_keputusan' => 'required',
+        'tempat_sk' => 'required',
+        'tanggal_sk' => 'required',
+        'nama_penandatangan' => 'required',
+        'metode_penanda_tangan' => 'required|in:ttd_elektronik,ttd_basah',
+    ]);
 
-            // Generate PDF (dummy view_sk — ganti dengan PDF JR yang sesungguhnya)
-            $pdf = Pdf::loadView('pdf.view_sk', ['sk' => (object)[
-                'nomor_sk'  => null,
-                'kendaraan' => $k,
-            ]])->setPaper('a4', 'portrait');
+    // Ambil data kendaraan (support 'all' atau single)
+    $kendaraan = $request->kendaraan_id === 'all'
+        ? $pengajuan->kendaraans()->with('pemilik')->get()
+        : $pengajuan->kendaraans()->with('pemilik')->where('id', $request->kendaraan_id)->get();
 
-            if ($request->has('preview')) {
-                $previewDir = 'sk/preview';
-                $prefix = Auth::id() . '_' . $k->id . '_jr_';
-                $existingFiles = Storage::disk('public')->files($previewDir);
-                foreach ($existingFiles as $file) {
-                    if (str_starts_with(basename($file), $prefix)) {
-                        Storage::disk('public')->delete($file);
-                    }
-                }
-                $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
-            } else {
-                $filename    = 'SK_JR_' . str_replace(' ', '_', $k->nrkb) . '_' . time() . '.pdf';
-                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
-            }
-
-            Storage::disk('public')->put($storagePath, $pdf->output());
-            $pdfUrlAbsolute = asset('storage/' . $storagePath);
-            $localPdfPath   = Storage::disk('public')->path($storagePath);
-
-            if (!$request->has('preview')) {
-                $log = $this->logSuratActionByKendaraanId(
-                    $pengajuan,
-                    $k->id,
-                    'SK Jasa Raharja berhasil diterbitkan',
-                    'Catatan: ' . ($request->catatan ?? '-'),
-                    storage_path('app/public/' . $storagePath)
-                );
-                $arrayResult[$k->id]['log_id'] = $log->id;
-            }
-
-            $arrayResult[$k->id]['pdf_url']        = $pdfUrlAbsolute;
-            $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
-        }
-
-        return $arrayResult;
+    if ($kendaraan->isEmpty()) {
+        return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
     }
 
+    $arrayResult = [];
+
+    foreach ($kendaraan as $k) {
+        $pemilik = optional($k->pemilik);
+        
+        $dataPdf = [
+            // Data Surat Keputusan JR
+            'nomor_keputusan' => strtoupper($request->nomor_keputusan),
+            'tempat_sk' => strtoupper($request->tempat_sk),
+            'tanggal_sk' => strtoupper($request->tanggal_sk),
+            'nama_penandatangan' => strtoupper($request->nama_penandatangan),
+            'jabatan_penandatangan' => 'KEPALA KANTOR WILAYAH PT JASA RAHARJA JAWA TENGAH',
+            'metode_penanda_tangan' => $request->metode_penanda_tangan,
+            
+            // Data Surat Referensi (Menimbang)
+            'tanggal_surat_permohonan' => strtoupper($request->tanggal_surat_permohonan),
+            'nomor_surat_regident' => strtoupper($request->nomor_surat_regident),
+            'tanggal_surat_regident' => strtoupper($request->tanggal_surat_regident),
+            'nomor_surat_bapenda' => $request->nomor_surat_bapenda ? strtoupper($request->nomor_surat_bapenda) : '-',
+            'tanggal_surat_bapenda' => $request->tanggal_surat_bapenda ? strtoupper($request->tanggal_surat_bapenda) : '-',
+            
+            // Data Kendaraan & Pemilik (format objek konsisten dengan method lain)
+            'data' => (object)[
+                'nama' => strtoupper($pemilik->nama_pemilik ?? '-'),
+                'alamat' => strtoupper($pemilik->alamat_pemilik ?? '-'),
+                'nik' => strtoupper($pemilik->nik_pemilik ?? '-'),
+                'no_tlp' => strtoupper($pemilik->telp_pemilik ?? '-'),
+                'email' => strtoupper($pemilik->email_pemilik ?? '-'),
+                'nrkb' => strtoupper($k->nrkb ?? '-'),
+                'merek' => strtoupper($k->merk_kendaraan ?? '-'),
+                'tipe' => strtoupper($k->tipe_kendaraan ?? '-'),
+                'jenis' => strtoupper($k->jenis_kendaraan ?? '-'),
+                'model' => strtoupper($k->model_kendaraan ?? '-'),
+                'tahun' => strtoupper($k->tahun_pembuatan ?? '-'),
+                'isi_silinder' => strtoupper($k->isi_silinder ?? '-'),
+                'no_rangka' => strtoupper($k->nomor_rangka ?? '-'),
+                'no_mesin' => strtoupper($k->nomor_mesin ?? '-'),
+                'warna_kendaraan' => strtoupper($k->warna_kendaraan ?? '-'),
+                'bahan_bakar' => strtoupper($k->jenis_bahan_bakar ?? '-'),
+                'warna_tnkb' => strtoupper($k->warna_tnkb ?? '-'),
+                'no_bpkb' => strtoupper($k->nomor_bpkb ?? '-'),
+                // Tambahan field khusus JR
+                'merk_type' => strtoupper(trim(($k->merk_kendaraan ?? '') . ' / ' . ($k->tipe_kendaraan ?? '-'))),
+                'no_rangka_mesin' => strtoupper(trim(($k->nomor_rangka ?? '') . ' / ' . ($k->nomor_mesin ?? '-'))),
+                'jenis_model' => strtoupper(trim(($k->jenis_kendaraan ?? '') . ' / ' . ($k->model_kendaraan ?? '-'))),
+            ],
+        ];
+
+        $arrayResult[$k->id] = [
+            'data' => $dataPdf,
+            'pdf_url' => null,
+            'local_pdf_path' => null,
+        ];
+        
+        // Cek apakah SK JR sudah ada untuk kendaraan ini (skip jika sudah)
+        if (!$request->has('preview')) {
+            $existingSk = $k->suratKeputusans()->where('unit_kerja', 'JR')->first();
+            if ($existingSk) {
+                $arrayResult[$k->id]['pdf_url'] = $existingSk->pdf_url;
+                $arrayResult[$k->id]['local_pdf_path'] = $existingSk->local_pdf_path;
+                continue;
+            }
+        }
+
+        // Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_jasa_raharja_pembebasan', $dataPdf)
+            ->setPaper('a4', 'portrait');
+            
+        if ($request->has('preview')) {
+            $previewDir = 'sk/preview';
+            $prefix = Auth::id() . '_' . $k->id . '_jr_pembebasan_';
+            $existingFiles = Storage::disk('public')->files($previewDir);
+            foreach ($existingFiles as $file) {
+                if (str_starts_with(basename($file), $prefix)) {
+                    Storage::disk('public')->delete($file);
+                }
+            }
+            $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+        } else {
+            $filename = 'SK_JR_PEMBEBASAN_' . str_replace([' ', '/'], '_', $k->nrkb) . '_' . str_replace('/', '_', $dataPdf['nomor_keputusan']) . '.pdf';
+            $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+        }
+
+        // Handle TTD Basah: jika mode basah & bukan preview, PDF tidak langsung di-generate
+        $ttd_basah = $request->metode_penanda_tangan == 'ttd_basah';
+        if (!$ttd_basah || $request->has('preview')) {
+            Storage::disk('public')->put($storagePath, $pdf->output());
+            $pdfUrlAbsolute = asset('storage/' . $storagePath);
+            $localPdfPath = Storage::disk('public')->path($storagePath);    
+        } else {
+            $pdfUrlAbsolute = null;
+            $localPdfPath = null;
+        }
+
+        // Catat log jika bukan preview
+        if (!$request->has('preview')) {
+            $log = $this->logSuratActionByKendaraanId(
+                $pengajuan,
+                $k->id,
+                'SK Jasa Raharja Pembebasan berhasil diterbitkan',
+                'Nomor Keputusan: ' . $request->nomor_keputusan,
+                !$ttd_basah ? storage_path('app/public/' . $storagePath) : null
+            );
+            $arrayResult[$k->id]['log_id'] = $log->id;
+        }
+
+        $arrayResult[$k->id]['pdf_url'] = $pdfUrlAbsolute;
+        $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
+    }
+
+    // Dispatch WhatsApp Notification (non-blocking) jika bukan preview
+    if (!isset($request->preview)) {
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp) {
+            try {
+                if ($request->kendaraan_id === 'all') {
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan: $pengajuan,
+                        kendaraan: null,
+                        skType: 'jr_pembebasan',
+                        pdfUrl: null,
+                        localPdfPath: null,
+                        wpPhone: $wpUser->no_hp,
+                        wpName: $wpUser->name,
+                        nrkb: null,
+                    );
+                } else {
+                    $k = $kendaraan->first();
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan: $pengajuan,
+                        kendaraan: $k,
+                        skType: 'jr_pembebasan',
+                        pdfUrl: $arrayResult[$k->id]['pdf_url'] ?? null,
+                        localPdfPath: $arrayResult[$k->id]['local_pdf_path'] ?? null,
+                        wpPhone: $wpUser->no_hp,
+                        wpName: $wpUser->name,
+                        nrkb: $k->nrkb,
+                    );
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK JR Pembebasan): ' . $e->getMessage());
+            }
+        }
+    }
+
+    return $arrayResult;
+}
     public function generateSkRegident(Request $request, Pengajuan $pengajuan)
     {
         
@@ -786,7 +886,7 @@ class SuratKeputusanController extends Controller
                 break;
             case 'JR':
                 $unitKerja = 'Jasa Raharja';
-                $data = $this->generateSkJR($request, $pengajuan);
+                $data = $this->generateSkJasaRaharja($request, $pengajuan);
                 break;
             default:
                 $unitKerja = 'Unit Kerja Lain';
