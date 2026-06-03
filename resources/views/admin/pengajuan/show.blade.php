@@ -4,6 +4,30 @@
         $totalSurat = 9;
         $progressValue = max(0, min((int) ($progress ?? 0), $totalSurat));
         $progressPercent = (int) round(($progressValue / $totalSurat) * 100);
+
+        // Hitung total dokumen resmi
+        $docsCount = 0;
+        if (!empty($pengajuan->suratKeputusan)) {
+            foreach ($pengajuan->suratKeputusan as $sk) {
+                if (!empty($sk->pdf_url)) {
+                    $docsCount++;
+                }
+            }
+        }
+        if (!empty($pengajuan->suratPengajuan)) {
+            foreach ($pengajuan->suratPengajuan as $sp) {
+                if (!empty($sp->pdf_url)) {
+                    $docsCount++;
+                }
+                if (!empty($sp->persetujuan_unit_kerja) && is_array($sp->persetujuan_unit_kerja)) {
+                    foreach ($sp->persetujuan_unit_kerja as $item) {
+                        if (!empty($item['pdf_url'])) {
+                            $docsCount++;
+                        }
+                    }
+                }
+            }
+        }
     @endphp
     <x-slot name="header">
        <div class="card border-0 shadow-sm mb-3 top-summary-card">
@@ -40,20 +64,17 @@
         @can('view_daftar_kendaraan')
         <div class="col-12">
             
-            <div class="card border-0 shadow-sm panel-card">
+            <div class="card border-0 shadow-sm panel-card mb-3">
                 @if($canUpdateBatch)
                 {{-- Form 'batchUpdate' SEKARANG DIMULAI DI SINI --}}
                 <form action="{{ route('admin.pengajuan.batchUpdate', $pengajuan) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
                     
-                    <div class="card-header panel-header d-flex flex-wrap justify-content-between align-items-center">
-                        <h4 class="card-title mb-2 mb-md-0">
+                    <div class="card-header panel-header">
+                        <h4 class="card-title mb-0">
                             Daftar Kendaraan (Total: {{ $pengajuan->kendaraans->count() }})
                         </h4>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Simpan Status
-                        </button>
                     </div>
                     <div class="card-body panel-body">
                         <div class="table-responsive">
@@ -64,7 +85,7 @@
                                         <th style="width: 15%;">Merk / Tipe</th>
                                         <th style="width: 15%;">Pemilik</th>
                                         <th style="width: 10%;">Status</th>
-                                        <th style="width: 15%;">Ubah Status</th>
+                                        <th style="width: 25%;">Ubah Status Pengajuan</th>
                                         <th style="width: 20%;" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -99,16 +120,16 @@
                                                 </select>
                                             </td>
  
-                                            {{-- Kolom Aksi (View) --}}
-                                            <td class="text-center">
-                                                <a href="{{ route('kendaraan.show', $kendaraan) }}" class="btn btn-sm btn-info" title="Lihat Detail & Dokumen" target="_blank">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </td>
+                                             {{-- Kolom Aksi (Submit Status) --}}
+                                             <td class="text-center">
+                                                 <button type="submit" class="btn btn-sm btn-primary">
+                                                     <i class="fas fa-save me-1"></i>Simpan Status
+                                                 </button>
+                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted py-3"> {{-- Colspan jadi 8 --}}
+                                            <td colspan="6" class="text-center text-muted py-3">
                                                 Bundel ini belum memiliki kendaraan.
                                             </td>
                                         </tr>
@@ -124,32 +145,40 @@
         </div>
         @endcan
 
-        <!-- === TABS: Log & Diskusi | Detail Kendaraan === -->
-        <div class="col-12 mt-4">
-            <ul class="nav nav-tabs nav-tabs-custom" id="pengajuanTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tab-log" data-bs-toggle="tab" data-bs-target="#panel-log" type="button" role="tab" aria-controls="panel-log" aria-selected="true">
-                        <i class="fas fa-comments me-2"></i>Log & Diskusi
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-detail" data-bs-toggle="tab" data-bs-target="#panel-detail" type="button" role="tab" aria-controls="panel-detail" aria-selected="false">
-                        <i class="fas fa-car me-2"></i>Detail Kendaraan
-                    </button>
-                </li>
-            </ul>
-
-            <div class="tab-content" id="pengajuanTabContent">
+        <!-- === TABS: Log & Diskusi | Detail Kendaraan | Dokumen === -->
+        <div class="col-12 mt-0">
+            <div class="shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom-0 p-3 pb-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <ul class="nav nav-tabs nav-tabs-custom mb-0 mt-0" id="pengajuanTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-log" data-bs-toggle="tab" data-bs-target="#panel-log" type="button" role="tab" aria-controls="panel-log" aria-selected="true">
+                                <i class="fas fa-comments me-2"></i>Log & Diskusi
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-detail" data-bs-toggle="tab" data-bs-target="#panel-detail" type="button" role="tab" aria-controls="panel-detail" aria-selected="false">
+                                <i class="fas fa-car me-2"></i>Detail Kendaraan
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-dokumen" data-bs-toggle="tab" data-bs-target="#panel-dokumen" type="button" role="tab" aria-controls="panel-dokumen" aria-selected="false">
+                                <i class="fas fa-file-pdf me-2"></i>Dokumen <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">{{ $docsCount }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-4 pt-2 bg-white" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                    <div class="tab-content" id="pengajuanTabContent">
                 {{-- Tab 1: Log & Diskusi --}}
                 <div class="tab-pane fade show active" id="panel-log" role="tabpanel" aria-labelledby="tab-log">
-                    <div class="pt-3">
+                    <div class="pt-0">
                         @includeWhen(true, 'pengajuan.partials.logs', ['admin' => true])
                     </div>
                 </div>
 
                 {{-- Tab 2: Detail Kendaraan --}}
                 <div class="tab-pane fade" id="panel-detail" role="tabpanel" aria-labelledby="tab-detail">
-                    <div class="pt-3">
+                    <div class="pt-0">
                         {{-- Pilih Kendaraan --}}
                         <div class="card mb-4 border-0 shadow-sm vehicle-switcher-card">
                             <div class="card-body p-4">
@@ -194,9 +223,17 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Tab 3: Dokumen --}}
+                <div class="tab-pane fade" id="panel-dokumen" role="tabpanel" aria-labelledby="tab-dokumen">
+                    <div class="pt-0">
+                        @includeIf('pengajuan.partials.dokumen')
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
     <script>
         function applyKendaraanFilter(kendaraanId) {
@@ -252,7 +289,7 @@
     <style>
         /* Custom Tabs */
         .nav-tabs-custom {
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0 !important;
             gap: 1.5rem;
             display: flex;
             flex-wrap: nowrap;
@@ -267,25 +304,25 @@
         }
 
         .nav-tabs-custom .nav-link {
-            border: none;
+            border: none !important;
             color: #64748b;
             font-weight: 600;
             padding: 0.75rem 0.5rem;
             position: relative;
-            background: transparent;
+            background: transparent !important;
             transition: color 0.2s ease;
             white-space: nowrap;
         }
 
         .nav-tabs-custom .nav-link:hover {
-            color: #0f172a;
-            border: none;
+            color: #0f172a !important;
+            border: none !important;
         }
 
         .nav-tabs-custom .nav-link.active {
-            color: #2f86df;
-            background: transparent;
-            border: none;
+            color: #2f86df !important;
+            background: transparent !important;
+            border: none !important;
         }
 
         .nav-tabs-custom .nav-link.active::after {

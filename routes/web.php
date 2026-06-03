@@ -121,6 +121,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/pengajuan/{pengajuan}/generate-sk-pembebasan', [AdminPengajuanController::class, 'generateSkPembebasan'])->name('pengajuan.generate_sk_pembebasan');
             Route::post('/pengajuan/{pengajuan}/generate-sk-penghapusan-regident', [AdminPengajuanController::class, 'generateSkPenghapusanRegident'])->name('pengajuan.generate_sk_penghapusan_regident');
             Route::post('/pengajuan/{pengajuan}/generate-sk-jasa-raharja', [AdminPengajuanController::class, 'generateSkJasaRaharja'])->name('pengajuan.generate_sk_jasa_raharja');
+            Route::post('/pengajuan/{pengajuan}/generate-sp-balasan-jr', [AdminPengajuanController::class, 'generateSpBalasanJR'])->name('pengajuan.generate_sp_balasan_jr');
         });
 
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
@@ -168,7 +169,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // === TEMPORARY: Preview SK PDF (hapus setelah controller siap) ===
     Route::get('/preview-sk-regident', function () {
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_penghapusan_regident', [
+        $pdf = Pdf::loadView('pdf.sk_penghapusan_regident', [
             'kendaraan' => (object) [
                 'nrkb' => 'AA 9660 QE',
                 'merk_kendaraan' => 'VIAR',
@@ -217,13 +218,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'alasan' => 'Permintaan penghapusan data oleh pemilik'
         ];
 
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.view_hapus-regident', $data)
+        return Pdf::loadView('pdf.view_hapus-regident', $data)
             ->setPaper('a4', 'portrait')
             ->stream('hapus-regident-test.pdf');
     })->name('test.pdf.hapus-regident');
 
     Route::get('/preview-sk-polda', function () {
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_polda', [
+        $pdf = Pdf::loadView('pdf.sk_polda', [
             'data' => (object) [
                 'nrkb' => 'AA 9660 QE',
                 'nama' => 'PEMERINTAH DESA GANDUWETAN',

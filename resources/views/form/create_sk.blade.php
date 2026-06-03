@@ -23,7 +23,6 @@
                     <label class="form-label fw-bold">Pilih Kendaraan</label>
                     <select class="form-select" name="kendaraan_id" required>
                         <option value="">-- Pilih Kendaraan (NRKB) --</option>
-                        <option value="all">Semua Kendaraan</option>
                         @foreach($pengajuan->kendaraans as $k)
                             @if ($k->suratKeputusans->where('unit_kerja', $normalizedUnitKerja)->count() > 0)
                                 @continue
@@ -31,7 +30,7 @@
                             <option value="{{ $k->id }}">{{ $k->nrkb }} - {{ $k->merk_kendaraan }}</option>
                         @endforeach
                     </select>
-                    <small class="text-muted d-block mt-1">Pilih kendaraan spesifik atau "Semua Kendaraan" untuk membuat SK sekaligus.</small>
+                    <small class="text-muted d-block mt-1">Pilih kendaraan spesifik untuk membuat SK.</small>
                 </div>
             </div>
 

@@ -3,6 +3,30 @@
         $totalSurat = 9;
         $progressValue = max(0, min((int) ($progress ?? 0), $totalSurat));
         $progressPercent = (int) round(($progressValue / $totalSurat) * 100);
+
+        // Hitung total dokumen resmi
+        $docsCount = 0;
+        if (!empty($pengajuan->suratKeputusan)) {
+            foreach ($pengajuan->suratKeputusan as $sk) {
+                if (!empty($sk->pdf_url)) {
+                    $docsCount++;
+                }
+            }
+        }
+        if (!empty($pengajuan->suratPengajuan)) {
+            foreach ($pengajuan->suratPengajuan as $sp) {
+                if (!empty($sp->pdf_url)) {
+                    $docsCount++;
+                }
+                if (!empty($sp->persetujuan_unit_kerja) && is_array($sp->persetujuan_unit_kerja)) {
+                    foreach ($sp->persetujuan_unit_kerja as $item) {
+                        if (!empty($item['pdf_url'])) {
+                            $docsCount++;
+                        }
+                    }
+                }
+            }
+        }
     @endphp
     <x-slot name="header">
         <div class="card border-0 shadow-sm mb-3 top-summary-card">
@@ -40,32 +64,40 @@
         </div>
     @endif
 
-    <!-- === TABS: Log & Diskusi | Pilih Kendaraan === -->
-    <div class="col-12 mt-4">
-        <ul class="nav nav-tabs nav-tabs-custom mb-3" id="pengajuanTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="tab-log" data-bs-toggle="tab" data-bs-target="#panel-log" type="button" role="tab" aria-controls="panel-log" aria-selected="true">
-                    <i class="fas fa-comments me-2"></i>Log & Diskusi
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tab-detail" data-bs-toggle="tab" data-bs-target="#panel-detail" type="button" role="tab" aria-controls="panel-detail" aria-selected="false">
-                    <i class="fas fa-car me-2"></i>Pilih Kendaraan
-                </button>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="pengajuanTabContent">
+    <!-- === TABS: Log & Diskusi | Pilih Kendaraan | Dokumen === -->
+    <div class="col-12 mt-0">
+        <div class="shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom-0 p-3 pb-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <ul class="nav nav-tabs nav-tabs-custom mb-0 mt-0" id="pengajuanTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-log" data-bs-toggle="tab" data-bs-target="#panel-log" type="button" role="tab" aria-controls="panel-log" aria-selected="true">
+                            <i class="fas fa-comments me-2"></i>Log & Diskusi
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-detail" data-bs-toggle="tab" data-bs-target="#panel-detail" type="button" role="tab" aria-controls="panel-detail" aria-selected="false">
+                            <i class="fas fa-car me-2"></i>Pilih Kendaraan
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-dokumen" data-bs-toggle="tab" data-bs-target="#panel-dokumen" type="button" role="tab" aria-controls="panel-dokumen" aria-selected="false">
+                            <i class="fas fa-file-pdf me-2"></i>Dokumen <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">{{ $docsCount }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body p-4 pt-2 bg-white" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                <div class="tab-content" id="pengajuanTabContent">
             {{-- Tab 1: Log & Diskusi --}}
             <div class="tab-pane fade show active" id="panel-log" role="tabpanel" aria-labelledby="tab-log">
-                <div class="pt-2">
+                <div class="pt-0">
                     @includeIf('pengajuan.partials.logs')
                 </div>
             </div>
 
             {{-- Tab 2: Pilih Kendaraan --}}
             <div class="tab-pane fade" id="panel-detail" role="tabpanel" aria-labelledby="tab-detail">
-                <div class="pt-2">
+                <div class="pt-0">
                     {{-- Tab Kendaraan --}}
                     @if($pengajuan->kendaraans->count() > 0)
                     <div class="card mb-4 border-0 shadow-sm vehicle-switcher-card">
@@ -295,6 +327,13 @@
                         @endif
                     </div>
                 </div>
+
+                {{-- Tab 3: Dokumen --}}
+                <div class="tab-pane fade" id="panel-dokumen" role="tabpanel" aria-labelledby="tab-dokumen">
+                    <div class="pt-0">
+                        @includeIf('pengajuan.partials.dokumen')
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -357,7 +396,7 @@
 
         /* Custom Tabs */
         .nav-tabs-custom {
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0 !important;
             gap: 1.5rem;
             display: flex;
             flex-wrap: nowrap;
@@ -372,25 +411,25 @@
         }
 
         .nav-tabs-custom .nav-link {
-            border: none;
+            border: none !important;
             color: #64748b;
             font-weight: 600;
             padding: 0.75rem 0.5rem;
             position: relative;
-            background: transparent;
+            background: transparent !important;
             transition: color 0.2s ease;
             white-space: nowrap;
         }
 
         .nav-tabs-custom .nav-link:hover {
-            color: #0f172a;
-            border: none;
+            color: #0f172a !important;
+            border: none !important;
         }
 
         .nav-tabs-custom .nav-link.active {
-            color: #2f86df;
-            background: transparent;
-            border: none;
+            color: #2f86df !important;
+            background: transparent !important;
+            border: none !important;
         }
 
         .nav-tabs-custom .nav-link.active::after {

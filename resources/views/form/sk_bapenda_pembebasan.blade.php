@@ -21,7 +21,6 @@
                     <label class="form-label fw-bold">Pilih Kendaraan</label>
                     <select class="form-select" name="kendaraan_id" required>
                         <option value="">-- Pilih Kendaraan (NRKB) --</option>
-                        <option value="all">Semua Kendaraan</option>
                         @foreach($pengajuan->kendaraans as $k)
                             @if ($k->suratKeputusans->where('unit_kerja', $normalizedUnitKerja)->count() > 0)
                                 @continue

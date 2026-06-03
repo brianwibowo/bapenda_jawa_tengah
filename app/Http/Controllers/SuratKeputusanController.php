@@ -394,7 +394,7 @@ public function generateSkJasaRaharja(Request $request, Pengajuan $pengajuan)
         
         // Cek apakah SK JR sudah ada untuk kendaraan ini (skip jika sudah)
         if (!$request->has('preview')) {
-            $existingSk = $k->suratKeputusans()->where('unit_kerja', 'JR')->first();
+            $existingSk = $k->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->first();
             if ($existingSk) {
                 $arrayResult[$k->id]['pdf_url'] = $existingSk->pdf_url;
                 $arrayResult[$k->id]['local_pdf_path'] = $existingSk->local_pdf_path;
@@ -403,7 +403,7 @@ public function generateSkJasaRaharja(Request $request, Pengajuan $pengajuan)
         }
 
         // Generate PDF
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_jasa_raharja_pembebasan', $dataPdf)
+        $pdf = Pdf::loadView('pdf.sk_jasa_raharja_pembebasan', $dataPdf)
             ->setPaper('a4', 'portrait');
             
         if ($request->has('preview')) {
@@ -745,7 +745,7 @@ public function generateSkJasaRaharja(Request $request, Pengajuan $pengajuan)
             }
 
 
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
+            $pdf = Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
             $pdf->setPaper('a4', 'portrait');
             if ($request->has('preview')) {
                 $previewDir = 'sk/preview';
