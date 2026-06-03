@@ -2,7 +2,7 @@
 <div class="modal fade" id="modalSkJasaRaharja" tabindex="-1" aria-labelledby="modalSkJasaRaharjaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="{{ route('admin.pengajuan.generate_sk_jasa_raharja', $pengajuan->id) }}" id="formSkJasaRaharjaDraft" method="POST" enctype="multipart/form-data">
+            <form id="formSkJasaRaharjaDraft" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="draft_mode" value="1">
                 <div class="modal-header bg-warning text-dark">

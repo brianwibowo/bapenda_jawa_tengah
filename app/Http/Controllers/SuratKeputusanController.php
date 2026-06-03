@@ -934,6 +934,9 @@ public function generateSkJasaRaharja(Request $request, Pengajuan $pengajuan)
             if (!$request->has('draft_mode')) {
                 $totalSkByUnitKerja = $k->suratKeputusans()
                     ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'Jasa Raharja'])
+                    ->whereDoesntHave('log', function($q) {
+                        $q->where('sk_status', 'draft');
+                    })
                     ->distinct('unit_kerja')
                     ->count('unit_kerja');
 

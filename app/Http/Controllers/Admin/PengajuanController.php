@@ -97,7 +97,7 @@ class PengajuanController extends Controller
             'kendaraans.logs.user', // Ambil log per kendaraan
             'kendaraans.logs.media', // Ambil lampiran log per kendaraan
             'suratPengajuan',
-            'suratKeputusans'
+            'suratKeputusans.log'
         ]);
 
         $progress = $pengajuan->getTotalSurat();
@@ -621,6 +621,9 @@ class PengajuanController extends Controller
             $kendaraan->refresh();
             $totalSkByUnitKerja = $kendaraan->suratKeputusans()
                 ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'Jasa Raharja'])
+                ->whereDoesntHave('log', function($q) {
+                    $q->where('sk_status', 'draft');
+                })
                 ->distinct('unit_kerja')
                 ->count('unit_kerja');
 

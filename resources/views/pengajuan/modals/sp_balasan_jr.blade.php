@@ -6,7 +6,7 @@
 <div class="modal fade" id="modalSkBalasanJR" tabindex="-1" aria-labelledby="modalSkBalasanJRLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="{{ route('admin.pengajuan.generate_sp_balasan_jr', $pengajuan->id) }}" id="formSpBalasanJR" method="POST">
+            <form id="formSpBalasanJR" method="POST">
                 @csrf
 
                 {{-- Header --}}

@@ -5,6 +5,9 @@
             // Extract SK PDFs
             if (!empty($pengajuan->suratKeputusan)) {
                 foreach ($pengajuan->suratKeputusan as $sk) {
+                    if ($sk->isDraft()) {
+                        continue;
+                    }
                     if (!empty($sk->pdf_url)) {
                         $docs->push((object)[
                             'pdf_url' => $sk->pdf_url,

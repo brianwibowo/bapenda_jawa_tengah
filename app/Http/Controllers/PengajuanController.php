@@ -334,7 +334,7 @@ class PengajuanController extends Controller
             'kendaraans.logs.user', // log per kendaraan
             'kendaraans.logs.media', // lampiran log per kendaraan
             'suratPengajuan',
-            'suratKeputusans'
+            'suratKeputusans.log'
         ]);
 
         // Urutkan kendaraan berdasarkan created_at (yang pertama dibuat = nomor 1)

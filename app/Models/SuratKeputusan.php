@@ -60,4 +60,14 @@ class SuratKeputusan extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function log() {
+        return $this->hasOne(KendaraanLog::class, 'sk_id');
+    }
+
+    public function isDraft(): bool {
+        if ($this->relationLoaded('log')) {
+            return $this->log ? $this->log->sk_status === 'draft' : false;
+        }
+        return $this->log()->where('sk_status', 'draft')->exists();
+    }
 }
