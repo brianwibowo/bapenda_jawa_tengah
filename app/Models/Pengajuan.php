@@ -155,7 +155,7 @@ class Pengajuan extends Model implements HasMedia
         $suratTerpenuhi = 0;
 
         // Cek Surat Pengajuan ke Samsat
-        if ($this->hasSuratPengajuanByInstansi($suratpengajuan, 'Polda')) {
+        if ($this->hasPublishedSuratPengajuanByInstansi($suratpengajuan, 'Polda')) {
             $suratTerpenuhi++;
         }
         // Cek Surat Pengajuan ke Polda
@@ -163,17 +163,17 @@ class Pengajuan extends Model implements HasMedia
             $suratTerpenuhi++;
         }
         // Cek Surat Pengajuan Pending ke Bapenda/JR
-        if ($this->hasSuratPengajuanByInstansi($suratpengajuan, 'Bapenda')) {
+        if ($this->hasPublishedSuratPengajuanByInstansi($suratpengajuan, 'Bapenda')) {
             $suratTerpenuhi++;
         }
-        if ($this->hasSuratPengajuanByInstansi($suratpengajuan, 'Jasa Raharja')) {
+        if ($this->hasPublishedSuratPengajuanByInstansi($suratpengajuan, 'Jasa Raharja')) {
             $suratTerpenuhi++;
          }
         // Cek Surat Pengajuan ke Bapenda/JR ( dari persetujuan_unit_kerja json key 'instansi' dengan value 'bapenda' atau 'jasa_raharja' )
-        if ($this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Bapenda')) {
+        if ($this->hasApprovedAndPublishedSuratPengajuanByInstansi($suratpengajuan, 'Bapenda')) {
             $suratTerpenuhi++;
         }
-        if ($this->hasApprovedSuratPengajuanByInstansi($suratpengajuan, 'Jasa Raharja')) {
+        if ($this->hasApprovedAndPublishedSuratPengajuanByInstansi($suratpengajuan, 'Jasa Raharja')) {
             $suratTerpenuhi++;
         }
         // Cek Surat Keputusan dari Polda
@@ -187,9 +187,33 @@ class Pengajuan extends Model implements HasMedia
             $curSkBapenda = $k->suratKeputusans()->where('unit_kerja', 'Bapenda')->first();
             $curSkJR = $k->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->first();
 
-            if ($curSkPolda && $curSkPolda->local_pdf_path) $totalSkPolda++;
-            if ($curSkBapenda && $curSkBapenda->local_pdf_path) $totalSkBapenda++;
-            if ($curSkJR && $curSkJR->local_pdf_path) $totalSkJR++;
+            if ($curSkPolda && $curSkPolda->local_pdf_path) {
+                $isPublished = KendaraanLog::where('kendaraan_id', $k->id)
+                    ->where('sk_id', $curSkPolda->id)
+                    ->where('sk_status', 'terbit')
+                    ->exists();
+                if ($isPublished) {
+                    $totalSkPolda++;
+                }
+            }
+            if ($curSkBapenda && $curSkBapenda->local_pdf_path) {
+                $isPublished = KendaraanLog::where('kendaraan_id', $k->id)
+                    ->where('sk_id', $curSkBapenda->id)
+                    ->where('sk_status', 'terbit')
+                    ->exists();
+                if ($isPublished) {
+                    $totalSkBapenda++;
+                }
+            }
+            if ($curSkJR && $curSkJR->local_pdf_path) {
+                $isPublished = KendaraanLog::where('kendaraan_id', $k->id)
+                    ->where('sk_id', $curSkJR->id)
+                    ->where('sk_status', 'terbit')
+                    ->exists();
+                if ($isPublished) {
+                    $totalSkJR++;
+                }
+            }
         }
 
         if ($totalSkPolda == $totalKendaraan) {
@@ -278,6 +302,56 @@ class Pengajuan extends Model implements HasMedia
                 return strcasecmp($item['instansi'] ?? '', $instansi) === 0
                     && (($item['status'] ?? null) === 'pending');
             });
+        });
+    }
+
+    private function hasPublishedSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
+    {
+        return $suratPengajuanCollection->contains(function ($sp) use ($instansi) {
+            // Cek apakah SP ini ditargetkan ke instansi tersebut
+            $hasTarget = collect($sp->persetujuan_unit_kerja ?? [])->contains(function ($item) use ($instansi) {
+                return strcasecmp($item['instansi'] ?? '', $instansi) === 0;
+            });
+
+            if (!$hasTarget) {
+                return false;
+            }
+
+            // Polda's SP must be published (sp_status !== 'draft')
+            $isDraft = KendaraanLog::where('sp_id', $sp->id)
+                ->where('sp_status', 'draft')
+                ->whereHas('user', function ($q) {
+                    $q->where('unit_kerja', 'Polda');
+                })
+                ->exists();
+
+            return !$isDraft;
+        });
+    }
+
+    private function hasApprovedAndPublishedSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
+    {
+        return $suratPengajuanCollection->contains(function ($sp) use ($instansi) {
+            // 1. Cek approval status in JSON
+            $approvedInJson = collect($sp->persetujuan_unit_kerja ?? [])->contains(function ($item) use ($instansi) {
+                return strcasecmp($item['instansi'] ?? '', $instansi) === 0
+                    && (($item['status'] ?? null) === 'approved');
+            });
+
+            if (!$approvedInJson) {
+                return false;
+            }
+
+            // 2. Cek published status in KendaraanLog
+            // Non-default SP Balasan must be published (sp_status !== 'draft')
+            $isDraft = KendaraanLog::where('sp_id', $sp->id)
+                ->where('sp_status', 'draft')
+                ->whereHas('user', function ($q) use ($instansi) {
+                    $q->where('unit_kerja', $instansi);
+                })
+                ->exists();
+
+            return !$isDraft;
         });
     }
 }

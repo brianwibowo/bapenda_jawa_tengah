@@ -5,6 +5,7 @@
     </div>
     <div class="card-body">
         @php
+            $unitkerja = Auth::user()->unit_kerja;
             $docs = collect();
 
             // Extract SK PDFs
@@ -99,23 +100,33 @@
                 @if(!empty($admin) && $admin)
                     {{-- Tombol Dinamis SP (Hanya Admin) — Standalone Modal --}}
                     @if(!empty($permissionSurat['canAjukanSP']))
-                        @if(Auth::user()->unit_kerja == 'Samsat')
-                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpDefault">
+                        @if($unitkerja == 'Samsat')
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpSamsat">
                                 <i class="fas fa-paper-plane me-1"></i> Buat Pengajuan ke Polda
                             </button>
                         @else
-                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpPolda">
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpPolda2bapendajr">
                                 <i class="fas fa-file-signature me-1"></i> Buat Pengajuan ke Bapenda/Jasa Raharja
                             </button>
                         @endif
                     @elseif(!empty($permissionSurat['canRespondSP']))
-                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalSpBapendaJr">
+                        @php
+                            $modalName = '';
+                            if ($unitkerja == 'Polda'){
+                                $modalName = 'modalSpDefault';
+                            } else if ($unitkerja == 'Bapenda'){
+                                $modalName = 'modalSpBalasanBapenda';
+                            } else if($unitkerja == 'Jasa Raharja'){
+                                $modalName = 'modalSpBalasanJR';
+                            }
+                        @endphp
+                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#{{$modalName}}">
                             <i class="fas fa-reply me-1"></i> Review & Balas SP
                         </button>
                     @endif
 
-                    @if(!empty($sTypeOptions) && count($sTypeOptions) > 0)
-                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;"
+                    @if($unitkerja != 'Samsat')
+                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" {{ $permissionSurat['canAjukanSK'] ? '' : 'disabled'}}
                                 data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK">
                             <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
                         </button>
@@ -180,11 +191,11 @@
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1 align-items-center">
-                                @if($log->isSkDraft())
+                                @if($log->isSkDraft() || $log->isSpDraft())
                                     <span class="badge px-3 py-2" style="background-color: #6c757d; color: #fff;">
-                                        <i class="fas fa-pen-ruler me-1"></i>Draft SK
+                                        <i class="fas fa-pen-ruler me-1"></i>Draft {{ $log->isSkDraft() ? 'SK' : 'SP' }}
                                     </span>
-                                @elseif($log->isSkPublished())
+                                @elseif($log->isSkPublished() || $log->isSpPublished())
                                     <span class="badge px-3 py-2" style="background-color: #198754; color: #fff;">
                                         <i class="fas fa-stamp me-1"></i>Terbit
                                     </span>
@@ -836,17 +847,36 @@
     </div>
 </div>
 
+@endif
 {{-- Include existing SK modals --}}
-@include('pengajuan.modals.sk_polda')
-@include('pengajuan.modals.sk_bapenda_pembebasan')
-@include('pengajuan.modals.sk_default')
-@include('pengajuan.modals.sk_jr')
+@if ($permissionSurat['canAjukanSK'] ?? null)
+        @if ($unitkerja == 'Polda')
+            @include('pengajuan.modals.sk_polda')
+        @elseif ($unitkerja == 'Bapenda')
+            @include('pengajuan.modals.sk_bapenda_pembebasan')
+        @elseif ($unitkerja == 'Jasa Raharja')
+            @include('pengajuan.modals.sk_jr')
+        @else
+            @include('pengajuan.modals.sk_default')
+        @endif
+@endif
 
 {{-- Include SP modals --}}
-@include('pengajuan.modals.sp_default')
-@include('pengajuan.modals.sp_polda2bapendajr')
-@include('pengajuan.modals.sp_balasan_bapenda')
-@include('pengajuan.modals.sp_balasan_jr')
+@if ($permissionSurat['canAjukanSP'] ?? null)
+    @if ($unitkerja == 'Samsat')
+        @include('pengajuan.modals.sp_samsat2polda')
+    @elseif ($unitkerja == 'Polda')
+        @include('pengajuan.modals.sp_polda2bapendajr')
+    @endif
+@endif
+@if ($permissionSurat['canRespondSP'] ?? null)
+    @if ($unitkerja == 'Polda')
+        @include('pengajuan.modals.sp_default')
+    @elseif ($unitkerja == 'Bapenda')
+        @include('pengajuan.modals.sp_balasan_bapenda')
+    @elseif ($unitkerja == 'Jasa Raharja')
+        @include('pengajuan.modals.sp_balasan_jr')
+    @endif
 @endif
 
 {{-- Modal: Upload & Terbitkan SK --}}
@@ -896,12 +926,14 @@
                     </div>
 
                     {{-- Checkbox Pernyataan --}}
-                    <div class="form-check mb-3 p-3 rounded-3" style="background: #f0f9f4; border: 1px solid #c3e6cb;">
-                        <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishPernyataan" required>
-                        <label class="form-check-label fw-semibold text-dark" for="publishPernyataan" style="cursor: pointer;">
-                            Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang 
-                            <br>sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
-                        </label>
+                    <div class="mb-3 p-3 rounded-3" style="background: #f0f9f4; border: 1px solid #c3e6cb;">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishPernyataan" required>
+                            <br>
+                            <label class="form-check-label fw-semibold text-dark text-wrap" for="publishPernyataan" style="cursor: pointer;">
+                                Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -963,12 +995,14 @@
                     </div>
 
                     {{-- Checkbox Pernyataan --}}
-                    <div class="form-check mb-3 p-3 rounded-3" style="background: #e8f0fe; border: 1px solid #b6d4fe;">
-                        <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishSpPernyataan" required>
-                        <label class="form-check-label fw-semibold text-dark" for="publishSpPernyataan" style="cursor: pointer;">
-                            Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang 
-                            <br>sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
-                        </label>
+                    <div class="mb-3 p-3 rounded-3" style="background: #e8f0fe; border: 1px solid #b6d4fe;">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishSpPernyataan" required>
+                            <br>
+                            <label class="form-check-label fw-semibold text-dark text-wrap" for="publishSpPernyataan" style="cursor: pointer;">
+                                Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">

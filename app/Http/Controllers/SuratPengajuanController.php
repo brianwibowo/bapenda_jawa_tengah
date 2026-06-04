@@ -300,9 +300,6 @@ class SuratPengajuanController extends Controller
 
     public function generateSPDefault(Request $request, Pengajuan $pengajuan)
     {
-        $request->validate([
-            'catatan' => 'required|string',
-        ]);
 
         $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
 
@@ -310,37 +307,70 @@ class SuratPengajuanController extends Controller
             return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
-        $dataPdf = [
-            'kendaraans' => $kendaraans,
-            'catatan' => $request->catatan,
+        return [
+            'pdf_url' => null,
+            'local_pdf_path' => null,
         ];
+    }
 
-        // Generate PDF
-        $pdf = Pdf::loadView('pdf.view_sp', $dataPdf)->setPaper('a4', 'portrait');
+    public function generateSPPolda(Request $request, Pengajuan $pengajuan)
+    {
+        // 1. Validasi input (termasuk 'lampiran')
+        $request->validate([
+            'status' => 'required|array',
+            'status.*' => 'required|in:pengajuan,diproses,selesai,ditolak',
+        ]);
 
-        if ($request->has('preview')) {
-            $previewDir = 'sp/preview';
-            $prefix = Auth::id() . '_default_';
-            // Delete old preview files matching this pattern to optimize storage space
-            $existingFiles = Storage::disk('public')->files($previewDir);
-            foreach ($existingFiles as $file) {
-                if (str_starts_with(basename($file), $prefix)) {
-                    Storage::disk('public')->delete($file);
-                }
-            }
-            $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
-        } else {
-            $filename = 'SP_DEFAULT_' . time() . '.pdf';
-            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+        $statuses = $request->input('status', []);
+
+        $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
+
+        if ($kendaraans->isEmpty()) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
-        Storage::disk('public')->put($storagePath, $pdf->output());
-        $pdfUrlAbsolute = asset('storage/' . $storagePath);
-        $localPdfPath = Storage::disk('public')->path($storagePath);
+        // 2. Loop setiap status yang dikirim dari form
+        foreach ($statuses as $kendaraanId => $newStatus) {
+
+            $kendaraan = $kendaraans->get($kendaraanId);
+            if (!$kendaraan) {
+                continue;
+            }
+            $oldStatus = $kendaraan->status;
+
+            // Hanya update jika status berubah ATAU ada catatan baru ATAU ada lampiran baru
+            if ($oldStatus !== $newStatus) {
+                $kendaraan->update([
+                    'status' => $newStatus,
+                ]);
+            }
+        }
+
+        /// Dispatch WA notification
+        $wpUser = $pengajuan->user;
+        if ($wpUser && $wpUser->no_hp) {
+            $nrkbString = $kendaraans->count() === 1 
+                ? $kendaraans->first()->nrkb 
+                : $kendaraans->pluck('nrkb')->implode(', ');
+            try {
+                SendWhatsAppNotification::dispatch(
+                    pengajuan:    $pengajuan,
+                    kendaraan:    $kendaraans->first(),
+                    skType:       'samsat',
+                    pdfUrl:       null,
+                    localPdfPath: null,
+                    wpPhone:      $wpUser->no_hp,
+                    wpName:       $wpUser->name,
+                    nrkb:         $nrkbString,
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Polda): ' . $e->getMessage());
+            }
+        }
 
         return [
-            'pdf_url' => $pdfUrlAbsolute,
-            'local_pdf_path' => $localPdfPath,
+            'pdf_url' => null,
+            'local_pdf_path' => null,
         ];
     }
 
@@ -515,6 +545,92 @@ class SuratPengajuanController extends Controller
         ];
     }
 
+    /**
+     * Generate PDF SP Balasan Jasa Raharja (SWDKLLJ)
+     */
+    public function generateSPBalasanJR(Request $request, Pengajuan $pengajuan)
+    {
+        $request->validate([
+            'nomor_surat' => 'required',
+            'nomor_surat_regident' => 'required|string',
+            'nomor_surat_bapenda' => 'required|string',
+            'tempat_surat' => 'required|string',
+            'tanggal_surat' => 'required|string',
+            'nama_penandatangan' => 'required|string',
+            'jabatan_penandatangan' => 'required|string',
+        ]);
+
+        $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
+
+        if ($kendaraans->isEmpty()) {
+            return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
+        }
+
+        $dataPdf = [
+            'kendaraans' => $kendaraans,
+            'nomor_surat' => strtoupper($request->nomor_surat),
+            'nomor_surat_regident' => strtoupper($request->nomor_surat_regident),
+            'nomor_surat_bapenda' => strtoupper($request->nomor_surat_bapenda),
+            'tempat_surat' => strtoupper($request->tempat_surat),
+            'tanggal_surat' => $request->tanggal_surat,
+            'nama_penandatangan' => strtoupper($request->nama_penandatangan),
+            'jabatan_penandatangan' => strtoupper($request->jabatan_penandatangan),
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdf.sp_balasan_jr', $dataPdf)->setPaper('a4', 'portrait');
+
+        if ($request->has('preview')) {
+            $previewDir = 'sp/preview';
+            $prefix = Auth::id() . '_sp_balasan_jr_';
+            // Delete old preview files matching this pattern to optimize storage space
+            $existingFiles = Storage::disk('public')->files($previewDir);
+            foreach ($existingFiles as $file) {
+                if (str_starts_with(basename($file), $prefix)) {
+                    Storage::disk('public')->delete($file);
+                }
+            }
+            $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
+        } else {
+            $filename = 'SP_BALASAN_JR_' . time() . '.pdf';
+            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+        }
+
+        Storage::disk('public')->put($storagePath, $pdf->output());
+        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+        $localPdfPath = Storage::disk('public')->path($storagePath);
+
+        if (!$request->has('preview')) {
+            // Dispatch WA notification
+            $wpUser = $pengajuan->user;
+            if ($wpUser && $wpUser->no_hp) {
+                $nrkbString = $kendaraans->count() === 1 
+                    ? $kendaraans->first()->nrkb 
+                    : $kendaraans->pluck('nrkb')->implode(', ');
+                try {
+                    SendWhatsAppNotification::dispatch(
+                        pengajuan:    $pengajuan,
+                        kendaraan:    $kendaraans->first(),
+                        skType:       'sp_balasan_jr',
+                        pdfUrl:       $pdfUrlAbsolute,
+                        localPdfPath: $localPdfPath,
+                        wpPhone:      $wpUser->no_hp,
+                        wpName:       $wpUser->name,
+                        nrkb:         $nrkbString,
+                    );
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Balasan JR): ' . $e->getMessage());
+                }
+            }
+        }
+
+        return [
+            'pdf_url' => $pdfUrlAbsolute,
+            'local_pdf_path' => $localPdfPath,
+        ];
+    }
+
+
     public function ajukan(Request $request, $id)
     {
         $pengajuan = Pengajuan::with(['kendaraans', 'suratPengajuan'])->findOrFail($id);
@@ -530,7 +646,7 @@ class SuratPengajuanController extends Controller
         $data = [];
         if ($unitKerja == "Samsat") {
             // Dummy default data
-            $data = $this->generateSPDefault($request, $pengajuan);
+            $data = $this->generateSPPolda($request, $pengajuan);
         } elseif ($unitKerja == 'Polda') {
             $data = $this->generateSPPolda2BapendaNJR($request, $pengajuan);
         } else {
@@ -548,7 +664,6 @@ class SuratPengajuanController extends Controller
         $baseLogTime = now();
         // Determine draft mode: Samsat (default) = no draft, Polda (non-default) = draft
         $isDraft = ($unitKerja !== 'Samsat');
-
         if ($unitKerja == 'Polda') {
             $sp = SuratPengajuan::create([
                 'pengajuan_id' => $pengajuan->id,
@@ -603,7 +718,7 @@ class SuratPengajuanController extends Controller
             ? 'Surat Pengajuan berhasil disimpan sebagai draft.'
             : 'Surat Pengajuan berhasil diajukan.';
 
-        return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+        return isset($data['redirect']) ? $data['redirect'] : redirect()->route('admin.pengajuan.show', $pengajuan->id)
             ->with('success', $successMsg);
     }
 
@@ -635,7 +750,7 @@ class SuratPengajuanController extends Controller
         $persetujuan = $surat->persetujuan_unit_kerja ?? [];
 
         // Cari instansi yang sesuai dan ubah statusnya
-        foreach ($persetujuan as &$item) {
+        foreach ($persetujuan as $item) {
             if (strcasecmp($item['instansi'] ?? '', $instansiUser) === 0 && ($item['status'] ?? null) == 'pending') {
                 if ($surat->pengajuan->kendaraans()->where('status', 'pengajuan')->count()) {
                     $surat->pengajuan->kendaraans()->update(['status' => 'ditolak']);
@@ -688,15 +803,16 @@ class SuratPengajuanController extends Controller
         }
 
         $instansiUser = $this->normalizeUnitKerja(Auth::user()->unit_kerja); // Misal: Bapenda / Jasa Raharja
-
+        $default = false;
         // ── KELOMPOK AJAX / PREVIEW FLOW (Untuk submit dari dynamic modal) ──
-        if ($request->ajax() || $request->expectsJson() || $request->has('preview')) {
+        if ($request->ajax() || $request->expectsJson() || $request->has('preview') || $request->hasHeader('X-CSRF-TOKEN') || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             if ($instansiUser == "Bapenda") {
                 $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
             } else if ($instansiUser == "Jasa Raharja") {
-                $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
+                $data = $this->generateSPBalasanJR($request, $pengajuan);
             } else {
                 $data = $this->generateSPDefault($request, $pengajuan);
+                $default = true;
             }
 
             if ($request->has('preview')) {
@@ -735,13 +851,13 @@ class SuratPengajuanController extends Controller
                 $log = $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
-                    $instansiUser == "Bapenda" ? 'SP Balasan Penghapusan Regident berhasil diterbitkan' : 'SP Balasan berhasil diterbitkan',
+                    $instansiUser == "Bapenda" ? 'SP Balasan Penghapusan Regident berhasil diterbitkan' : ($instansiUser == "Jasa Raharja" ? 'SP Balasan Jasa Raharja berhasil diterbitkan' : 'SP Balasan berhasil diterbitkan'),
                     'Nomor Surat: ' . $request->nomor_surat,
                     $data['local_pdf_path'] ?? null,
                     $surat->id
                 );
                 // Non-default SP respond: always draft
-                $log->update(['sp_status' => 'draft']);
+                $log->update(['sp_status' => $default ? 'terbit' : 'draft']);
             }
 
             // Jika semua instansi sudah approved, ubah status kendaraan ke diproses

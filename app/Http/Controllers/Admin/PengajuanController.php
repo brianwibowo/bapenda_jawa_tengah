@@ -151,45 +151,54 @@ class PengajuanController extends Controller
 
         // Generate signed URLs for modal form submissions (access control)
         $signedUrls = [];
-        $signedUrls['sp_ajukan'] = URL::temporarySignedRoute(
-            'admin.pengajuan.ajukan', now()->addMinutes(30), ['id' => $pengajuan->id]
-        );
-        if ($lastSp) {
-            $signedUrls['sp_terima'] = URL::temporarySignedRoute(
-                'admin.pengajuan.sp.terima', now()->addMinutes(30), ['surat' => $lastSp->id]
+        if (($permissionSurat['canAjukanSP'] ?? null)){
+            $signedUrls['sp_ajukan'] = URL::temporarySignedRoute(
+                'admin.pengajuan.ajukan', now()->addMinutes(60), ['id' => $pengajuan->id]
             );
         }
-        $signedUrls['sk_buat'] = URL::temporarySignedRoute(
-            'admin.pengajuan.buat_sk', now()->addMinutes(30), ['id' => $pengajuan->id]
-        );
+        if ($lastSp && ($permissionSurat['canRespondSP'] ?? null)) {
+            $signedUrls['sp_terima'] = URL::temporarySignedRoute(
+                'admin.pengajuan.sp.terima', now()->addMinutes(60), ['surat' => $lastSp->id]
+            );
+            $signedUrls['sp_tolak'] = URL::temporarySignedRoute(
+                'admin.pengajuan.sp.tolak', now()->addMinutes(60), ['surat' => $lastSp->id]
+            );
+        }
+        if (($permissionSurat['canAjukanSK'] ?? null)) {
+            $signedUrls['sk_buat'] = URL::temporarySignedRoute(
+                'admin.pengajuan.buat_sk', now()->addMinutes(60), ['id' => $pengajuan->id]
+            );
+        }
 
         // Mapping jenis Surat per role untuk modal "Pilih Jenis Surat"
         $sTypeOptions = [];
         $normalizedUK = $this->normalizeUnitKerja($user->unit_kerja);
         switch ($normalizedUK) {
             case 'Samsat':
-                $sTypeOptions = [
-                    ['key' => 'sp_default', 'label' => 'SP Pengajuan ke Polda', 'icon' => 'fas fa-paper-plane', 'modal' => '#modalSpDefault'],
-                    ['key' => 'sk_default', 'label' => 'SK Default', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkDefault'],
-                ];
+                if (($permissionSurat['canAjukanSP'] ?? null)){
+                    $sTypeOptions[] = ['key' => 'sp_default', 'label' => 'SP Pengajuan ke Polda', 'icon' => 'fas fa-paper-plane', 'modal' => '#modalSpDefault'];
+                }
                 break;
             case 'Polda':
-                $sTypeOptions = [
-                    ['key' => 'sp_polda2bapendajr', 'label' => 'SP Polda ke Bapenda/JR', 'icon' => 'fas fa-paper-plane', 'modal' => '#modalSpPolda2bapendajr'],
-                    ['key' => 'sk_polda', 'label' => 'SK Polda', 'icon' => 'fas fa-shield-alt', 'modal' => '#modalSkPolda'],
-                ];
+                if (($permissionSurat['canAjukanSP'] ?? null)) {
+                    $sTypeOptions[] = ['key' => 'sp_polda2bapendajr', 'label' => 'SP Polda ke Bapenda/JR', 'icon' => 'fas fa-paper-plane', 'modal' => '#modalSpPolda2bapendajr'];
+                } else if (($permissionSurat['canAjukanSK'] ?? null)) {
+                    $sTypeOptions[] = ['key' => 'sk_polda', 'label' => 'SK Polda', 'icon' => 'fas fa-shield-alt', 'modal' => '#modalSkPolda'];
+                }
                 break;
             case 'Bapenda':
-                $sTypeOptions = [
-                    ['key' => 'sp_balasan_bapenda', 'label' => 'SP Balasan Bapenda', 'icon' => 'fas fa-reply', 'modal' => '#modalSpBalasanBapenda'],
-                    ['key' => 'sk_bapenda', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'],
-                ];
+                if (($permissionSurat['canRespondSP'] ?? null)) {
+                    $sTypeOptions[] = ['key' => 'sp_balasan_bapenda', 'label' => 'SP Balasan Bapenda', 'icon' => 'fas fa-reply', 'modal' => '#modalSpBalasanBapenda'];
+                } else if (($permissionSurat['canAjukanSK'] ?? null)) {
+                    $sTypeOptions[] = ['key' => 'sk_bapenda', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'];
+                }
                 break;
             case 'Jasa Raharja':
-                $sTypeOptions = [
-                    ['key' => 'sp_balasan_jr', 'label' => 'SP Balasan Jasa Raharja', 'icon' => 'fas fa-reply', 'modal' => '#modalSpBalasanJR'],
-                    ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'],
-                ];
+                if (($permissionSurat['canRespondSP'] ?? null)) {
+                    $sTypeOptions[] = ['key' => 'sp_balasan_jr', 'label' => 'SP Balasan Jasa Raharja', 'icon' => 'fas fa-reply', 'modal' => '#modalSpBalasanJR'];
+                } else if (($permissionSurat['canAjukanSK'] ?? null)) {
+                    $sTypeOptions[] = ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'];
+                }
                 break;
         }
 
@@ -582,6 +591,9 @@ class PengajuanController extends Controller
             ]);
         }
 
+        // Clear old draft media first to avoid double media in the log
+        $log->clearMediaCollection('lampiran_log');
+
         // Attach file ke media library log
         $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
 
@@ -674,11 +686,31 @@ class PengajuanController extends Controller
         // Update SuratPengajuan record
         $sp = SuratPengajuan::find($log->sp_id);
         if ($sp) {
-            $sp->update([
-                'local_pdf_path' => $pdfUrlAbsolute,
-                'pdf_url' => $pdfUrlAbsolute,
-            ]);
+            $unitKerja = $this->normalizeUnitKerja(Auth::user()->unit_kerja);
+            if ($unitKerja === 'Bapenda' || $unitKerja === 'Jasa Raharja') {
+                $persetujuan = $sp->persetujuan_unit_kerja ?? [];
+                foreach ($persetujuan as &$item) {
+                    if (strcasecmp($item['instansi'] ?? '', $unitKerja) === 0) {
+                        $item['pdf_url'] = $pdfUrlAbsolute;
+                        $item['local_pdf_path'] = $pdfUrlAbsolute;
+                        $item['updated_at'] = now();
+                    }
+                }
+                $sp->update([
+                    'persetujuan_unit_kerja' => $persetujuan,
+                    'local_pdf_balasan_path' => $pdfUrlAbsolute,
+                    'pdf_balasan_url' => $pdfUrlAbsolute,
+                ]);
+            } else {
+                $sp->update([
+                    'local_pdf_path' => $pdfUrlAbsolute,
+                    'pdf_url' => $pdfUrlAbsolute,
+                ]);
+            }
         }
+
+        // Clear old draft media first to avoid double media in the log
+        $log->clearMediaCollection('lampiran_log');
 
         // Attach file ke media library log
         $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');

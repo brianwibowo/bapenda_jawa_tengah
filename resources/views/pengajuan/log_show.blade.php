@@ -60,11 +60,11 @@
                             <tr>
                                 <td class="text-muted">Tipe Aksi</td>
                                 <td>
-                                    @if($log->isSkDraft())
+                                    @if($log->isSkDraft() || $log->isSpDraft())
                                         <span class="badge px-3 py-2" style="background-color: #6c757d; color: #fff;">
-                                            <i class="fas fa-pen-ruler me-1"></i>Draft SK
+                                            <i class="fas fa-pen-ruler me-1"></i>Draft {{ $log->isSkDraft() ? 'SK' : 'SP' }}
                                         </span>
-                                    @elseif($log->isSkPublished())
+                                    @elseif($log->isSkPublished() || $log->isSpPublished())
                                         <span class="badge px-3 py-2" style="background-color: #198754; color: #fff;">
                                             <i class="fas fa-stamp me-1"></i>Terbit
                                         </span>
@@ -249,6 +249,25 @@
                                     </div>
                                 </div>
                             @endif
+
+                            {{-- Tombol Upload & Terbitkan SP (untuk draft milik role yang sama) --}}
+                            @if($log->isSpDraft() && $log->user && $log->user->unit_kerja === auth()->user()->unit_kerja)
+                                <div class="mt-4 pt-2">
+                                    <div class="card border-0 shadow-sm" style="border-radius: 0.75rem; background: linear-gradient(145deg, #e8f0fe, #d2e3fc);">
+                                        <div class="card-body p-4 text-center">
+                                            <i class="fas fa-cloud-upload-alt d-block mb-2" style="font-size: 2.5rem; color: #0d6efd;"></i>
+                                            <h6 class="fw-bold text-dark mb-2">Upload Dokumen Bertandatangan</h6>
+                                            <p class="text-muted small mb-3">Unggah dokumen SP yang telah ditandatangani resmi untuk menerbitkan SP ini.</p>
+                                            <button class="btn btn-primary fw-bold px-4 btn-publish-sp"
+                                                    data-bs-toggle="modal" data-bs-target="#modalPublishSPDetail"
+                                                    data-log-id="{{ $log->id }}"
+                                                    data-sp-id="{{ $log->sp_id }}">
+                                                <i class="fas fa-stamp me-1"></i> Upload & Terbitkan SP
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                     </div>
@@ -332,12 +351,14 @@
                         </div>
                     </div>
 
-                    <div class="form-check mb-3 p-3 rounded-3" style="background: #f0f9f4; border: 1px solid #c3e6cb;">
-                        <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishPernyataanDetail" required>
-                        <label class="form-check-label fw-semibold text-dark" for="publishPernyataanDetail" style="cursor: pointer;">
-                            Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang 
-                            <br>sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
-                        </label>
+                    <div class="mb-3 p-3 rounded-3" style="background: #f0f9f4; border: 1px solid #c3e6cb;">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishPernyataanDetail" required>
+                            <br>
+                            <label class="form-check-label fw-semibold text-dark text-wrap" for="publishPernyataanDetail" style="cursor: pointer;">
+                                Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -378,6 +399,113 @@ document.addEventListener('DOMContentLoaded', function() {
         const dropZone = document.getElementById('publishDropZoneDetail');
         if (dropZone) {
             dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#198754'; dropZone.style.background = '#f0f9f4'; });
+            dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#dee2e6'; dropZone.style.background = '#f8f9fa'; });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#dee2e6'; dropZone.style.background = '#f8f9fa';
+                if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event('change')); }
+            });
+        }
+    }
+    if (checkbox) checkbox.addEventListener('change', checkReady);
+});
+</script>
+@endif
+
+{{-- Modal: Upload & Terbitkan SP (dari halaman detail log) --}}
+@if($log->isSpDraft() && $log->user && $log->user->unit_kerja === auth()->user()->unit_kerja)
+<div class="modal fade" id="modalPublishSPDetail" tabindex="-1" aria-labelledby="modalPublishSPDetailLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="formPublishSPDetail" method="POST" enctype="multipart/form-data"
+                  action="{{ route('admin.pengajuan.publish_sp', $log->id) }}">
+                @csrf
+                <input type="hidden" name="log_id" value="{{ $log->id }}">
+                <input type="hidden" name="sp_id" value="{{ $log->sp_id }}">
+
+                <div class="modal-header" style="background: linear-gradient(135deg, #0d6efd, #0a58ca); border: none;">
+                    <h5 class="modal-title fw-bold text-white" id="modalPublishSPDetailLabel">
+                        <i class="fas fa-stamp me-2"></i>Terbitkan Surat Pengajuan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="alert alert-info border-0 d-flex align-items-start mb-4" style="border-radius: 10px;">
+                        <i class="fas fa-info-circle me-3 mt-1 fs-5"></i>
+                        <div>
+                            <strong>Informasi:</strong> Unggah dokumen SP yang telah ditandatangani secara resmi. Setelah diterbitkan, SP ini akan terlihat oleh seluruh instansi terkait.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Unggah Dokumen Bertandatangan
+                        </label>
+                        <div class="border rounded-3 p-4 text-center position-relative" id="publishSpDropZoneDetail"
+                             style="border: 2px dashed #dee2e6; border-radius: 12px !important; cursor: pointer; transition: all 0.2s ease; background: #f8f9fa;">
+                            <input type="file" name="file" id="publishSpFileInputDetail" class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;"
+                                   accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.docx" required>
+                            <div id="publishSpDropContentDetail">
+                                <i class="fas fa-cloud-upload-alt d-block mb-2" style="font-size: 2.5rem; color: #adb5bd;"></i>
+                                <p class="mb-1 fw-semibold text-dark">Seret file ke sini atau klik untuk memilih</p>
+                                <small class="text-muted">PDF, DOCX, JPG, PNG · Maks 10MB</small>
+                            </div>
+                            <div id="publishSpFilePreviewDetail" style="display: none;">
+                                <i class="fas fa-file-check d-block mb-2 text-success" style="font-size: 2rem;"></i>
+                                <p class="mb-0 fw-semibold text-success" id="publishSpFileNameDetail"></p>
+                                <small class="text-muted" id="publishSpFileSizeDetail"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 p-3 rounded-3" style="background: #e8f0fe; border: 1px solid #b6d4fe;">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="pernyataan" value="1" id="publishSpPernyataanDetail" required>
+                            <br>
+                            <label class="form-check-label fw-semibold text-dark text-wrap" for="publishSpPernyataanDetail" style="cursor: pointer;">
+                                Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSPDetail" disabled>
+                        <i class="fas fa-stamp me-1"></i> Terbitkan SP
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('publishSpFileInputDetail');
+    const checkbox = document.getElementById('publishSpPernyataanDetail');
+    const btn = document.getElementById('btnPublishSPDetail');
+
+    function checkReady() {
+        const hasFile = fileInput && fileInput.files.length > 0;
+        const hasCheck = checkbox && checkbox.checked;
+        if (btn) btn.disabled = !(hasFile && hasCheck);
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                document.getElementById('publishSpDropContentDetail').style.display = 'none';
+                document.getElementById('publishSpFilePreviewDetail').style.display = '';
+                document.getElementById('publishSpFileNameDetail').textContent = file.name;
+                document.getElementById('publishSpFileSizeDetail').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                checkReady();
+            }
+        });
+
+        const dropZone = document.getElementById('publishSpDropZoneDetail');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#0d6efd'; dropZone.style.background = '#e8f0fe'; });
             dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#dee2e6'; dropZone.style.background = '#f8f9fa'; });
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();

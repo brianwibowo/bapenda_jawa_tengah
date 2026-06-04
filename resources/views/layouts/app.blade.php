@@ -28,7 +28,6 @@
 </head>
 
 <body>
-    @include('layouts.partials.frame')
     <div class="wrapper">
         @include('layouts.partials.sidebar')
 
