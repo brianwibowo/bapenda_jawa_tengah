@@ -408,6 +408,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     if (checkbox) checkbox.addEventListener('change', checkReady);
+
+    // === Publish SK Form Confirmation ===
+    const formPublishSKDetail = document.getElementById('formPublishSKDetail');
+    if (formPublishSKDetail) {
+        formPublishSKDetail.addEventListener('submit', function(e) {
+            if (!confirm('Apakah Anda yakin ingin menerbitkan Surat Keputusan ini? Setelah diterbitkan, dokumen tidak dapat diubah.')) {
+                e.preventDefault();
+            }
+        });
+    }
 });
 </script>
 @endif
@@ -515,6 +525,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     if (checkbox) checkbox.addEventListener('change', checkReady);
+
+    // === Publish SP Form Confirmation ===
+    const formPublishSPDetail = document.getElementById('formPublishSPDetail');
+    if (formPublishSPDetail) {
+        formPublishSPDetail.addEventListener('submit', function(e) {
+            if (!confirm('Apakah Anda yakin ingin menerbitkan Surat Pengajuan ini? Setelah diterbitkan, dokumen tidak dapat diubah.')) {
+                e.preventDefault();
+            }
+        });
+    }
 });
 </script>
 @endif

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="fw-bold mb-0">Edit Wajib Pajak</h2>
+            <h2 class="fw-bold mb-0">Edit Pengusul</h2>
             <a href="{{ route('admin.users.wp.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
         </div>
     </x-slot>

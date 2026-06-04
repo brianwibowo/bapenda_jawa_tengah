@@ -26,9 +26,8 @@
                                             <th style="width: 15%;">NRKB</th>
                                             <th style="width: 15%;">Merk / Tipe</th>
                                             <th style="width: 15%;">Pemilik</th>
-                                            <th style="width: 10%;">Status</th>
-                                            <th style="width: 15%;">Ubah Status</th>
-                                            <th style="width: 20%;" class="text-center">Aksi</th>
+                                            <th style="width: 10%;" class="text-center" >Status</th>
+                                            <th style="width: 15%;" class="text-center" >Ubah Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -40,7 +39,7 @@
                                                 <td>{{ $kendaraan->pemilik->nama_pemilik ?? '-' }}</td>
                                                 
                                                 {{-- Status Saat Ini --}}
-                                                <td>
+                                                <td class="text-center">
                                                     @if($kendaraan->status == 'pengajuan')
                                                         <span class="badge bg-warning text-dark">Diajukan</span>
                                                     @elseif($kendaraan->status == 'diproses')
@@ -53,18 +52,12 @@
                                                 </td>
     
                                                 {{-- Kolom Aksi (Form Input) --}}
-                                                <td>
+                                                <td class="text-center">
                                                     <span class="badge bg-info text-dark">Diproses</span>
                                                 </td>
 
                                                 <input type="hidden" name="status[{{ $kendaraan->id }}]" value="diproses">
-    
-                                                {{-- Kolom Aksi (View) --}}
-                                                <td class="text-center">
-                                                    <a href="{{ route('kendaraan.show', $kendaraan) }}" class="btn btn-sm btn-info" title="Lihat Detail & Dokumen" target="_blank">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                </td>
+
                                             </tr>
                                         @empty
                                             <tr>

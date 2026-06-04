@@ -121,16 +121,13 @@
                     <button type="button" class="btn btn-outline-primary" id="btnShowPreviewSkPembebasan">
                         <i class="fas fa-eye me-1"></i>Lihat Preview
                     </button>
-                    <button type="button" class="btn btn-success" id="btnSubmitSkPembebasanDraft">
-                        <i class="fas fa-save me-1"></i> Simpan sebagai Draft
-                    </button>
                 </div>
 
                 {{-- Footer: Mode Preview --}}
                 <div class="modal-footer" id="footerPreviewSkPembebasan" style="display:none;">
                     <button type="button" class="btn btn-warning" id="btnEditSkPembebasan">Kembali Edit</button>
                     <button type="button" class="btn btn-success" id="btnSubmitSkPembebasanDraftPreview">
-                        <i class="fas fa-save me-1"></i> Simpan sebagai Draft
+                        <i class="fas fa-save me-1"></i> Terbitkan SK
                     </button>
                 </div>
         </form>
@@ -223,10 +220,6 @@
                btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
            });
        };
-
-       document.getElementById('btnSubmitSkPembebasanDraft').addEventListener('click', function () {
-           submitForm(this);
-       });
 
        document.getElementById('btnSubmitSkPembebasanDraftPreview').addEventListener('click', function () {
            submitForm(this);

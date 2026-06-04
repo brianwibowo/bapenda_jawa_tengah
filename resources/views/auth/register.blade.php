@@ -3,7 +3,7 @@
         {{-- Header --}}
         <div class="reg-header text-center">
             <span class="reg-header__badge">Pendaftaran</span>
-            <h3>Daftar Akun Wajib Pajak</h3>
+            <h3>Daftar Akun Pengusul</h3>
             <p>Lengkapi data untuk membuat akun baru</p>
         </div>
 

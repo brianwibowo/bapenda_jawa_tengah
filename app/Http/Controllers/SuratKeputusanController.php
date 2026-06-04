@@ -666,7 +666,7 @@ class SuratKeputusanController extends Controller
             }
 
 
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
+            $pdf = Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
             $pdf->setPaper('a4', 'portrait');
             if ($request->has('preview')) {
                 $previewDir = 'sk/preview';
@@ -856,9 +856,7 @@ class SuratKeputusanController extends Controller
 
             if (isset($data[$k->id]['log_id'])) {
                 $updateData = ['sk_id' => $sk->id];
-                if ($request->metode_penanda_tangan) {
-                    $updateData['sk_status'] = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah' ? 'draft' : 'terbit';
-                }
+                $updateData['sk_status'] = (($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah' && $isDraft) ? 'draft' : 'terbit';
                 KendaraanLog::where('id', $data[$k->id]['log_id'])->update($updateData);
             }
 
@@ -866,6 +864,9 @@ class SuratKeputusanController extends Controller
             if (!$isDraft) {
                 $totalSkByUnitKerja = $k->suratKeputusans()
                     ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'Jasa Raharja'])
+                    ->whereDoesntHave('log', function($q) {
+                        $q->where('sk_status', 'draft');
+                    })
                     ->distinct('unit_kerja')
                     ->count('unit_kerja');
 

@@ -77,16 +77,13 @@
                 <button type="button" class="btn btn-outline-primary" id="btnPreviewSkPolda">
                     <i class="fas fa-eye me-1"></i>Lihat Preview
                 </button>
-                <button type="button" class="btn btn-success" id="btnSubmitSkPoldaDraft">
-                    <i class="fas fa-save me-1"></i> Simpan sebagai Draft
-                </button>
             </div>
 
             {{-- Footer: Mode Preview --}}
             <div class="modal-footer" id="footerPreviewSkPolda" style="display:none;">
                 <button type="button" class="btn btn-warning" id="btnEditSkPolda">Kembali Edit</button>
                 <button type="button" class="btn btn-success" id="btnSubmitSkPoldaDraftPreview">
-                    <i class="fas fa-save me-1"></i> Simpan sebagai Draft
+                    <i class="fas fa-save me-1"></i> Terbitkan SK
                 </button>
             </div>
         </form>
@@ -178,10 +175,6 @@
                 btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
             });
         };
-
-        document.getElementById('btnSubmitSkPoldaDraft').addEventListener('click', function () {
-            submitForm(this);
-        });
 
         document.getElementById('btnSubmitSkPoldaDraftPreview').addEventListener('click', function () {
             submitForm(this);

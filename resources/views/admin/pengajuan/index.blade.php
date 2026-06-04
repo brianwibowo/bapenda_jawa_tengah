@@ -197,7 +197,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="px-4 py-3">Nomor Pengajuan</th>
-                            <th class="px-4 py-3">Wajib Pajak</th>
+                            <th class="px-4 py-3">Pengusul</th>
                             <th class="px-4 py-3">Cabang / Wilayah</th>
                             <th class="px-4 py-3">Tanggal Masuk</th>
                             <th class="px-4 py-3">Update Terakhir</th>

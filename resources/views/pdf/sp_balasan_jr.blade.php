@@ -60,84 +60,84 @@
 </head>
 <body>
 
-        {{-- ============ KOP SURAT ============ --}}
-        <div class="kop-surat">
-            <img src="{{ public_path('images/Logo_JS 2024.png') }}" class="kop-logo" alt="Logo Jasa Raharja">
-        </div>
+    {{-- ============ KOP SURAT ============ --}}
+    <div class="kop-surat">
+        <img src="{{ public_path('images/Logo_JS 2024.png') }}" class="kop-logo" alt="Logo Jasa Raharja">
+    </div>
 
-        {{-- ============ JUDUL SURAT ============ --}}
-        <div class="judul-surat">
-            SURAT PEMBEBASAN KEWAJIBAN PEMBAYARAN<br>
-            SUMBANGAN WAJIB DANA KECELAKAAN LALU LINTAS JALAN,<br>
-            KARTU DANA, DAN DENDA SUMBANGAN WAJIB<br>
-            DANA KECELAKAAN LALU LINTAS JALAN
-        </div>
-        <div class="nomor-surat">NOMOR: {{ $nomor_surat }}</div>
+    {{-- ============ JUDUL SURAT ============ --}}
+    <div class="judul-surat">
+        SURAT PEMBEBASAN KEWAJIBAN PEMBAYARAN<br>
+        SUMBANGAN WAJIB DANA KECELAKAAN LALU LINTAS JALAN,<br>
+        KARTU DANA, DAN DENDA SUMBANGAN WAJIB<br>
+        DANA KECELAKAAN LALU LINTAS JALAN
+    </div>
+    <div class="nomor-surat">NOMOR: {{ $nomor_surat }}</div>
 
-        {{-- ============ PARAGRAF 1: Referensi Regident + Data Kendaraan ============ --}}
-        <div class="paragraf">
-            Berdasarkan Surat Keterangan Penghapusan Regident Ranmor Nomor {{ $nomor_surat_regident }}, dengan ini diberitahukan bahwa kendaraan bermotor dengan identitas sebagai berikut:
-        </div>
+    {{-- ============ PARAGRAF 1: Referensi Regident + Data Kendaraan ============ --}}
+    <div class="paragraf">
+        Berdasarkan Surat Keterangan Penghapusan Regident Ranmor Nomor {{ $nomor_surat_regident }}, dengan ini diberitahukan bahwa kendaraan bermotor dengan identitas sebagai berikut:
+    </div>
 
-        <table class="data-table">
-            <tr>
-                <td>Nomor Registrasi Kendaraan Bermotor</td>
-                <td>:</td>
-                <td class="fw-bold">{{ $data->nrkb }}</td>
-            </tr>
-            <tr>
-                <td>Nama Pemilik</td>
-                <td>:</td>
-                <td>{{ $data->nama }}</td>
-            </tr>
-            <tr>
-                <td>Alamat</td>
-                <td>:</td>
-                <td>{{ $data->alamat }}</td>
-            </tr>
-            <tr>
-                <td>Merk/Type</td>
-                <td>:</td>
-                <td>{{ $data->merk_type }}</td>
-            </tr>
-            <tr>
-                <td>No. Rangka/Mesin</td>
-                <td>:</td>
-                <td>{{ $data->no_rangka_mesin }}</td>
-            </tr>
-            <tr>
-                <td>Jenis/Model</td>
-                <td>:</td>
-                <td>{{ $data->jenis_model }}</td>
-            </tr>
-            <tr>
-                <td>Tahun Pembuatan</td>
-                <td>:</td>
-                <td>{{ $data->tahun }}</td>
-            </tr>
-        </table>
+    <table class="data-table">
+        <tr>
+            <td>Nomor Registrasi Kendaraan Bermotor</td>
+            <td>:</td>
+            <td class="fw-bold">{{ $data->nrkb }}</td>
+        </tr>
+        <tr>
+            <td>Nama Pemilik</td>
+            <td>:</td>
+            <td>{{ $data->nama }}</td>
+        </tr>
+        <tr>
+            <td>Alamat</td>
+            <td>:</td>
+            <td>{{ $data->alamat }}</td>
+        </tr>
+        <tr>
+            <td>Merk/Type</td>
+            <td>:</td>
+            <td>{{ $data->merk_type }}</td>
+        </tr>
+        <tr>
+            <td>No. Rangka/Mesin</td>
+            <td>:</td>
+            <td>{{ $data->no_rangka_mesin }}</td>
+        </tr>
+        <tr>
+            <td>Jenis/Model</td>
+            <td>:</td>
+            <td>{{ $data->jenis_model }}</td>
+        </tr>
+        <tr>
+            <td>Tahun Pembuatan</td>
+            <td>:</td>
+            <td>{{ $data->tahun }}</td>
+        </tr>
+    </table>
 
-        {{-- ============ PARAGRAF 2: Dasar Hukum Pembebasan ============ --}}
-        <div class="paragraf">
-            Mempertimbangkan Peraturan Direksi PT Jasa Raharja Nomor PER/25/2025, pemilik kendaraan bermotor tersebut di atas dapat dibebaskan dari kewajiban pembayaran SWDKLLJ, Kartu Dana, dan denda SWDKLLJ sebagaimana pembebasan atas kewajiban pembayaran Pajak Kendaraan Bermotor yang tertuang dalam Surat Badan Pengelola Pendapatan Daerah Nomor {{ $nomor_surat_bapenda }} sesuai teknis dan ketentuan peraturan perundang-undangan yang berlaku.
-        </div>
+    {{-- ============ PARAGRAF 2: Dasar Hukum Pembebasan ============ --}}
+    <div class="paragraf">
+        Mempertimbangkan Peraturan Direksi PT Jasa Raharja Nomor PER/25/2025, pemilik kendaraan bermotor tersebut di atas dapat dibebaskan dari kewajiban pembayaran SWDKLLJ, Kartu Dana, dan denda SWDKLLJ sebagaimana pembebasan atas kewajiban pembayaran Pajak Kendaraan Bermotor yang tertuang dalam Surat Badan Pengelola Pendapatan Daerah Nomor {{ $nomor_surat_bapenda }} sesuai teknis dan ketentuan peraturan perundang-undangan yang berlaku.
+    </div>
 
-        {{-- ============ PENUTUP ============ --}}
-        <div class="paragraf">
-            Demikian surat ini dibuat untuk digunakan sebagaimana mestinya.
-        </div>
+    {{-- ============ PENUTUP ============ --}}
+    <div class="paragraf">
+        Demikian surat ini dibuat untuk digunakan sebagaimana mestinya.
+    </div>
 
-        {{-- ============ TANDA TANGAN ============ --}}
-        <div class="signature-block">
-            <div class="signature-inner">
-                <div>{{ $tempat_surat }}, {{ $tanggal_surat }}</div>
-                <br>
-                <div>PT Jasa Raharja</div>
-                <div>Kantor Wilayah Utama Jawa Tengah</div>
-                <div class="signature-name">{{ $nama_penandatangan }}</div>
-                <div>{{ $jabatan_penandatangan }}</div>
-            </div>
+    {{-- ============ TANDA TANGAN ============ --}}
+    <div class="signature-block">
+        <div class="signature-inner">
+            <div>{{ $tempat_surat }}, {{ $tanggal_surat }}</div>
+            <br>
+            <div>PT Jasa Raharja</div>
+            <div>Kantor Wilayah Utama Jawa Tengah</div>
+            <div class="signature-name">{{ $nama_penandatangan }}</div>
+            <div>{{ $jabatan_penandatangan }}</div>
         </div>
+    </div>
 
 </body>
 </html>

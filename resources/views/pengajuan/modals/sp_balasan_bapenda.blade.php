@@ -83,9 +83,6 @@
                 <button type="button" class="btn btn-outline-primary" id="btnPreviewSpBalasanBapenda">
                     <i class="fas fa-eye me-1"></i>Lihat Preview
                 </button>
-                <button type="button" class="btn btn-success" id="btnSubmitSpBalasanBapenda">
-                    <i class="fas fa-save me-1"></i>Simpan sebagai Draft
-                </button>
             </div>
 
             {{-- Footer: Mode Preview --}}
@@ -212,10 +209,6 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.innerHTML = '<i class="fas fa-save me-1"></i>Simpan sebagai Draft';
         });
     };
-
-    document.getElementById('btnSubmitSpBalasanBapenda').addEventListener('click', function() {
-        submitForm(this);
-    });
 
     document.getElementById('btnSubmitSpBalasanBapendaPreview').addEventListener('click', function() {
         submitForm(this);

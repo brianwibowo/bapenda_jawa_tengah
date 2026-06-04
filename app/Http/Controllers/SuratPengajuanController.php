@@ -561,6 +561,7 @@ class SuratPengajuanController extends Controller
         ]);
 
         $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
+        $firstKendaraan = $kendaraans->first();
 
         if ($kendaraans->isEmpty()) {
             return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
@@ -575,6 +576,15 @@ class SuratPengajuanController extends Controller
             'tanggal_surat' => $request->tanggal_surat,
             'nama_penandatangan' => strtoupper($request->nama_penandatangan),
             'jabatan_penandatangan' => strtoupper($request->jabatan_penandatangan),
+            'data' => (object)[
+                'nrkb' => strtoupper($firstKendaraan->nrkb ?? '-'),
+                'nama' => optional($firstKendaraan->pemilik)->nama_pemilik ?? '-',
+                'alamat' => optional($firstKendaraan->pemilik)->alamat_pemilik ?? '-',
+                'merk_type' => ($firstKendaraan->merk_kendaraan ?? '-') . '/' . ($firstKendaraan->tipe_kendaraan ?? '-'),
+                'no_rangka_mesin' => strtoupper(($firstKendaraan->nomor_rangka ?? '-') . '/' . ($firstKendaraan->nomor_mesin ?? '-')),
+                'jenis_model' => strtoupper(($firstKendaraan->jenis_kendaraan ?? '-') . '/' . ($firstKendaraan->model_kendaraan ?? '-')),
+                'tahun' => $firstKendaraan->tahun_pembuatan ?? '-',
+            ],
         ];
 
         // Generate PDF

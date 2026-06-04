@@ -140,6 +140,7 @@
                             <th class="px-4 py-3">Tanggal Masuk</th>
                             <th class="px-4 py-3">Update Terakhir</th>
                             <th class="px-4 py-3 text-center">Status</th>
+                            <th class="px-4 py-3 text-center">Progres</th>
                             <th class="px-4 py-3 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -190,6 +191,9 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-center">
+                                    {{ $progress[$pengajuan->id] ?? 0 }} / 9
+                                </td>
+                                <td class="px-4 py-3 text-center">
                                     <a href="{{ route('pengajuan.show', $pengajuan) }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-eye me-1"></i> Lihat Detail
                                     </a>
@@ -197,7 +201,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                         <h5>Tidak ada data pengajuan</h5>

@@ -60,9 +60,6 @@
             <div class="modal-footer" id="footerFormSpPolda2bapendajr">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                 <button type="button" class="btn btn-outline-primary" id="btnPreviewSpPolda2bapendajr">Lihat Preview</button>
-                <button type="button" class="btn btn-success" id="btnSubmitSpPolda2bapendajr">
-                    <i class="fas fa-save me-1"></i> Simpan sebagai Draft
-                </button>
             </div>
 
             {{-- Footer: Mode Preview --}}
@@ -154,10 +151,6 @@
                 btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
             });
         };
-
-        document.getElementById('btnSubmitSpPolda2bapendajr').addEventListener('click', function () {
-            submitForm(this);
-        });
 
         document.getElementById('btnSubmitSpPolda2bapendajrPreview').addEventListener('click', function () {
             submitForm(this);

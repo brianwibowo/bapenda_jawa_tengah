@@ -108,8 +108,8 @@ class Pengajuan extends Model implements HasMedia
 
         $statuses = $this->kendaraans->pluck('status');
 
-        if ($statuses->isEmpty()) {
-            return 'draft'; // Jika tidak ada kendaraan, statusnya 'draft'
+        if ($statuses->isEmpty() || $statuses->every(fn($status) => $status == 'draft')) {
+            return 'draft'; // Jika tidak ada kendaraan atau semua kendaraan masih draft, statusnya 'draft'
         }
         if ($statuses->contains('ditolak')) {
             return 'ditolak'; // Jika ada 1 saja ditolak, status bundel 'ditolak'
@@ -183,36 +183,24 @@ class Pengajuan extends Model implements HasMedia
         $totalSkJR = 0;
 
         foreach ($this->kendaraans as $k){
-            $curSkPolda = $k->suratKeputusans()->where('unit_kerja', 'Polda')->first();
-            $curSkBapenda = $k->suratKeputusans()->where('unit_kerja', 'Bapenda')->first();
-            $curSkJR = $k->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->first();
+            $curSkPolda = $k->suratKeputusans()->where('unit_kerja', 'Polda')->whereHas('log', function($q) {
+                $q->where('sk_status', 'terbit');
+            })->first();
+            $curSkBapenda = $k->suratKeputusans()->where('unit_kerja', 'Bapenda')->whereHas('log', function($q) {
+                $q->where('sk_status', 'terbit');
+            })->first();
+            $curSkJR = $k->suratKeputusans()->where('unit_kerja', 'Jasa Raharja')->whereHas('log', function($q) {
+                $q->where('sk_status', 'terbit');
+            })->first();
 
             if ($curSkPolda && $curSkPolda->local_pdf_path) {
-                $isPublished = KendaraanLog::where('kendaraan_id', $k->id)
-                    ->where('sk_id', $curSkPolda->id)
-                    ->where('sk_status', 'terbit')
-                    ->exists();
-                if ($isPublished) {
-                    $totalSkPolda++;
-                }
+                $totalSkPolda++;
             }
             if ($curSkBapenda && $curSkBapenda->local_pdf_path) {
-                $isPublished = KendaraanLog::where('kendaraan_id', $k->id)
-                    ->where('sk_id', $curSkBapenda->id)
-                    ->where('sk_status', 'terbit')
-                    ->exists();
-                if ($isPublished) {
-                    $totalSkBapenda++;
-                }
+                $totalSkBapenda++;
             }
             if ($curSkJR && $curSkJR->local_pdf_path) {
-                $isPublished = KendaraanLog::where('kendaraan_id', $k->id)
-                    ->where('sk_id', $curSkJR->id)
-                    ->where('sk_status', 'terbit')
-                    ->exists();
-                if ($isPublished) {
-                    $totalSkJR++;
-                }
+                $totalSkJR++;
             }
         }
 

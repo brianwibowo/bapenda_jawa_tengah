@@ -86,9 +86,6 @@
                 <button type="button" class="btn btn-outline-primary" id="btnPreviewSpBalasanJR">
                     <i class="fas fa-eye me-1"></i>Lihat Preview
                 </button>
-                <button type="button" class="btn btn-success" id="btnSubmitSpBalasanJR">
-                    <i class="fas fa-save me-1"></i>Simpan sebagai Draft
-                </button>
             </div>
 
             {{-- Footer: Mode Preview --}}
@@ -215,10 +212,6 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.innerHTML = '<i class="fas fa-save me-1"></i>Simpan sebagai Draft';
         });
     };
-
-    document.getElementById('btnSubmitSpBalasanJR').addEventListener('click', function() {
-        submitForm(this);
-    });
 
     document.getElementById('btnSubmitSpBalasanJRPreview').addEventListener('click', function() {
         submitForm(this);
