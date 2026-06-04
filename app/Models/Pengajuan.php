@@ -108,8 +108,8 @@ class Pengajuan extends Model implements HasMedia
 
         $statuses = $this->kendaraans->pluck('status');
 
-        if ($statuses->isEmpty()) {
-            return 'draft'; // Jika tidak ada kendaraan, statusnya 'draft'
+        if ($statuses->isEmpty() || $statuses->every(fn($status) => $status == 'draft')) {
+            return 'draft'; // Jika tidak ada kendaraan atau semua kendaraan masih draft, statusnya 'draft'
         }
         if ($statuses->contains('ditolak')) {
             return 'ditolak'; // Jika ada 1 saja ditolak, status bundel 'ditolak'

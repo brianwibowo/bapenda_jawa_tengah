@@ -41,7 +41,10 @@ class PengajuanController extends Controller
         $isBranchScoped = $user->can('scoped_to_own_branch');
         $isSamsat = $isBranchScoped;
 
-        $query = Pengajuan::with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
+        $query = Pengajuan::whereHas('kendaraans', function ($q) {
+                $q->where('status', '<>', 'draft');
+            })
+            ->with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
             ->withCount('kendaraans')
             ->latest('updated_at');
 

@@ -226,7 +226,9 @@
                                                     <tr>
                                                         <td class="text-muted">Status</td>
                                                         <td>
-                                                            @if($kendaraan->status == 'pengajuan')
+                                                            @if($kendaraan->status == 'draft')
+                                                                <span class="badge bg-secondary">Draft</span>
+                                                            @elseif($kendaraan->status == 'pengajuan')
                                                                 <span class="badge bg-warning text-dark">Diajukan</span>
                                                             @elseif($kendaraan->status == 'diproses')
                                                                 <span class="badge bg-info text-dark">Diproses</span>

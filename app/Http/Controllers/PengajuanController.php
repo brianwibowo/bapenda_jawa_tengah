@@ -47,8 +47,10 @@ class PengajuanController extends Controller
             } else {
                 switch ($status) {
                     case 'draft':
-                        // no kendaraans
-                        $query->whereDoesntHave('kendaraans');
+                        // no kendaraans OR all kendaraans are draft
+                        $query->whereDoesntHave('kendaraans', function ($q) {
+                            $q->where('status', '<>', 'draft');
+                        });
                         break;
 
                     case 'ditolak':
@@ -76,13 +78,16 @@ class PengajuanController extends Controller
                         break;
 
                     case 'pengajuan':
-                        // has kendaraans, none ditolak, none diproses, and not all selesai
+                        // has kendaraans, none ditolak, none diproses, none draft, and not all selesai
                         $query->whereHas('kendaraans')
                             ->whereDoesntHave('kendaraans', function ($q) {
                                 $q->where('status', 'ditolak');
                             })
                             ->whereDoesntHave('kendaraans', function ($q) {
                                 $q->where('status', 'diproses');
+                            })
+                            ->whereDoesntHave('kendaraans', function ($q) {
+                                $q->where('status', 'draft');
                             })
                             // ensure at least one kendaraan is not 'selesai' (so not all finished)
                             ->whereHas('kendaraans', function ($q) {
@@ -208,7 +213,7 @@ class PengajuanController extends Controller
         ]);
 
         $dataKendaraan['pemilik_id'] = $pemilik->id;
-        $dataKendaraan['status'] = 'pengajuan';
+        $dataKendaraan['status'] = 'draft';
 
         // Update atau create kendaraan
         if ($request->has('kendaraan_id') && $request->kendaraan_id) {
@@ -227,14 +232,7 @@ class PengajuanController extends Controller
         // Upload dokumen
         $this->uploadDokumen($request, $kendaraan, $request->has('kendaraan_id'));
 
-        // Catat ke Log Histori
-        KendaraanLog::create([
-            'kendaraan_id' => $kendaraan->id,
-            'user_id' => Auth::id(),
-            'aksi' => $request->has('kendaraan_id') ? 'Kendaraan diupdate' : 'Kendaraan Diajukan',
-            'status_baru' => 'pengajuan',
-            'catatan' => 'Kendaraan (' . $kendaraan->merk_kendaraan . ') ' . ($request->has('kendaraan_id') ? 'diperbarui' : 'diajukan') . ' oleh ' . (Auth::user()->unit_kerja ?? Auth::user()->name),
-        ]);
+        // TIDAK mencatat ke Log Histori saat simpan kendaraan (bersifat draft)
 
         return response()->json([
             'success' => true,
@@ -278,6 +276,22 @@ class PengajuanController extends Controller
             return redirect()->route('pengajuan.create', ['pengajuan_id' => $pengajuan->id])
                 ->with('error', 'Beberapa kendaraan belum lengkap datanya. Silakan lengkapi terlebih dahulu.')
                 ->with('incomplete_kendaraans', $incompleteKendaraans);
+        }
+
+        // Update status kendaraan dari draft ke pengajuan, dan catat ke Log Histori (1x per kendaraan)
+        foreach ($kendaraans as $kendaraan) {
+            if ($kendaraan->status === 'draft') {
+                $kendaraan->update(['status' => 'pengajuan']);
+                
+                KendaraanLog::create([
+                    'kendaraan_id' => $kendaraan->id,
+                    'user_id' => Auth::id(),
+                    'aksi' => 'Kendaraan Diajukan',
+                    'tipe' => 'system',
+                    'status_baru' => 'pengajuan',
+                    'catatan' => 'Kendaraan (' . $kendaraan->merk_kendaraan . ') diajukan oleh ' . (Auth::user()->unit_kerja ?? Auth::user()->name),
+                ]);
+            }
         }
 
         // Pengajuan sudah lengkap, redirect ke halaman detail pengajuan
