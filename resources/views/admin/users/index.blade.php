@@ -2,7 +2,7 @@
     <x-slot name="header">
         <h2 class="fw-bold mb-0">
             @if($type === 'wp')
-                Manajemen Pengguna (Wajib Pajak)
+                Manajemen Pengguna (Pengusul)
             @else
                 Manajemen Pemangku Kepentingan
             @endif

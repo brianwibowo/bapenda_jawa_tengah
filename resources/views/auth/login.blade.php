@@ -49,7 +49,7 @@
         @if (Route::has('register'))
             <div class="text-end mb-3">
                 <a href="{{ route('register') }}" class="text-decoration-none small text-primary fw-semibold hover-primary">
-                    Daftar Akun Wajib Pajak
+                    Daftar Akun Pengusul
                 </a>
             </div>
         @endif
