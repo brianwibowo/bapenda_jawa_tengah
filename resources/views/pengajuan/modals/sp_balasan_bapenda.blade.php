@@ -1,30 +1,21 @@
-<!-- Modal Form SK Penghapusan Regident (Non-Default, Draft) -->
-<div class="modal fade" id="modalSkPenghapusanRegident" tabindex="-1" aria-labelledby="modalSkPenghapusanRegidentLabel" aria-hidden="true">
+{{-- Modal Full Form: SP Balasan Bapenda (Non-Default, Draft) --}}
+<div class="modal fade" id="modalSpBalasanBapenda" tabindex="-1" aria-labelledby="modalSpBalasanBapendaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow">
-            <form id="formSkPenghapusanRegidentDraft" method="POST">
+            <form id="formSpBalasanBapenda" method="POST">
                 @csrf
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalSkPenghapusanRegidentLabel">Input Data SK Penghapusan Regident</h5>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalSpBalasanBapendaLabel">
+                        <i class="fas fa-reply me-2"></i>Balas Surat Pengajuan (Bapenda)
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label fw-bold">Pilih Kendaraan</label>
-                            <select class="form-select" name="kendaraan_id" required>
-                                <option value="">-- Pilih Kendaraan (NRKB) --</option>
-                                @foreach($pengajuan->kendaraans as $k)
-                                    <option value="{{ $k->id }}">{{ $k->nrkb }} - {{ $k->merk_kendaraan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+                <div class="modal-body" style="padding: 1.25rem;">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat</label>
                             <input type="text" class="form-control" name="nomor_surat" required>
-                            <small class="text-muted d-block mt-1">Contoh: SKET/ {{ date('m') }} /{{ date('m/Y') }}/Ditlantas</small>
+                            <small class="text-muted d-block mt-1">Contoh: SKET/ {{ date('m') }}/{{ date('m/Y') }}/Ditlantas</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Sifat</label>
@@ -72,70 +63,81 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-outline-primary" id="btnShowPreviewSkPenghapusanRegident">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Batal
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="btnPreviewSpBalasanBapenda">
                         <i class="fas fa-eye me-1"></i>Lihat Preview
                     </button>
-                    <button type="button" class="btn btn-success" id="btnSubmitSkPenghapusanRegidentDraft">
-                        <i class="fas fa-save me-1"></i> Simpan sebagai Draft
+                    <button type="button" class="btn btn-success" id="btnSubmitSpBalasanBapenda">
+                        <i class="fas fa-save me-1"></i>Simpan sebagai Draft
                     </button>
                 </div>
             </form>
         </div>
     </div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('formSkPenghapusanRegidentDraft');
+</div>
 
-        document.getElementById('btnShowPreviewSkPenghapusanRegident').addEventListener('click', async function () {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formSpBalasanBapenda');
+    const signedUrl = @json($signedUrls['sp_terima'] ?? '');
+
+    if (!signedUrl) return; // No active SP to respond to
+
+    // Preview: uses terima route with preview=1
+    const btnPreview = document.getElementById('btnPreviewSpBalasanBapenda');
+    if (btnPreview && form) {
+        btnPreview.addEventListener('click', async function() {
             if (!form.checkValidity()) { form.reportValidity(); return; }
-            const btn = this;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
+            btnPreview.disabled = true;
+            btnPreview.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Memuat...';
 
             try {
                 const formData = new FormData(form);
                 formData.append('preview', '1');
-                const url = `{{ route('admin.pengajuan.generate_sk_penghapusan_regident', $pengajuan->id) }}`;
-                const response = await fetch(url, {
+                const response = await fetch(signedUrl, {
                     method: 'POST', body: formData,
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/pdf' }
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                 });
                 if (!response.ok) throw new Error('Request failed: ' + response.status);
-                const blob = await response.blob();
-                const blobUrl = URL.createObjectURL(blob);
+                const result = await response.json();
+                const pdfUrl = result.data?.pdf_url || null;
+                if (!pdfUrl) throw new Error('No PDF URL returned');
 
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalSkPenghapusanRegident'));
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalSpBalasanBapenda'));
                 modal.hide();
                 if (typeof openPdfViewer === 'function') {
-                    openPdfViewer(blobUrl, { title: 'Preview SK Penghapusan Regident', onBack: () => modal.show(), onClose: () => URL.revokeObjectURL(blobUrl) });
-                } else { window.open(blobUrl, '_blank'); }
+                    openPdfViewer(pdfUrl, { title: 'Preview SP Balasan Bapenda', onBack: () => modal.show() });
+                } else { window.open(pdfUrl, '_blank'); }
             } catch (error) {
-                console.error('Preview load failed:', error);
-                alert('Gagal memuat preview PDF.');
+                console.error('Preview error:', error);
+                alert('Gagal memuat preview. Silakan coba lagi.');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-eye me-1"></i>Lihat Preview';
+                btnPreview.disabled = false;
+                btnPreview.innerHTML = '<i class="fas fa-eye me-1"></i>Lihat Preview';
             }
         });
+    }
 
-        document.getElementById('btnSubmitSkPenghapusanRegidentDraft').addEventListener('click', function () {
+    // Submit (no preview → actual submission via terima)
+    const btnSubmit = document.getElementById('btnSubmitSpBalasanBapenda');
+    if (btnSubmit && form) {
+        btnSubmit.addEventListener('click', function() {
             if (!form.checkValidity()) { form.reportValidity(); return; }
-            const btn = this;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...';
             const formData = new FormData(form);
-            fetch(`{{ route('admin.pengajuan.draft_sk', $pengajuan->id) }}`, {
+            fetch(signedUrl, {
                 method: 'POST', body: formData,
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'text/html' }
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success && data.redirect) { window.location.href = data.redirect; }
-                else { alert(data.message || 'Terjadi kesalahan.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft'; }
+            .then(r => {
+                if (r.redirected) { window.location.href = r.url; return; }
+                return r.text().then(() => { window.location.reload(); });
             })
-            .catch(() => { alert('Gagal menyimpan draft.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft'; });
+            .catch(() => { alert('Gagal menyimpan.'); btnSubmit.disabled = false; btnSubmit.innerHTML = '<i class="fas fa-save me-1"></i>Simpan sebagai Draft'; });
         });
-    });
-    </script>
-</div>
+    }
+});
+</script>

@@ -8,7 +8,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="formSkJR" method="POST" action="{{ route('admin.pengajuan.draft_sk', $pengajuan->id) }}">
+            <form id="formSkJR" method="POST" action="{{ $signedUrls['sk_buat'] ?? '#' }}">
                 @csrf
                 <input type="hidden" name="kendaraan_id" value="all">
                 <div class="modal-body">

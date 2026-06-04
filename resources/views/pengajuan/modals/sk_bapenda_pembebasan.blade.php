@@ -133,18 +133,21 @@
     document.addEventListener('DOMContentLoaded', function () {
        const form = document.getElementById('formSkPembebasanDraft');
        const metodePenandaTangan = document.getElementById('metode_penanda_tangan');
+       const signedUrl = @json($signedUrls['sk_buat'] ?? '');
 
-       metodePenandaTangan.addEventListener('change', function () {
-            if (this.value === 'ttd_basah') {
-                document.getElementById('sk_pembebasan_ttd_basah_container').style.display = 'block';
-                document.getElementById('sk_pembebasan_ttd_basah').required = true;
-            } else {
-                document.getElementById('sk_pembebasan_ttd_basah_container').style.display = 'none';
-                document.getElementById('sk_pembebasan_ttd_basah').required = false;
-            }
-       });
+       if (metodePenandaTangan) {
+           metodePenandaTangan.addEventListener('change', function () {
+                if (this.value === 'ttd_basah') {
+                    document.getElementById('sk_pembebasan_ttd_basah_container').style.display = 'block';
+                    document.getElementById('sk_pembebasan_ttd_basah').required = true;
+                } else {
+                    document.getElementById('sk_pembebasan_ttd_basah_container').style.display = 'none';
+                    document.getElementById('sk_pembebasan_ttd_basah').required = false;
+                }
+           });
+       }
 
-       // Preview: fetch PDF blob → openPdfViewer
+       // Preview: fetch buat-sk with preview=1 → JSON with pdf_url
        document.getElementById('btnShowPreviewSkPembebasan').addEventListener('click', async function () {
            if (!form.checkValidity()) { form.reportValidity(); return; }
            const btn = this;
@@ -154,20 +157,28 @@
            try {
                const formData = new FormData(form);
                formData.append('preview', '1');
-               const url = `{{ route('admin.pengajuan.generate_sk_pembebasan', $pengajuan->id) }}`;
-               const response = await fetch(url, {
+               const response = await fetch(signedUrl, {
                    method: 'POST', body: formData,
-                   headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/pdf' }
+                   headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                });
                if (!response.ok) throw new Error('Request failed: ' + response.status);
-               const blob = await response.blob();
-               const blobUrl = URL.createObjectURL(blob);
+               const result = await response.json();
+
+               let pdfUrl = null;
+               if (result.data) {
+                   if (result.data.pdf_url) { pdfUrl = result.data.pdf_url; }
+                   else {
+                       const firstKey = Object.keys(result.data)[0];
+                       if (firstKey && result.data[firstKey]) { pdfUrl = result.data[firstKey].pdf_url || null; }
+                   }
+               }
+               if (!pdfUrl) throw new Error('No PDF URL returned');
 
                const modal = bootstrap.Modal.getInstance(document.getElementById('modalSkPembebasan'));
                modal.hide();
                if (typeof openPdfViewer === 'function') {
-                   openPdfViewer(blobUrl, { title: 'Preview SK Pembebasan', onBack: () => modal.show(), onClose: () => URL.revokeObjectURL(blobUrl) });
-               } else { window.open(blobUrl, '_blank'); }
+                   openPdfViewer(pdfUrl, { title: 'Preview SK Pembebasan', onBack: () => modal.show() });
+               } else { window.open(pdfUrl, '_blank'); }
            } catch (error) {
                console.error('Preview load failed:', error);
                alert('Gagal memuat preview PDF.');
@@ -177,21 +188,20 @@
            }
        });
 
-       // Submit as Draft
+       // Submit (no preview param → actual submission via buat-sk)
        document.getElementById('btnSubmitSkPembebasanDraft').addEventListener('click', function () {
            if (!form.checkValidity()) { form.reportValidity(); return; }
            const btn = this;
            btn.disabled = true;
            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
            const formData = new FormData(form);
-           fetch(`{{ route('admin.pengajuan.draft_sk', $pengajuan->id) }}`, {
+           fetch(signedUrl, {
                method: 'POST', body: formData,
-               headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+               headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'text/html' }
            })
-           .then(r => r.json())
-           .then(data => {
-               if (data.success && data.redirect) { window.location.href = data.redirect; }
-               else { alert(data.message || 'Terjadi kesalahan.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft'; }
+           .then(r => {
+               if (r.redirected) { window.location.href = r.url; return; }
+               return r.text().then(() => { window.location.reload(); });
            })
            .catch(() => { alert('Gagal menyimpan draft.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft'; });
        });

@@ -118,9 +118,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/pengajuan/{pengajuan}/draft-sk', [AdminPengajuanController::class, 'storeDraftSk'])->name('pengajuan.draft_sk');
             Route::post('/pengajuan/publish-sk/{log}', [AdminPengajuanController::class, 'publishSk'])->name('pengajuan.publish_sk');
             Route::post('/pengajuan/publish-sp/{log}', [AdminPengajuanController::class, 'publishSp'])->name('pengajuan.publish_sp');
-            Route::post('/pengajuan/{pengajuan}/generate-sk-regident', [AdminPengajuanController::class, 'generateSkRegident'])->name('pengajuan.generate_sk_regident');
-            Route::post('/pengajuan/{pengajuan}/generate-sk-pembebasan', [AdminPengajuanController::class, 'generateSkPembebasan'])->name('pengajuan.generate_sk_pembebasan');
-            Route::post('/pengajuan/{pengajuan}/generate-sk-penghapusan-regident', [AdminPengajuanController::class, 'generateSkPenghapusanRegident'])->name('pengajuan.generate_sk_penghapusan_regident');
         });
 
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
@@ -152,10 +149,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
     });
 
-    // Generate PDF routes (shared between user and admin)
-    Route::post('/pengajuan/generate-sk-polda', [AdminPengajuanController::class, 'generateSkPolda'])->name('pengajuan.generate_sk_polda');
-
-
     // API untuk mendapatkan tiket akses (UUID/Signature di URL)
     Route::post('/api/frame-access/{type}/{category}/{id}', [FrameController::class, 'requestAccess'])
         ->name('frame.access.request');
@@ -165,82 +158,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/secure-frame/{type}/{category}/{id}', [FrameController::class, 'render'])
         ->middleware(['signed']) 
         ->name('frame.secure.render');
-
-    // === TEMPORARY: Preview SK PDF (hapus setelah controller siap) ===
-    Route::get('/preview-sk-regident', function () {
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_penghapusan_regident', [
-            'kendaraan' => (object) [
-                'nrkb' => 'AA 9660 QE',
-                'merk_kendaraan' => 'VIAR',
-                'tipe_kendaraan' => 'V 15 RL',
-                'jenis_kendaraan' => 'SEPEDA MOTOR',
-                'model_kendaraan' => 'RODA TIGA',
-                'tahun_pembuatan' => '2015',
-                'isi_silinder' => '150 CC',
-                'nomor_rangka' => 'MGRVR15TAFL207980',
-                'nomor_mesin' => 'YX161FMG15207805',
-                'jenis_bahan_bakar' => 'BENSIN',
-                'warna_tnkb' => 'MERAH',
-                'nomor_bpkb' => 'M01679715',
-                'pemilik' => (object) [
-                    'nama_pemilik' => 'PEMERINTAH DESA GANDUWETAN',
-                    'alamat_pemilik' => 'JL JUMO NO 03 KEC. NGADIREJO KAB. TEMANGGUNG',
-                    'nik_pemilik' => '-',
-                    'telp_pemilik' => '-',
-                    'email_pemilik' => '-',
-                ],
-            ],
-            'warna_kendaraan' => 'BIRU',
-            'nomor_surat' => 'SKET/ 01 /VI/YAN.1/2025/Ditlantas',
-            'nama_pembuat_pernyataan' => 'Dwiyanto Setyo Budi',
-            'lokasi_pernyataan' => 'Temanggung',
-            'tanggal_pernyataan' => '13 Mei 2024',
-            'nama_pembuat_permohonan' => 'Dwiyanto Setyo Budi',
-            'lokasi_permohonan' => 'Temanggung',
-            'tanggal_permohonan' => '13 Mei 2024',
-            'tempat_dikeluarkan' => 'Semarang',
-            'tanggal_surat' => '30 Juni 2025',
-            'jabatan_penandatangan' => 'DIREKTUR LALU LINTAS POLDA JAWA TENGAH',
-        ]);
-        return $pdf->setPaper('a4', 'portrait')->stream('SK_PENGHAPUSAN_REGIDENT.pdf');
-    })->name('preview.sk.regident');
-
-    // Test route for Hapus Regident PDF
-    Route::get('/test-pdf-hapus-regident', function () {
-        $data = [
-            'nomor' => 'HR-001/2026',
-            'nama_pemohon' => 'John Doe',
-            'alamat' => 'Jl. Sudirman No. 123, Semarang',
-            'nomor_identitas' => '1234567890123456',
-            'nama_resident' => 'Jane Smith',
-            'id_resident' => 'RES-2026-001',
-            'alasan' => 'Permintaan penghapusan data oleh pemilik'
-        ];
-
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.view_hapus-regident', $data)
-            ->setPaper('a4', 'portrait')
-            ->stream('hapus-regident-test.pdf');
-    })->name('test.pdf.hapus-regident');
-
-    Route::get('/preview-sk-polda', function () {
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_polda', [
-            'data' => (object) [
-                'nrkb' => 'AA 9660 QE',
-                'nama' => 'PEMERINTAH DESA GANDUWETAN',
-                'alamat' => 'JL. JUMO NO 03 KEL NGADIREJO KAB TEMANGGUNG',
-                'jenis_model' => 'SEPEDA MOTOR/RODA TIGA',
-                'merek_tipe' => 'VIAR/V15 RL',
-                'tahun' => '2015',
-                'isi_silinder' => '150 CC',
-                'bahan_bakar' => 'BENSIN',
-                'no_rangka' => 'MGRVR15TAFL207980',
-                'no_mesin' => 'YX161FMG15207805',
-                'warna' => 'BIRU',
-                'no_bpkb' => 'M01679715',
-            ],
-            'nama_direktur' => 'M. PRATAMA, S.I.K., S.H., M.H.',
-            'pangkat_direktur' => 'KOMISARIS BESAR POLISI NRP 68090397',
-        ]);
-        return $pdf->setPaper('a4', 'portrait')->stream('SK_POLDA.pdf');
-    })->name('preview.sk.polda');
 });

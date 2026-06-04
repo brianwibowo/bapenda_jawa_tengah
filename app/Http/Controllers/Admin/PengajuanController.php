@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class PengajuanController extends Controller
@@ -148,29 +149,45 @@ class PengajuanController extends Controller
             }
         }
 
-        // Mapping jenis SK per role untuk modal "Pilih Jenis SK"
-        $skTypeOptions = [];
+        // Generate signed URLs for modal form submissions (access control)
+        $signedUrls = [];
+        $signedUrls['sp_ajukan'] = URL::temporarySignedRoute(
+            'admin.pengajuan.ajukan', now()->addMinutes(30), ['id' => $pengajuan->id]
+        );
+        if ($lastSp) {
+            $signedUrls['sp_terima'] = URL::temporarySignedRoute(
+                'admin.pengajuan.sp.terima', now()->addMinutes(30), ['surat' => $lastSp->id]
+            );
+        }
+        $signedUrls['sk_buat'] = URL::temporarySignedRoute(
+            'admin.pengajuan.buat_sk', now()->addMinutes(30), ['id' => $pengajuan->id]
+        );
+
+        // Mapping jenis Surat per role untuk modal "Pilih Jenis Surat"
+        $sTypeOptions = [];
         $normalizedUK = $this->normalizeUnitKerja($user->unit_kerja);
         switch ($normalizedUK) {
             case 'Samsat':
-                $skTypeOptions = [
-                    ['key' => 'sk_default', 'label' => 'SK Default', 'icon' => 'fas fa-file', 'modal' => '#modalSkDefault'],
+                $sTypeOptions = [
+                    ['key' => 'sp_default', 'label' => 'SP Pengajuan ke Polda', 'icon' => 'fas fa-paper-plane', 'modal' => '#modalSpDefault'],
+                    ['key' => 'sk_default', 'label' => 'SK Default', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkDefault'],
                 ];
                 break;
             case 'Polda':
-                $skTypeOptions = [
-                    ['key' => 'sk_regident', 'label' => 'SK Penghapusan Regident Polda', 'icon' => 'fas fa-file-alt', 'modal' => '#modalSkRegident'],
+                $sTypeOptions = [
+                    ['key' => 'sp_polda2bapendajr', 'label' => 'SP Polda ke Bapenda/JR', 'icon' => 'fas fa-paper-plane', 'modal' => '#modalSpPolda2bapendajr'],
                     ['key' => 'sk_polda', 'label' => 'SK Polda', 'icon' => 'fas fa-shield-alt', 'modal' => '#modalSkPolda'],
                 ];
                 break;
             case 'Bapenda':
-                $skTypeOptions = [
-                    ['key' => 'sk_bapenda_pembebasan', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'],
-                    ['key' => 'sk_penghapusan_regident', 'label' => 'SK Penghapusan Regident Bapenda', 'icon' => 'fas fa-file-excel', 'modal' => '#modalSkPenghapusanRegident'],
+                $sTypeOptions = [
+                    ['key' => 'sp_balasan_bapenda', 'label' => 'SP Balasan Bapenda', 'icon' => 'fas fa-reply', 'modal' => '#modalSpBalasanBapenda'],
+                    ['key' => 'sk_bapenda', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'],
                 ];
                 break;
             case 'Jasa Raharja':
-                $skTypeOptions = [
+                $sTypeOptions = [
+                    ['key' => 'sp_balasan_jr', 'label' => 'SP Balasan Jasa Raharja', 'icon' => 'fas fa-reply', 'modal' => '#modalSpBalasanJR'],
                     ['key' => 'sk_jr', 'label' => 'SK Jasa Raharja', 'icon' => 'fas fa-file-contract', 'modal' => '#modalSkJR'],
                 ];
                 break;
@@ -183,7 +200,8 @@ class PengajuanController extends Controller
             'suratpengajuan',
             'progress',
             'permissionSurat',
-            'skTypeOptions',
+            'sTypeOptions',
+            'signedUrls',
             'lastSp'
         ));
     }

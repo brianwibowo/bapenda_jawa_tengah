@@ -114,7 +114,7 @@
                         </button>
                     @endif
 
-                    @if(!empty($skTypeOptions) && count($skTypeOptions) > 0)
+                    @if(!empty($sTypeOptions) && count($sTypeOptions) > 0)
                         <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;"
                                 data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK">
                             <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
@@ -805,20 +805,20 @@
 </script>
 
 {{-- Modal: Pilih Jenis SK --}}
-@if(!empty($admin) && $admin && !empty($skTypeOptions))
+@if(!empty($admin) && $admin && !empty($sTypeOptions))
 <div class="modal fade" id="modalPilihJenisSK" tabindex="-1" aria-labelledby="modalPilihJenisSKLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header" style="background: linear-gradient(135deg, #FEC014, #f0a500); border: none;">
                 <h5 class="modal-title fw-bold text-dark" id="modalPilihJenisSKLabel">
-                    <i class="fas fa-file-contract me-2"></i>Pilih Jenis Surat Keputusan
+                    <i class="fas fa-file-contract me-2"></i>Pilih Jenis Surat
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body py-4">
-                <p class="text-muted mb-4">Pilih jenis SK yang akan dibuat untuk pengajuan ini:</p>
+                <p class="text-muted mb-4">Pilih jenis Surat yang akan dibuat untuk pengajuan ini:</p>
                 <div class="row g-3">
-                    @foreach($skTypeOptions as $option)
+                    @foreach($sTypeOptions as $option)
                         <div class="col-6">
                             <button type="button" class="btn w-100 py-4 fw-bold text-dark shadow-sm border-0 btn-pilih-sk-type"
                                     style="background: linear-gradient(145deg, #fff8e1, #fff3cd); border-radius: 12px; transition: all 0.2s ease;"
@@ -836,18 +836,17 @@
     </div>
 </div>
 
-{{-- Include existing SK modals (sebelumnya di pilih_sk, sekarang inline di sini) --}}
-@include('pengajuan.modals.sk_regident')
+{{-- Include existing SK modals --}}
 @include('pengajuan.modals.sk_polda')
 @include('pengajuan.modals.sk_bapenda_pembebasan')
-@include('pengajuan.modals.sk_penghapusan_regident')
 @include('pengajuan.modals.sk_default')
 @include('pengajuan.modals.sk_jr')
 
 {{-- Include SP modals --}}
 @include('pengajuan.modals.sp_default')
-@include('pengajuan.modals.sp_polda')
-@include('pengajuan.modals.sp_bapenda_jr')
+@include('pengajuan.modals.sp_polda2bapendajr')
+@include('pengajuan.modals.sp_balasan_bapenda')
+@include('pengajuan.modals.sp_balasan_jr')
 @endif
 
 {{-- Modal: Upload & Terbitkan SK --}}
