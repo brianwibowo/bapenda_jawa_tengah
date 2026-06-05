@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cabang;
 use App\Models\Pengajuan;
 use App\Models\KendaraanLog;
 use App\Models\Kendaraan;
@@ -17,7 +18,8 @@ class PengajuanController extends Controller
      */
     public function create()
     {
-        return view('pengajuan.create');
+        $branches = Cabang::orderBy('wilayah')->get();
+        return view('pengajuan.create', compact('branches'));
     }
 
     /**
@@ -171,7 +173,7 @@ class PengajuanController extends Controller
                 return response()->json(['error' => 'Pengajuan tidak ditemukan'], 404);
             }
         } else {
-            // Buat pengajuan baru jika belum ada
+            // Buat pengajuan baru jika belum ada (tanpa nomor_pengajuan dulu, akan di-generate saat finalisasi)
             $pengajuan = Pengajuan::create([
                 'user_id' => Auth::id(),
                 'cabang_id' => Auth::user()->cabang_id,
@@ -250,11 +252,17 @@ class PengajuanController extends Controller
     {
         $request->validate([
             'pengajuan_id' => 'required|exists:pengajuans,id',
+            'cabang_id' => 'nullable|exists:cabangs,id',
         ]);
 
         $pengajuan = Pengajuan::where('id', $request->pengajuan_id)
             ->where('user_id', Auth::id())
             ->firstOrFail();
+
+        if ($request->filled('cabang_id')) {
+            $pengajuan->cabang_id = $request->cabang_id;
+            $pengajuan->save();
+        }
 
         // Validasi semua kendaraan sudah lengkap
         $pengajuan->loadMissing('kendaraans.pemilik');
@@ -276,6 +284,12 @@ class PengajuanController extends Controller
             return redirect()->route('pengajuan.create', ['pengajuan_id' => $pengajuan->id])
                 ->with('error', 'Beberapa kendaraan belum lengkap datanya. Silakan lengkapi terlebih dahulu.')
                 ->with('incomplete_kendaraans', $incompleteKendaraans);
+        }
+
+        // Generate nomor_pengajuan hanya saat finalisasi (bukan di draft)
+        if (empty($pengajuan->nomor_pengajuan)) {
+            $pengajuan->nomor_pengajuan = Pengajuan::generateNomorPengajuan();
+            $pengajuan->save();
         }
 
         // Update status kendaraan dari draft ke pengajuan, dan catat ke Log Histori (1x per kendaraan)

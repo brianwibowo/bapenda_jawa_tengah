@@ -13,6 +13,7 @@ class Cabang extends Model
     protected $fillable = [
         'nama',
         'wilayah',
+        'alamat',
     ];
 
     public function users(): HasMany

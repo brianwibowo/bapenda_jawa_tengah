@@ -79,7 +79,7 @@
                             </div>
                             @unless($isSamsatUser)
                                 <div class="col-md-4">
-                                    <select name="cabang_id" class="form-select">
+                                    <select name="cabang_id" class="form-select searchable-select">
                                         <option value="">-- Filter Cabang / Wilayah --</option>
                                         @foreach($branches as $branch)
                                             <option value="{{ $branch->id }}" {{ request('cabang_id') == $branch->id ? 'selected' : '' }}>

@@ -65,7 +65,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Cabang Samsat</label>
-                        <select name="cabang_id" class="form-select">
+                        <select name="cabang_id" class="form-select searchable-select">
                             <option value="">-- Tidak ada / Pilih cabang --</option>
                             @foreach($branches as $branch)
                                 <option value="{{ $branch->id }}" {{ old('cabang_id') == $branch->id ? 'selected' : '' }}>

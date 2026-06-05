@@ -28,7 +28,7 @@
                         <tr>
                             <th>Nama Cabang</th>
                             <th>Wilayah (Kota / Kabupaten)</th>
-                            <th class="text-center">Aksi</th>
+                            <th>Alamat</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -36,14 +36,7 @@
                             <tr>
                                 <td>{{ $cabang->nama }}</td>
                                 <td>{{ $cabang->wilayah }}</td>
-                                <td class="text-center">
-                                    <a href="{{ route('admin.cabangs.edit', $cabang) }}" class="btn btn-warning btn-sm" title="Ubah"><i class="fas fa-edit"></i></a>
-                                    <form action="{{ route('admin.cabangs.destroy', $cabang) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus cabang ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </td>
+                                <td>{{ $cabang->alamat }}</td>
                             </tr>
                         @empty
                             <tr>

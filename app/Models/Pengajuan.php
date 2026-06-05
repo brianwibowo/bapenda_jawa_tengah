@@ -67,32 +67,11 @@ class Pengajuan extends Model implements HasMedia
 
     /**
      * Boot method untuk membuat nomor pengajuan unik.
-     * (PENTING: Kita hapus set status default dari sini)
+     * (PENTING: Nomor pengajuan hanya dibuat saat finalisasi, bukan saat draft)
      */
     protected static function booted(): void
     {
-        static::creating(function ($pengajuan) {
-            // Logika generate nomor_pengajuan (INI BENAR)
-            if (empty($pengajuan->nomor_pengajuan)) {
-                $prefix = 'PJN-' . now()->format('ym') . '-';
-                $lastPengajuan = self::where('nomor_pengajuan', 'LIKE', $prefix . '%')
-                                     ->orderBy('nomor_pengajuan', 'desc')
-                                     ->first();
-                
-                $nextNumber = 1;
-                if ($lastPengajuan) {
-                    $lastNumber = (int) substr($lastPengajuan->nomor_pengajuan, -4);
-                    $nextNumber = $lastNumber + 1;
-                }
-                
-                $pengajuan->nomor_pengajuan = $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-            }
-            
-            // HAPUS LOGIKA STATUS DRAFT DARI SINI
-            // if (empty($pengajuan->status)) {
-            //     $pengajuan->status = 'draft'; 
-            // }
-        });
+        // Jangan generate nomor pengajuan di sini - hanya saat finalisasi
     }
 
     /**
@@ -122,6 +101,26 @@ class Pengajuan extends Model implements HasMedia
         }
 
         return 'pengajuan'; // Default jika semua masih 'pengajuan'
+    }
+
+    /**
+     * Generate nomor_pengajuan hanya saat finalisasi
+     */
+    public static function generateNomorPengajuan()
+    {
+        $prefix = 'PJN-' . now()->format('ym') . '-';
+        $lastPengajuan = self::where('nomor_pengajuan', 'LIKE', $prefix . '%')
+                             ->where('nomor_pengajuan', '!=', NULL)
+                             ->orderBy('nomor_pengajuan', 'desc')
+                             ->first();
+        
+        $nextNumber = 1;
+        if ($lastPengajuan) {
+            $lastNumber = (int) substr($lastPengajuan->nomor_pengajuan, -4);
+            $nextNumber = $lastNumber + 1;
+        }
+        
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function getSliceSuratPengajuanLastRejected()
