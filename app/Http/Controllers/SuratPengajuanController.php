@@ -913,7 +913,8 @@ class SuratPengajuanController extends Controller
     private function authorizeBranch(Pengajuan $pengajuan): void
     {
         $user = Auth::user();
-        $isBranchScoped = $user->can('scoped_to_own_branch');
+        // Superadmin should not be branch-scoped
+        $isBranchScoped = $user->hasRole('superadmin') ? false : $user->can('scoped_to_own_branch');
 
         if ($isBranchScoped && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
             abort(403, 'Akses ditolak: cabang berbeda.');

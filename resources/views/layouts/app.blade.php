@@ -55,7 +55,20 @@
     <script src="{{ asset('kaiadmin/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/core/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('kaiadmin/js/plugin/select2/select2.full.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/kaiadmin.min.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined') {
+                jQuery('.searchable-select').select2({
+                    theme: 'bootstrap',
+                    width: '100%',
+                    placeholder: 'Pilih...',
+                    allowClear: true,
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -50,10 +50,24 @@
 
     {{-- Tombol Finalisasi Pengajuan --}}
     <div class="card mb-4" id="finalizeCard" style="display: none;">
-        <div class="card-body text-center">
-            <button type="button" class="btn btn-success btn-lg" id="btnFinalize">
-                <i class="fas fa-check-circle me-2"></i> Selesai & Buat Nomor Pengajuan
-            </button>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Cabang Samsat <span class="text-danger">*</span></label>
+                <select id="pengajuanCabangSelect" class="form-select searchable-select" required>
+                    <option value="">-- Pilih Cabang Samsat --</option>
+                    @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}">
+                            {{ $branch->nama }} - {{ $branch->wilayah }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="form-text">Pilih cabang yang terkait dengan pengajuan ini.</div>
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-success btn-lg" id="btnFinalize">
+                    <i class="fas fa-check-circle me-2"></i> Selesai & Buat Nomor Pengajuan
+                </button>
+            </div>
         </div>
     </div>
 
