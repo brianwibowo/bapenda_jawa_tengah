@@ -335,15 +335,9 @@ class SuratKeputusanController extends Controller
                 $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
             }
 
-            $ttd_basah = $request->metode_penanda_tangan == 'ttd_basah';
-            if (!$ttd_basah || $request->has('preview')) {
-                Storage::disk('public')->put($storagePath, $pdf->output());
-                $pdfUrlAbsolute = asset('storage/' . $storagePath);
-                $localPdfPath = Storage::disk('public')->path($storagePath);    
-            } else {
-                $pdfUrlAbsolute = null;
-                $localPdfPath = null;
-            }
+            Storage::disk('public')->put($storagePath, $pdf->output());
+            $pdfUrlAbsolute = asset('storage/' . $storagePath);
+            $localPdfPath = Storage::disk('public')->path($storagePath);
 
             if (!$request->has('preview')) {
                 $log = $this->logSuratActionByKendaraanId(
@@ -351,7 +345,7 @@ class SuratKeputusanController extends Controller
                     $k->id,
                     'SK Jasa Raharja berhasil dibuat dan ditandatangani',
                     'Nomor Keputusan: ' . $request->nomor_keputusan,
-                    !$ttd_basah ? Storage::disk('public')->path($storagePath) : null
+                    $localPdfPath
                 );
                 $arrayResult[$k->id]['log_id'] = $log->id;
             }
@@ -684,15 +678,9 @@ class SuratKeputusanController extends Controller
                 $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
             }
             
-            $ttd_basah = $request->metode_penanda_tangan == 'ttd_basah';
-            if (!$ttd_basah || $request->has('preview')) {
-                Storage::disk('public')->put($storagePath, $pdf->output());
-                $pdfUrlAbsolute = asset('storage/' . $storagePath);
-                $localPdfPath = Storage::disk('public')->path($storagePath);    
-            } else {
-                $pdfUrlAbsolute = null;
-                $localPdfPath = null;
-            }
+            Storage::disk('public')->put($storagePath, $pdf->output());
+            $pdfUrlAbsolute = asset('storage/' . $storagePath);
+            $localPdfPath = Storage::disk('public')->path($storagePath);
 
             if (!$request->has('preview')) {
                 $log = $this->logSuratActionByKendaraanId(
@@ -700,7 +688,7 @@ class SuratKeputusanController extends Controller
                     $k->id,
                     'SK Pembebasan berhasil dibuat dan ditandatangani',
                     'Nomor Surat: ' . $request->nomor_surat_pembebasan,
-                    !$ttd_basah ? Storage::disk('public')->path($storagePath) : null
+                    $localPdfPath
                 );
                 $arrayResult[$k->id]['log_id'] = $log->id;
             }

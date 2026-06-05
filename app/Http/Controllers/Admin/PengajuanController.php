@@ -585,9 +585,10 @@ class PengajuanController extends Controller
         $localPdfPath = Storage::disk('public')->path($storagePath);
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
 
-        // Update SuratKeputusan record
+        // Update SuratKeputusan record & hapus pdf sebelumnya pada storage
         $sk = SuratKeputusan::find($log->sk_id);
         if ($sk) {
+            $this->deletePhysicalPdf($sk->local_pdf_path);
             $sk->update([
                 'local_pdf_path' => $pdfUrlAbsolute,
                 'pdf_url' => $pdfUrlAbsolute,
@@ -697,17 +698,21 @@ class PengajuanController extends Controller
                 $persetujuan = $sp->persetujuan_unit_kerja ?? [];
                 foreach ($persetujuan as &$item) {
                     if (strcasecmp($item['instansi'] ?? '', $unitKerja) === 0) {
+                        $oldPath = $item['local_pdf_path'] ?? null;
+                        $this->deletePhysicalPdf($oldPath);
                         $item['pdf_url'] = $pdfUrlAbsolute;
                         $item['local_pdf_path'] = $pdfUrlAbsolute;
                         $item['updated_at'] = now();
                     }
                 }
+                $this->deletePhysicalPdf($sp->local_pdf_balasan_path);
                 $sp->update([
                     'persetujuan_unit_kerja' => $persetujuan,
                     'local_pdf_balasan_path' => $pdfUrlAbsolute,
                     'pdf_balasan_url' => $pdfUrlAbsolute,
                 ]);
             } else {
+                $this->deletePhysicalPdf($sp->local_pdf_path);
                 $sp->update([
                     'local_pdf_path' => $pdfUrlAbsolute,
                     'pdf_url' => $pdfUrlAbsolute,
@@ -1365,6 +1370,45 @@ class PengajuanController extends Controller
         }
 
         return $logArray;
+    }
+
+    /**
+     * Delete a physical PDF file from the public storage disk using its local path or absolute URL.
+     */
+    private function deletePhysicalPdf(?string $pathOrUrl): void
+    {
+        if (!$pathOrUrl) {
+            return;
+        }
+
+        try {
+            // 1. If it's an absolute URL, resolve the local file path from the URL
+            if (filter_var($pathOrUrl, FILTER_VALIDATE_URL) || str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
+                $parsedUrl = parse_url($pathOrUrl, PHP_URL_PATH);
+                // e.g. "/storage/sk/uuid.pdf" or "/storage/sp/uuid.pdf"
+                if ($parsedUrl && str_starts_with($parsedUrl, '/storage/')) {
+                    $relativePath = substr($parsedUrl, strlen('/storage/')); // e.g. "sk/uuid.pdf"
+                    if (Storage::disk('public')->exists($relativePath)) {
+                        Storage::disk('public')->delete($relativePath);
+                    }
+                }
+            } else {
+                // 2. If it's already a local absolute path, find the relative path to the public disk
+                $publicPathPrefix = Storage::disk('public')->path(''); // e.g. "/workspaces/bapendajawatengah-ssh/storage/app/public/"
+                if (str_starts_with($pathOrUrl, $publicPathPrefix)) {
+                    $relativePath = substr($pathOrUrl, strlen($publicPathPrefix));
+                    if (Storage::disk('public')->exists($relativePath)) {
+                        Storage::disk('public')->delete($relativePath);
+                    }
+                } elseif (file_exists($pathOrUrl)) {
+                    // Fallback to direct php unlink
+                    @unlink($pathOrUrl);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Log error or ignore to prevent breaking the flow
+            \Illuminate\Support\Facades\Log::error('Gagal menghapus file PDF fisik: ' . $e->getMessage());
+        }
     }
 
 }
