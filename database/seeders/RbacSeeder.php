@@ -101,7 +101,7 @@ class RbacSeeder extends Seeder
         $roleJr = Role::firstOrCreate(['name' => 'jasa_raharja', 'guard_name' => 'web']);
 
         // 3. Distribusi Izin Dasar (Sesuai Matriks Dosen)
-        $roleSuperadmin->syncPermissions(Permission::all());
+        $roleSuperadmin->syncPermissions(Permission::where('name', '!=', 'scoped_to_own_branch')->get());
 
         // Wajib Pajak (WP)
         $roleWp->syncPermissions([

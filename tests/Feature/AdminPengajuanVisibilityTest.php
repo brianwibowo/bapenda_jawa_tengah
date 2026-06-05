@@ -25,10 +25,13 @@ class AdminPengajuanVisibilityTest extends TestCase
             'user_id' => User::factory()->create()->id,
             'cabang_id' => $cabangA->id,
         ]);
+        $this->createKendaraanForPengajuan($pengajuanCabangA, 'H 1111 AA');
+
         $pengajuanCabangB = Pengajuan::create([
             'user_id' => User::factory()->create()->id,
             'cabang_id' => $cabangB->id,
         ]);
+        $this->createKendaraanForPengajuan($pengajuanCabangB, 'H 2222 BB');
 
         $response = $this->actingAs($samsat)->get(route('admin.pengajuan.index'));
 
@@ -57,10 +60,13 @@ class AdminPengajuanVisibilityTest extends TestCase
             'user_id' => User::factory()->create()->id,
             'cabang_id' => $cabangA->id,
         ]);
+        $this->createKendaraanForPengajuan($pengajuanCabangA, 'H 1111 AA');
+
         $pengajuanCabangB = Pengajuan::create([
             'user_id' => User::factory()->create()->id,
             'cabang_id' => $cabangB->id,
         ]);
+        $this->createKendaraanForPengajuan($pengajuanCabangB, 'H 2222 BB');
 
         $response = $this->actingAs($polda)->get(route('admin.pengajuan.index'));
 
@@ -125,6 +131,36 @@ class AdminPengajuanVisibilityTest extends TestCase
         $response->assertSee($pengajuan->nomor_pengajuan);
     }
 
+    private function createKendaraanForPengajuan(Pengajuan $pengajuan, string $nrkb): Kendaraan
+    {
+        $pemilik = Pemilik::create([
+            'nama_pemilik' => 'Test Owner',
+            'nik_pemilik' => '3374' . rand(100000, 999999) . '0001',
+            'alamat_pemilik' => 'Test Alamat',
+            'telp_pemilik' => '08123456789',
+            'email_pemilik' => 'test@example.com',
+        ]);
+
+        return Kendaraan::create([
+            'pengajuan_id' => $pengajuan->id,
+            'pemilik_id' => $pemilik->id,
+            'nrkb' => $nrkb,
+            'jenis_kendaraan' => 'Mobil',
+            'model_kendaraan' => 'SUV',
+            'merk_kendaraan' => 'Toyota',
+            'tipe_kendaraan' => 'Rush',
+            'tahun_pembuatan' => 2022,
+            'isi_silinder' => '1500',
+            'jenis_bahan_bakar' => 'Bensin',
+            'nomor_rangka' => 'MH' . rand(100000000, 999999999),
+            'nomor_mesin' => 'EN' . rand(100000, 999999),
+            'warna_kendaraan' => 'Hitam',
+            'warna_tnkb' => 'Hitam',
+            'nomor_bpkb' => 'BPKB' . rand(100, 999),
+            'status' => 'pengajuan',
+        ]);
+    }
+
     private function createOfficer(string $roleName, string $unitKerja, ?int $cabangId = null): User
     {
         $permission = Permission::firstOrCreate([
@@ -133,6 +169,14 @@ class AdminPengajuanVisibilityTest extends TestCase
         ]);
         $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
         $role->givePermissionTo($permission);
+
+        if ($roleName === 'samsat') {
+            $branchPermission = Permission::firstOrCreate([
+                'name' => 'scoped_to_own_branch',
+                'guard_name' => 'web',
+            ]);
+            $role->givePermissionTo($branchPermission);
+        }
 
         $user = User::factory()->create([
             'unit_kerja' => $unitKerja,

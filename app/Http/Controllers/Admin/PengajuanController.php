@@ -39,7 +39,7 @@ class PengajuanController extends Controller
         $search = $request->query('search');
         $selectedCabang = $request->query('cabang_id');
         $user = Auth::user();
-        $isBranchScoped = $user->can('scoped_to_own_branch');
+        $isBranchScoped = $user->can('scoped_to_own_branch') && !$user->hasRole('superadmin');
         $isSamsat = $isBranchScoped;
 
         $query = Pengajuan::whereHas('kendaraans', function ($q) {
@@ -336,7 +336,7 @@ class PengajuanController extends Controller
     private function authorizeBranch(Pengajuan $pengajuan): void
     {
         $user = Auth::user();
-        $isBranchScoped = $user->can('scoped_to_own_branch');
+        $isBranchScoped = $user->can('scoped_to_own_branch') && !$user->hasRole('superadmin');
 
         if ($isBranchScoped && $user->cabang_id && $pengajuan->cabang_id !== $user->cabang_id) {
             abort(403, 'Akses ditolak: cabang berbeda.');
