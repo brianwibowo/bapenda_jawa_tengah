@@ -40,7 +40,7 @@
                 {{-- Tab kendaraan akan ditambahkan secara dinamis --}}
             </div>
             <button type="button" class="btn btn-outline-primary" id="btnTambahKendaraan">
-                <i class="fas fa-plus me-1"></i> + Tambah kendaraan
+                <i class="fas fa-plus me-1"></i> Tambah kendaraan
             </button>
         </div>
     </div>
