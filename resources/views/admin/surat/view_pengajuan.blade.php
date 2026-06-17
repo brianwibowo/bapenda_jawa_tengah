@@ -275,9 +275,7 @@
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
-                                                            </div>
-                                                        </div>
-                                                    @endif
+                                                                            @endif
                             </td>
                             </tr>
                         @empty
