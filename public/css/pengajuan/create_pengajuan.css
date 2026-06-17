@@ -6,6 +6,11 @@
     transition: all 0.3s;
 }
 
+#btnTambahKendaraan {
+    padding: 10px 20px;
+    border-radius: 8px;
+}
+
 .btn-kendaraan-tab.active {
     transform: scale(1.05);
 }

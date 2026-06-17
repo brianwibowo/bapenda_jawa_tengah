@@ -291,7 +291,12 @@ function buatTab(index) {
     tab.setAttribute("data-index", index);
     tab.addEventListener("click", () => aktifkanTab(index));
 
-    document.getElementById("kendaraanTabs").appendChild(tab);
+    const btnTambah = document.getElementById("btnTambahKendaraan");
+    if (btnTambah) {
+        btnTambah.parentNode.insertBefore(tab, btnTambah);
+    } else {
+        document.getElementById("kendaraanTabs").appendChild(tab);
+    }
     updateTabStyles();
 }
 

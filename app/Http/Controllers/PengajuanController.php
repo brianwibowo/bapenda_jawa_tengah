@@ -366,7 +366,7 @@ class PengajuanController extends Controller
         ]);
         error_log("Test");
         // Urutkan kendaraan berdasarkan created_at (yang pertama dibuat = nomor 1)
-        $pengajuan->kendaraans = $pengajuan->kendaraans->sortBy('created_at')->values();
+        $pengajuan->setRelation('kendaraans', $pengajuan->kendaraans->sortBy('created_at')->values());
 
         $progress = $pengajuan->getTotalSurat();
         error_log("Test");

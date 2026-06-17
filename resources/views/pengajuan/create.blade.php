@@ -36,12 +36,12 @@
     {{-- Tab Kendaraan --}}
     <div class="card mb-4">
         <div class="card-body">
-            <div class="d-flex flex-wrap gap-2 mb-3" id="kendaraanTabs">
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-3" id="kendaraanTabs">
                 {{-- Tab kendaraan akan ditambahkan secara dinamis --}}
+                <button type="button" class="btn btn-outline-primary" id="btnTambahKendaraan">
+                    <i class="fas fa-plus me-1"></i> Tambah kendaraan
+                </button>
             </div>
-            <button type="button" class="btn btn-outline-primary" id="btnTambahKendaraan">
-                <i class="fas fa-plus me-1"></i> Tambah kendaraan
-            </button>
         </div>
     </div>
 

@@ -232,51 +232,7 @@
                                                             </button>
                                                         @endif
                                                     </div>
-
-                                                    @if($isAdminRole)
-                                                                                <!-- Delete Modal -->
-                                                                                <div class="modal fade" id="deleteModal{{ $pengajuan->id }}" tabindex="-1">
-                                                                                    <div class="modal-dialog modal-dialog-centered">
-                                                                                        <div class="modal-content">
-                                                                                            <div class="modal-header bg-danger text-white">
-                                                                                                <h5 class="modal-title">
-                                                                                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                                                                                    Konfirmasi Hapus
-                                                                                                </h5>
-                                                                                                <button type="button" class="btn-close btn-close-white"
-                                                                                                    data-bs-dismiss="modal"></button>
-                                                                                            </div>
-                                                                                            <div class="modal-body">
-                                                                                                <div class="text-center mb-3">
-                                                                                                    <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-                                                                                                    <h6>Apakah Anda yakin ingin menghapus pengajuan ini?</h6>
-                                                                                                    <p class="text-muted mb-0">
-                                                                                                        <strong>{{ $pengajuan->nomor_pengajuan }}</strong>
-                                                                                                    </p>
-                                                                                                    <small class="text-danger">
-                                                                                                        Data yang dihapus tidak dapat dikembalikan!
-                                                                                                    </small>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div class="modal-footer">
-                                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                                                                    <i class="fas fa-times me-1"></i> Batal
-                                                                                                </button>
-                                                                                                <form
-                                                                                                    action="{{ route($pengajuanRoutePrefix . '.pengajuan.destroy', $pengajuan) }}"
-                                                                                                    method="POST" class="d-inline">
-                                                                                                    @csrf
-                                                                                                    @method('DELETE')
-                                                                                                    <button type="submit" class="btn btn-danger">
-                                                                                                        <i class="fas fa-trash me-1"></i> Hapus Permanen
-                                                                                                    </button>
-                                                                                                </form>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            @endif
-                            </td>
+                                                </td>
                             </tr>
                         @empty
             <tr>
@@ -311,6 +267,49 @@
         </div>
     @endif
     </div>
+
+    @if($isAdminRole)
+        @foreach ($pengajuans as $pengajuan)
+            <!-- Delete Modal -->
+            <div class="modal fade" id="deleteModal{{ $pengajuan->id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Konfirmasi Hapus
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                                <h6>Apakah Anda yakin ingin menghapus pengajuan ini?</h6>
+                                <p class="text-muted mb-0">
+                                    <strong>{{ $pengajuan->nomor_pengajuan }}</strong>
+                                </p>
+                                <small class="text-danger">
+                                    Data yang dihapus tidak dapat dikembalikan!
+                                </small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i> Batal
+                            </button>
+                            <form action="{{ route($pengajuanRoutePrefix . '.pengajuan.destroy', $pengajuan) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-1"></i> Hapus Permanen
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
 
     <style>
         /* Nav Pills */

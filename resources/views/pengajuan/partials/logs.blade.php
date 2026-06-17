@@ -359,7 +359,7 @@
                                 <label class="form-label">Tipe</label>
                                 <select name="tipe" class="form-select" required>
                                     <option value="komentar">Komentar / Balasan</option>
-                                    <option value="revisi">Setor Revisi Dokumen</option>
+                                    <option value="revisi">Minta Revisi Dokumen</option>
                                 </select>
                             </div>
                             <div class="col-12">
