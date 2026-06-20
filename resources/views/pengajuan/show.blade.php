@@ -329,12 +329,12 @@
                         @endif
                     </div>
                 </div>
-
-                {{-- Tab 3: Dokumen --}}
-                <div class="tab-pane fade" id="panel-dokumen" role="tabpanel" aria-labelledby="tab-dokumen">
-                    <div class="pt-0">
-                        @includeIf('pengajuan.partials.dokumen')
-                    </div>
+            </div>
+            
+            {{-- Tab 3: Dokumen --}}
+            <div class="tab-pane fade" id="panel-dokumen" role="tabpanel" aria-labelledby="tab-dokumen">
+                <div class="pt-0">
+                    @includeIf('pengajuan.partials.dokumen')
                 </div>
             </div>
         </div>
