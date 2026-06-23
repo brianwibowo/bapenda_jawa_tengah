@@ -12,6 +12,7 @@ use App\Http\Controllers\KendaraanController;
 use App\Http\Controllers\FrameController;
 use App\Http\Controllers\SuratKeputusanController as SKController;
 use App\Http\Controllers\SuratPengajuanController as SPController;
+use App\Http\Controllers\Admin\SuratTemplateTestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,6 +141,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::post('/pengajuan/sp/upload-media', [SPController::class, 'uploadFileToMedia'])
             ->name('pengajuan.sp.upload_media');
+    });
+
+    // ===========================================================
+    // == SURAT TEMPLATE TEST (Superadmin Only) ==
+    // ===========================================================
+    Route::middleware(['role:superadmin'])->group(function () {
+        Route::get('/surat-template-test', [SuratTemplateTestController::class, 'index'])
+            ->name('surat-template-test.index');
+        Route::post('/surat-template-test/preview/{type}', [SuratTemplateTestController::class, 'preview'])
+            ->name('surat-template-test.preview');
+        Route::post('/surat-template-test/render-code', [SuratTemplateTestController::class, 'renderCode'])
+            ->name('surat-template-test.render-code');
     });
 
     Route::prefix('kendaraan')->name('kendaraan.')->group(function () {
