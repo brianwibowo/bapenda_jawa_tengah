@@ -48,17 +48,17 @@
 
     <table style="width: 100%; margin-bottom: 10px;">
         <tr>
-            <td class="tl">
-                <img src="{{ public_path('images/LOGO_JASA_RAHARJA_2024.png') }}" style="height:65px;"><br>
+            <td class="tc">
+                <img src="{{ public_path('images/Logo-provinsi-jateng-warna.png') }}" style="height:65px;"><br>
                 <div class="header-kop">
-                    <!-- PT JASA RAHARJA (PERSERO)<br><br> -->
+                    PT JASA RAHARJA (PERSERO)<br><br>
                 </div>
             </td>
         </tr>
     </table>
 
     <div class="title-box">
-        <div class="uc" style="text-decoration: underline;">KEPUTUSAN KEPALA KANTOR WILAYAH</div>
+        <div class="uc">KEPUTUSAN KEPALA KANTOR WILAYAH UTAMA PT JASA RAHARJA JAWA TENGAH</div>
         <div>NOMOR {{ $nomor_keputusan }}</div>
         <br>
         <div class="uc">TENTANG<br><br>

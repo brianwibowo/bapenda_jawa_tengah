@@ -28,10 +28,6 @@ class District extends Model
      */
     protected $table = 'districts';
 
-    public $incrementing = false;
-    public $timestamps = false;
-    protected $keyType = 'string';
-
     /**
      * The attributes that should be hidden for arrays.
      *

@@ -205,6 +205,25 @@
                     @endcanany
                 @endcanany
 
+                {{-- == MENU KHUSUS SUPERADMIN == --}}
+                @auth
+                    @if(auth()->user()->hasRole('superadmin'))
+                        <li class="nav-section">
+                            <span class="sidebar-mini-icon">
+                                <i class="fa fa-ellipsis-h"></i>
+                            </span>
+                            <h4 class="text-section">TOOLS</h4>
+                        </li>
+
+                        <li class="nav-item {{ request()->routeIs('surat-template-test.*') ? 'active' : '' }}">
+                            <a href="{{ route('surat-template-test.index') }}">
+                                <i class="fas fa-file-pdf"></i>
+                                <p>Template Surat</p>
+                            </a>
+                        </li>
+                    @endif
+                @endauth
+
                 <li class="nav-section">
                     <span class="sidebar-mini-icon">
                         <i class="fa fa-ellipsis-h"></i>
