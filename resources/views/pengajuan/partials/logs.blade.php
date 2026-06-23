@@ -1,5 +1,41 @@
-
 <div class="card mt-4 border-0 shadow-sm log-panel">
+    <style>
+        .log-panel .table-responsive {
+            max-height: 480px !important;
+        }
+        .log-panel .table td, 
+        .log-panel .table th {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 13px !important;
+            vertical-align: middle !important;
+        }
+        .log-panel .table td small {
+            font-size: 11px !important;
+        }
+        .log-panel .badge {
+            padding: 0.35rem 0.6rem !important;
+            font-size: 11px !important;
+        }
+        .log-panel .btn-sm {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 11px !important;
+        }
+        .log-panel tr.unread-log-row td {
+            border-top: 1.5px solid #0d6efd !important;
+            border-bottom: 1.5px solid #0d6efd !important;
+            background-color: rgba(13, 110, 253, 0.05) !important;
+        }
+        .log-panel tr.unread-log-row td:first-child {
+            border-left: 1.5px solid #0d6efd !important;
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        .log-panel tr.unread-log-row td:last-child {
+            border-right: 1.5px solid #0d6efd !important;
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+    </style>
     <div class="card-header bg-white border-bottom">
         <h4 class="card-title mb-0">Log & Diskusi</h4>
     </div>
@@ -57,7 +93,7 @@
 
         <hr class="mt-2 mb-3">
 
-        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+        <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
             <table class="table table-striped table-hover mb-0">
                 <thead class="table-light">
                     <tr>
@@ -93,10 +129,16 @@
                     @endphp
 
                     @forelse($paginatedLogs as $log)
-                        <tr data-kendaraan-id="{{ $log->kendaraan_id }}">
+                        @php
+                            $isUnreadLog = isset($unreadLogIds) && in_array($log->id, $unreadLogIds);
+                        @endphp
+                        <tr data-kendaraan-id="{{ $log->kendaraan_id }}" class="{{ $isUnreadLog ? 'unread-log-row' : '' }}">
                             <td class="text-nowrap">{{ $log->created_at->timezone('Asia/Jakarta')->format('H:i, d M Y') }}</td>
                             <td><strong>{{ $log->kendaraan->nrkb ?? 'N/A' }}</strong></td>
                             <td>
+                                @if($isUnreadLog)
+                                    <span class="d-inline-block bg-danger rounded-circle me-2" style="width: 8px; height: 8px;" title="Aktivitas baru"></span>
+                                @endif
                                 {{ $log->aksi }}
                                 @if($log->catatan)
                                     <br><small class="text-muted"><strong>Komentar:</strong> {{ $log->catatan }}</small>

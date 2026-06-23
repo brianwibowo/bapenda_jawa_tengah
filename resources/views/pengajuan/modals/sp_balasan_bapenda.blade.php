@@ -1,7 +1,7 @@
 {{-- Modal Full Form: SP Balasan Bapenda (Non-Default, Draft) --}}
 <div class="modal fade" id="modalSpBalasanBapenda" tabindex="-1" aria-labelledby="modalSpBalasanBapendaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form id="formSpBalasanBapenda" class="modal-content border-0 shadow" method="POST">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 980px;">
+        <form id="formSpBalasanBapenda" class="modal-content border-0 shadow" style="min-height: 75vh;" method="POST">
             @csrf
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="modalSpBalasanBapendaLabel">
@@ -67,9 +67,7 @@
                 </div>
 
                 {{-- Container Preview PDF --}}
-                <div id="previewSpBalasanBapendaContainer" style="display:none;">
-                    <iframe id="iframePreviewSpBalasanBapenda" src="" style="width:100%; height:500px; border:1px solid #ddd; border-radius:8px;"></iframe>
-                </div>
+                <div id="previewSpBalasanBapendaContainer" style="display:none;"></div>
             </div>
 
             {{-- Footer: Mode Form --}}
@@ -103,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewContainer = document.getElementById('previewSpBalasanBapendaContainer');
     const footerForm = document.getElementById('footerFormSpBalasanBapenda');
     const footerPreview = document.getElementById('footerPreviewSpBalasanBapenda');
-    const iframePreview = document.getElementById('iframePreviewSpBalasanBapenda');
+    // Custom PDF.js Viewer will render here
     
     const signedUrl = @json($signedUrls['sp_terima'] ?? '');
     const tolakUrl = @json($signedUrls['sp_tolak'] ?? '');
@@ -135,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const pdfResponse = await fetch(pdfUrl);
             const blob = await pdfResponse.blob();
             currentBlobUrl = URL.createObjectURL(blob);
-            iframePreview.src = currentBlobUrl;
+            window.BapendaPdfViewer.render('previewSpBalasanBapendaContainer', currentBlobUrl, 'sp_balasan_bapenda.pdf');
 
             formContainer.style.display = 'none';
             footerForm.style.display = 'none';
@@ -219,8 +217,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentBlobUrl) {
             URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = null;
-            iframePreview.src = '';
         }
+        window.BapendaPdfViewer.cleanup('previewSpBalasanBapendaContainer');
         previewContainer.style.display = 'none';
         footerPreview.style.display = 'none';
         formContainer.style.display = 'block';

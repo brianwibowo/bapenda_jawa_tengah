@@ -825,7 +825,7 @@ async function finalizePengajuan() {
     const cabangSelect = document.getElementById("pengajuanCabangSelect");
     if (!cabangSelect.value || cabangSelect.value.trim() === "") {
         alert(
-            "Pilih Cabang Samsat terlebih dahulu sebelum menyelesaikan pengajuan.",
+            "Pilih Wilayah Samsat terlebih dahulu sebelum menyelesaikan pengajuan.",
         );
         cabangSelect.focus();
         return;
@@ -926,7 +926,7 @@ function updateFinalizeButton() {
                 }
                 // Reinitialize
                 jQuery(cabangSelect).select2({
-                    placeholder: "-- Pilih Cabang Samsat --",
+                    placeholder: "-- Pilih Wilayah Samsat --",
                     allowClear: false,
                     width: "100%",
                 });

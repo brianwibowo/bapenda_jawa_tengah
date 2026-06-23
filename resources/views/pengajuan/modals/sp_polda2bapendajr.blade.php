@@ -1,11 +1,11 @@
 {{-- Modal Full Form: SP Polda ke Bapenda/JR (Non-Default, Draft) --}}
 <div class="modal fade" id="modalSpPolda2bapendajr" tabindex="-1" aria-labelledby="modalSpPolda2bapendajrLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form id="formSpPolda2bapendajr" class="modal-content border-0 shadow" method="POST">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 980px;">
+        <form id="formSpPolda2bapendajr" class="modal-content border-0 shadow" style="min-height: 75vh;" method="POST">
             @csrf
             <input type="hidden" name="pengajuan_id" value="{{ $pengajuan->id }}">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalSpPolda2bapendajrLabel">Input Data SP Polda ke Bapenda/JR</h5>
+                <h5 class="modal-title" id="modalSpPolda2bapendajrLabel">Input Data Surat Pengajuan Polda ke Bapenda/JR</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -51,9 +51,7 @@
                 </div>
 
                 {{-- Container Preview PDF --}}
-                <div id="previewSpPolda2bapendajrContainer" style="display:none;">
-                    <iframe id="iframePreviewSpPolda2bapendajr" src="" style="width:100%; height:500px; border:1px solid #ddd; border-radius:8px;"></iframe>
-                </div>
+                <div id="previewSpPolda2bapendajrContainer" style="display:none;"></div>
             </div>
 
             {{-- Footer: Mode Form --}}
@@ -78,7 +76,7 @@
         const previewContainer = document.getElementById('previewSpPolda2bapendajrContainer');
         const footerForm = document.getElementById('footerFormSpPolda2bapendajr');
         const footerPreview = document.getElementById('footerPreviewSpPolda2bapendajr');
-        const iframePreview = document.getElementById('iframePreviewSpPolda2bapendajr');
+        // Custom PDF.js Viewer will render here
         
         const signedUrl = @json($signedUrls['sp_ajukan'] ?? '');
         let currentBlobUrl = null;
@@ -108,7 +106,7 @@
                 const pdfResponse = await fetch(pdfUrl);
                 const blob = await pdfResponse.blob();
                 currentBlobUrl = URL.createObjectURL(blob);
-                iframePreview.src = currentBlobUrl;
+                window.BapendaPdfViewer.render('previewSpPolda2bapendajrContainer', currentBlobUrl, 'sp_polda_ke_bapenda_jr.pdf');
 
                 formContainer.style.display = 'none';
                 footerForm.style.display = 'none';
@@ -161,8 +159,8 @@
             if (currentBlobUrl) {
                 URL.revokeObjectURL(currentBlobUrl);
                 currentBlobUrl = null;
-                iframePreview.src = '';
             }
+            window.BapendaPdfViewer.cleanup('previewSpPolda2bapendajrContainer');
             previewContainer.style.display = 'none';
             footerPreview.style.display = 'none';
             formContainer.style.display = 'block';

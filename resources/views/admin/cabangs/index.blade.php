@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="fw-bold mb-0">Kelola Cabang Samsat</h2>
-            <a href="{{ route('admin.cabangs.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah Cabang</a>
+            <h2 class="fw-bold mb-0">Kelola Wilayah Samsat</h2>
+            <a href="{{ route('admin.cabangs.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah Wilayah</a>
         </div>
     </x-slot>
 
@@ -26,7 +26,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Nama Cabang</th>
+                            <th>Nama Wilayah</th>
                             <th>Wilayah (Kota / Kabupaten)</th>
                             <th>Alamat</th>
                         </tr>
@@ -40,7 +40,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-4">Belum ada cabang tersimpan.</td>
+                                <td colspan="3" class="text-center text-muted py-4">Belum ada Wilayah tersimpan.</td>
                             </tr>
                         @endforelse
                     </tbody>

@@ -64,7 +64,7 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Cabang Samsat</label>
+                        <label class="form-label fw-bold">Wilayah Samsat</label>
                         <select name="cabang_id" class="form-select searchable-select">
                             <option value="">-- Tidak ada / Pilih cabang --</option>
                             @foreach($branches as $branch)
@@ -73,7 +73,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <div class="form-text">Opsional untuk pengguna yang memiliki cabang samsat terkait.</div>
+                        <div class="form-text">Opsional untuk pengguna yang memiliki wilayah samsat terkait.</div>
                     </div>
                 </div>
 

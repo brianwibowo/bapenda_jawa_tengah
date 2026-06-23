@@ -86,7 +86,14 @@ class PengajuanController extends Controller
             $progress[$pengajuan->id] = $pengajuan->getTotalSurat();
         }
 
-        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang', 'isSamsat', 'progress'));
+        $unreadPengajuanIds = Auth::user()
+            ? Auth::user()->unreadNotifications
+                ->pluck('data.pengajuan_id')
+                ->filter()
+                ->toArray()
+            : [];
+
+        return view('admin.pengajuan.index', compact('pengajuans', 'branches', 'selectedCabang', 'isSamsat', 'progress', 'unreadPengajuanIds'));
     }
 
     /**
@@ -206,6 +213,19 @@ class PengajuanController extends Controller
         }
 
 
+        $unreadLogIds = [];
+        if (Auth::check()) {
+            $unreadNotifs = Auth::user()->unreadNotifications
+                ->filter(function ($n) use ($pengajuan) {
+                    return isset($n->data['pengajuan_id']) && $n->data['pengajuan_id'] == $pengajuan->id;
+                });
+            
+            $unreadLogIds = $unreadNotifs->pluck('data.log_id')->filter()->toArray();
+            $unreadNotifs->each(function ($n) {
+                $n->markAsRead();
+            });
+        }
+
         return view('admin.pengajuan.show', compact(
             'pengajuan',
             'suratkeputusan',
@@ -214,7 +234,8 @@ class PengajuanController extends Controller
             'permissionSurat',
             'sTypeOptions',
             'signedUrls',
-            'lastSp'
+            'lastSp',
+            'unreadLogIds'
         ));
     }
 
@@ -302,7 +323,7 @@ class PengajuanController extends Controller
 
                 // 6. Handle upload lampiran (jika ada) dan tempelkan ke LOG
                 if ($lampiranFile) {
-                    /** @var \App\Models\KendaraanLog $log */
+                    /** @var KendaraanLog $log */
                     // addMedia berasal dari trait InteractsWithMedia pada model KendaraanLog
                     $log->addMedia($lampiranFile)->toMediaCollection('lampiran_log');
                 }
@@ -816,10 +837,10 @@ class PengajuanController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_penghapusan_regident', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
         
-        $filename   = 'SK_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . Str::uuid() . '.pdf';
+        $filename   = 'SK Polda - Surat Keterangan Penghapusan No Pol ' . $kendaraan->nrkb . '.pdf';
         
         if (!$request->has('preview')) {
-            $storagePath = 'sk/' . $filename;
+            $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
             Storage::disk('public')->put($storagePath, $pdf->output());
             $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
 
@@ -1030,7 +1051,7 @@ class PengajuanController extends Controller
         
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
-        $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $kendaraan->nrkb) . '_' . str_replace('/','_',str_replace(' ', '_', $request->nomor_surat_pembebasan)) . '.pdf';
+        $filename = 'SK Bapenda - Surat Keputusan Pembebasan No Pol ' . $kendaraan->nrkb . '.pdf';
         $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
         Storage::disk('public')->put($storagePath, $pdf->output());
         $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
@@ -1230,7 +1251,7 @@ class PengajuanController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_jasa_raharja_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
-        $filename = 'SK_JR_PEMBEBASAN_' . str_replace([' ', '/'], '_', $kendaraan->nrkb) . '_' . str_replace('/', '_', $dataPdf['nomor_keputusan']) . '.pdf';
+        $filename = 'SK JR - Surat Keputusan KANWIL Jateng Pembebasan No Pol ' . $kendaraan->nrkb . '.pdf';
         $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
         
         $ttd_basah = $request->metode_penanda_tangan == 'ttd_basah';
@@ -1311,7 +1332,7 @@ class PengajuanController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sp_balasan_jr', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
 
-        $filename = 'SP_BALASAN_JR_' . str_replace([' ', '/'], '_', $kendaraan->nrkb) . '_' . str_replace('/', '_', $request->nomor_surat) . '.pdf';
+        $filename = 'Balasan JR - Surat Pembebasan SW No Pol ' . $kendaraan->nrkb . '.pdf';
 
         // Simpan PDF & log aksi (skip jika preview)
         if (!$request->has('preview')) {

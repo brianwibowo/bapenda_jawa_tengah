@@ -33,23 +33,23 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="nama_pemilik" class="form-label">Atas Nama</label>
+                            <label for="nama_pemilik" class="form-label">Atas Nama <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nama_pemilik" name="nama_pemilik" value="{{ old('nama_pemilik', $kendaraan->nama_pemilik) }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="nik_pemilik" class="form-label">NIK/TDP/NIB/Kitas/Kitab</label>
+                            <label for="nik_pemilik" class="form-label">NIK/TDP/NIB/Kitas/Kitab <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nik_pemilik" name="nik_pemilik" value="{{ old('nik_pemilik', $kendaraan->nik_pemilik) }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="alamat_pemilik" class="form-label">Alamat</label>
+                            <label for="alamat_pemilik" class="form-label">Alamat <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="alamat_pemilik" name="alamat_pemilik" rows="3" required>{{ old('alamat_pemilik', $kendaraan->alamat_pemilik) }}</textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="telp_pemilik" class="form-label">No. TLP/HP</label>
+                            <label for="telp_pemilik" class="form-label">No. TLP/HP <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="telp_pemilik" name="telp_pemilik" value="{{ old('telp_pemilik', $kendaraan->telp_pemilik) }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="email_pemilik" class="form-label">Email</label>
+                            <label for="email_pemilik" class="form-label">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="email_pemilik" name="email_pemilik" value="{{ old('email_pemilik', $kendaraan->email_pemilik) }}" required>
                         </div>
                     </div>
@@ -64,58 +64,58 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="nrkb" class="form-label">NRKB</label>
+                            <label for="nrkb" class="form-label">NRKB <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nrkb" name="nrkb" value="{{ old('nrkb', $kendaraan->nrkb) }}" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="jenis_kendaraan" class="form-label">Jenis</label>
+                                <label for="jenis_kendaraan" class="form-label">Jenis <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="jenis_kendaraan" name="jenis_kendaraan" value="{{ old('jenis_kendaraan', $kendaraan->jenis_kendaraan) }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="model_kendaraan" class="form-label">Model</label>
+                                <label for="model_kendaraan" class="form-label">Model <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="model_kendaraan" name="model_kendaraan" value="{{ old('model_kendaraan', $kendaraan->model_kendaraan) }}" required>
                             </div>
                         </div>
                          <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="merk_kendaraan" class="form-label">Merk</label>
+                                <label for="merk_kendaraan" class="form-label">Merk <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="merk_kendaraan" name="merk_kendaraan" value="{{ old('merk_kendaraan', $kendaraan->merk_kendaraan) }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="tipe_kendaraan" class="form-label">Tipe</label>
+                                <label for="tipe_kendaraan" class="form-label">Tipe <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="tipe_kendaraan" name="tipe_kendaraan" value="{{ old('tipe_kendaraan', $kendaraan->tipe_kendaraan) }}" required>
                             </div>
                         </div>
                         <div class="row">
                              <div class="col-md-6 mb-3">
-                                <label for="tahun_pembuatan" class="form-label">Tahun Pembuatan</label>
+                                <label for="tahun_pembuatan" class="form-label">Tahun Pembuatan <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="tahun_pembuatan" name="tahun_pembuatan" value="{{ old('tahun_pembuatan', $kendaraan->tahun_pembuatan) }}" required min="1901" max="{{ date('Y') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="isi_silinder" class="form-label">Isi Silinder / Daya Listrik</label>
+                                <label for="isi_silinder" class="form-label">Isi Silinder / Daya Listrik <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="isi_silinder" name="isi_silinder" value="{{ old('isi_silinder', $kendaraan->isi_silinder) }}" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="jenis_bahan_bakar" class="form-label">Jenis Bahan Bakar / Sumber Energi</label>
+                            <label for="jenis_bahan_bakar" class="form-label">Jenis Bahan Bakar / Sumber Energi <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="jenis_bahan_bakar" name="jenis_bahan_bakar" value="{{ old('jenis_bahan_bakar', $kendaraan->jenis_bahan_bakar) }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="nomor_rangka" class="form-label">Nomor Rangka</label>
+                            <label for="nomor_rangka" class="form-label">Nomor Rangka <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nomor_rangka" name="nomor_rangka" value="{{ old('nomor_rangka', $kendaraan->nomor_rangka) }}" required>
                         </div>
                          <div class="mb-3">
-                            <label for="nomor_mesin" class="form-label">Nomor Mesin</label>
+                            <label for="nomor_mesin" class="form-label">Nomor Mesin <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nomor_mesin" name="nomor_mesin" value="{{ old('nomor_mesin', $kendaraan->nomor_mesin) }}" required>
                         </div>
                          <div class="row">
                              <div class="col-md-6 mb-3">
-                                <label for="warna_tnkb" class="form-label">Warna TNKB</label>
+                                <label for="warna_tnkb" class="form-label">Warna TNKB <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="warna_tnkb" name="warna_tnkb" value="{{ old('warna_tnkb', $kendaraan->warna_tnkb) }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="nomor_bpkb" class="form-label">Nomor BPKB</label>
+                                <label for="nomor_bpkb" class="form-label">Nomor BPKB <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="nomor_bpkb" name="nomor_bpkb" value="{{ old('nomor_bpkb', $kendaraan->nomor_bpkb) }}" required>
                             </div>
                         </div>

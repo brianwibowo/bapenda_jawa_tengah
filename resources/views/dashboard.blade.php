@@ -5,7 +5,7 @@
     {{-- Header Dashboard & Identity --}}
     <div class="row mb-4 align-items-center">
         <div class="col-md-6">
-            <h2 class="fw-bold">Sistem Monitoring Bapenda</h2>
+            <h2 class="fw-bold">Sistem Monitoring SIP-Hapus</h2>
             <p class="text-muted mb-0">
                 <i class="fas fa-calendar-alt me-2"></i>
                 {{ \Carbon\Carbon::now()->timezone('Asia/Jakarta')->translatedFormat('l, d F Y - H:i') }} WIB

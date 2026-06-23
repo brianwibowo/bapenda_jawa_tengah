@@ -15,7 +15,7 @@
         } elseif ($user->hasRole('polda')) {
             $sidebarColor = 'purple';
         } elseif ($user->hasRole('wajib_pajak')) {
-            $sidebarColor = 'white';
+            $sidebarColor = 'darkwp';
         } else {
             // Fallback to unit kerja
             $unit = strtolower($user->unit_kerja ?? '');

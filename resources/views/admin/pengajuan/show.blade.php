@@ -35,7 +35,7 @@
         <div class="card-body py-3 px-4">
             <div class="small text-muted mb-1">Nomor Pengajuan</div>
             <div class="h3 mb-3 fw-semibold text-dark">{{ $pengajuan->nomor_pengajuan }}</div>
-            <div class="progress-label">Progres</div>
+            <div class="progress-label">Progres ({{ $progressValue }} / {{ $totalSurat }})</div>
             <div class="progress slim-progress">
                 <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progressPercent }}%;"></div>
             </div>

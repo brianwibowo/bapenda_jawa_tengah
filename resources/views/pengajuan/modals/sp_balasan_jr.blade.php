@@ -1,7 +1,7 @@
 {{-- Modal Full Form: SP Balasan JR (Non-Default, Draft) --}}
 <div class="modal fade" id="modalSpBalasanJR" tabindex="-1" aria-labelledby="modalSpBalasanJRLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form id="formSpBalasanJR" class="modal-content border-0 shadow" method="POST">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 980px;">
+        <form id="formSpBalasanJR" class="modal-content border-0 shadow" style="min-height: 75vh;" method="POST">
             @csrf
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="modalSpBalasanJRLabel">
@@ -70,9 +70,7 @@
                 </div>
 
                 {{-- Container Preview PDF --}}
-                <div id="previewSpBalasanJRContainer" style="display:none;">
-                    <iframe id="iframePreviewSpBalasanJR" src="" style="width:100%; height:500px; border:1px solid #ddd; border-radius:8px;"></iframe>
-                </div>
+                <div id="previewSpBalasanJRContainer" style="display:none;"></div>
             </div>
 
             {{-- Footer: Mode Form --}}
@@ -106,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewContainer = document.getElementById('previewSpBalasanJRContainer');
     const footerForm = document.getElementById('footerFormSpBalasanJR');
     const footerPreview = document.getElementById('footerPreviewSpBalasanJR');
-    const iframePreview = document.getElementById('iframePreviewSpBalasanJR');
+    // Custom PDF.js Viewer will render here
     
     const signedUrl = @json($signedUrls['sp_terima'] ?? '');
     const tolakUrl = @json($signedUrls['sp_tolak'] ?? '');
@@ -138,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const pdfResponse = await fetch(pdfUrl);
             const blob = await pdfResponse.blob();
             currentBlobUrl = URL.createObjectURL(blob);
-            iframePreview.src = currentBlobUrl;
+            window.BapendaPdfViewer.render('previewSpBalasanJRContainer', currentBlobUrl, 'sp_balasan_jasa_raharja.pdf');
 
             formContainer.style.display = 'none';
             footerForm.style.display = 'none';
@@ -222,8 +220,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentBlobUrl) {
             URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = null;
-            iframePreview.src = '';
         }
+        window.BapendaPdfViewer.cleanup('previewSpBalasanJRContainer');
         previewContainer.style.display = 'none';
         footerPreview.style.display = 'none';
         formContainer.style.display = 'block';

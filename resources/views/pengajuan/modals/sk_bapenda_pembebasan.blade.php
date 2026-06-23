@@ -1,7 +1,7 @@
 <!-- Modal Form SK Pembebasan (Non-Default, with TTD method choice) -->
 <div class="modal fade" id="modalSkPembebasan" tabindex="-1" aria-labelledby="modalSkPembebasanLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form id="formSkPembebasanDraft" class="modal-content border-0 shadow" method="POST" enctype="multipart/form-data">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 980px;">
+        <form id="formSkPembebasanDraft" class="modal-content border-0 shadow" style="min-height: 75vh;" method="POST" enctype="multipart/form-data">
             @csrf
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalSkPembebasanLabel">Input Data Surat Keputusan Pembebasan</h5>
@@ -110,9 +110,7 @@
                     </div>
 
                     {{-- Container Preview PDF --}}
-                    <div id="previewSkPembebasanContainer" style="display:none;">
-                        <iframe id="iframePreviewSkPembebasan" src="" style="width:100%; height:500px; border:1px solid #ddd; border-radius:8px;"></iframe>
-                    </div>
+                    <div id="previewSkPembebasanContainer" style="display:none;"></div>
                 </div>
 
                 {{-- Footer: Mode Form --}}
@@ -140,7 +138,7 @@
        const previewContainer = document.getElementById('previewSkPembebasanContainer');
        const footerForm = document.getElementById('footerFormSkPembebasan');
        const footerPreview = document.getElementById('footerPreviewSkPembebasan');
-       const iframePreview = document.getElementById('iframePreviewSkPembebasan');
+       // Custom PDF.js Viewer will render here
 
        const signedUrl = @json($signedUrls['sk_buat'] ?? '');
        let currentBlobUrl = null;
@@ -177,7 +175,7 @@
                const pdfResponse = await fetch(pdfUrl);
                const blob = await pdfResponse.blob();
                currentBlobUrl = URL.createObjectURL(blob);
-               iframePreview.src = currentBlobUrl;
+               window.BapendaPdfViewer.render('previewSkPembebasanContainer', currentBlobUrl, 'sk_bapenda_pembebasan.pdf');
 
                formContainer.style.display = 'none';
                footerForm.style.display = 'none';
@@ -230,8 +228,8 @@
            if (currentBlobUrl) {
                URL.revokeObjectURL(currentBlobUrl);
                currentBlobUrl = null;
-               iframePreview.src = '';
            }
+           window.BapendaPdfViewer.cleanup('previewSkPembebasanContainer');
            previewContainer.style.display = 'none';
            footerPreview.style.display = 'none';
            formContainer.style.display = 'block';

@@ -194,8 +194,13 @@
                                     {{ $progress[$pengajuan->id] ?? 0 }} / 9
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <a href="{{ route('pengajuan.show', $pengajuan) }}" class="btn btn-primary btn-sm">
+                                    <a href="{{ route('pengajuan.show', $pengajuan) }}" class="btn btn-primary btn-sm position-relative">
                                         <i class="fas fa-eye me-1"></i> Lihat Detail
+                                        @if(isset($unreadPengajuanIds) && in_array($pengajuan->id, $unreadPengajuanIds))
+                                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 10px; height: 10px;" title="Ada aktivitas baru">
+                                                <span class="visually-hidden">New Alert</span>
+                                            </span>
+                                        @endif
                                     </a>
                                 </td>
                             </tr>

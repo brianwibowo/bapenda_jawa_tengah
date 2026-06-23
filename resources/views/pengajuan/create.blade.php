@@ -52,16 +52,16 @@
     <div class="card mb-4" id="finalizeCard" style="display: none;">
         <div class="card-body">
             <div class="mb-3">
-                <label class="form-label fw-bold">Cabang Samsat <span class="text-danger">*</span></label>
+                <label class="form-label fw-bold">Wilayah Samsat <span class="text-danger">*</span></label>
                 <select id="pengajuanCabangSelect" class="form-select searchable-select" required>
-                    <option value="">-- Pilih Cabang Samsat --</option>
+                    <option value="">-- Pilih Wilayah Samsat --</option>
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}">
                             {{ $branch->nama }} - {{ $branch->wilayah }}
                         </option>
                     @endforeach
                 </select>
-                <div class="form-text">Pilih cabang yang terkait dengan pengajuan ini.</div>
+                <div class="form-text">Pilih wilayah yang terkait dengan pengajuan ini.</div>
             </div>
             <div class="text-center">
                 <button type="button" class="btn btn-success btn-lg" id="btnFinalize">
@@ -96,24 +96,24 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
-                                            <label class="form-label">Nama Pemilik</label>
+                                            <label class="form-label">Nama Pemilik <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="nama_pemilik" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">NIK/TDP/NIB/Kitas/Kitab</label>
+                                            <label class="form-label">NIK/TDP/NIB/Kitas/Kitab <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="nik_pemilik" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Alamat</label>
+                                            <label class="form-label">Alamat <span class="text-danger">*</span></label>
                                             <textarea class="form-control" name="alamat_pemilik" rows="3"
                                                 required></textarea>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">No. TLP/HP</label>
+                                            <label class="form-label">No. TLP/HP <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="telp_pemilik" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Email</label>
+                                            <label class="form-label">Email <span class="text-danger">*</span></label>
                                             <input type="email" class="form-control" name="email_pemilik" required>
                                         </div>
                                     </div>
@@ -128,63 +128,63 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
-                                            <label class="form-label">NRKB</label>
+                                            <label class="form-label">NRKB <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="nrkb" required>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Merk</label>
+                                                <label class="form-label">Merk <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="merk_kendaraan" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Tipe</label>
+                                                <label class="form-label">Tipe <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="tipe_kendaraan" required>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Jenis</label>
+                                                <label class="form-label">Jenis <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="jenis_kendaraan" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Model</label>
+                                                <label class="form-label">Model <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="model_kendaraan" required>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Tahun Pembuatan</label>
+                                                <label class="form-label">Tahun Pembuatan <span class="text-danger">*</span></label>
                                                 <input type="number" class="form-control" name="tahun_pembuatan"
                                                     required min="1901" max="{{ date('Y') }}">
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Isi Silinder / Daya Listrik</label>
+                                                <label class="form-label">Isi Silinder / Daya Listrik <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="isi_silinder" required>
                                             </div>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Nomor Rangka</label>
+                                            <label class="form-label">Nomor Rangka <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="nomor_rangka" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Nomor Mesin</label>
+                                            <label class="form-label">Nomor Mesin <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="nomor_mesin" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Warna Kendaraan Bermotor</label>
+                                            <label class="form-label">Warna Kendaraan Bermotor <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="warna_kendaraan" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Bahan Bakar / Sumber Energi</label>
+                                            <label class="form-label">Bahan Bakar / Sumber Energi <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="jenis_bahan_bakar" required>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Warna TNKB</label>
+                                                <label class="form-label">Warna TNKB <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="warna_tnkb" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Nomor BPKB</label>
+                                                <label class="form-label">Nomor BPKB <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="nomor_bpkb" required>
                                             </div>
                                         </div>
@@ -204,7 +204,7 @@
                                     <!-- Surat Permohonan -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">Surat permohonan penghapusan</label>
+                                            <label class="form-label fw-bold mb-0">Surat permohonan penghapusan <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="surat_permohonan"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
@@ -230,7 +230,7 @@
                                     <!-- Surat Pernyataan -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">Surat pernyataan kepemilikan</label>
+                                            <label class="form-label fw-bold mb-0">Surat pernyataan kepemilikan <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="surat_pernyataan"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
@@ -256,7 +256,7 @@
                                     <!-- KTP -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">Tanda bukti identitas pemilik (KTP)</label>
+                                            <label class="form-label fw-bold mb-0">Tanda bukti identitas pemilik (KTP) <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="ktp"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
@@ -281,7 +281,7 @@
                                     <!-- BPKB -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">BPKB</label>
+                                            <label class="form-label fw-bold mb-0">BPKB <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="bpkb"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
@@ -306,7 +306,7 @@
                                     <!-- TBPKP -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">TBPKP</label>
+                                            <label class="form-label fw-bold mb-0">TBPKP <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="tbpkp"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
@@ -331,7 +331,7 @@
                                     <!-- Cek Fisik -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">Hasil pemeriksaan cek fisik</label>
+                                            <label class="form-label fw-bold mb-0">Hasil pemeriksaan cek fisik <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="cek_fisik"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
@@ -356,7 +356,7 @@
                                     <!-- Foto Ranmor -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">Foto Kendaraan</label>
+                                            <label class="form-label fw-bold mb-0">Foto Kendaraan <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="foto_ranmor"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
@@ -381,7 +381,7 @@
                                     <!-- STNK -->
                                     <div class="col-md-6 mb-4">
                                         <div class="mb-2">
-                                            <label class="form-label fw-bold mb-0">STNK</label>
+                                            <label class="form-label fw-bold mb-0">STNK <span class="text-danger">*</span></label>
                                         </div>
                                         <div class="file-container file-dropzone" data-field="stnk"
                                             data-accept=".pdf,.docx,.jpg,.jpeg,.png,.heic,.heif" data-max-size="10240">
