@@ -93,14 +93,27 @@ class SuratPengajuanController extends Controller
 
         $config = $registries[$type] ?? abort(404);
 
+        $nrkbStr = '';
+        if ($pengajuan && $pengajuan->kendaraans->isNotEmpty()) {
+            $nrkbStr = $pengajuan->kendaraans->count() === 1
+                ? $pengajuan->kendaraans->first()->nrkb
+                : $pengajuan->kendaraans->pluck('nrkb')->implode(', ');
+        }
+
         if ($type === 'pdf' && $data instanceof SuratPengajuan) {
             $path = $data->local_pdf_path ?? $data->pdf_url ?? '';
-            if (str_contains(strtoupper($path), 'SP_POLDA') || str_contains(strtoupper($path), 'SP-POLDA')) {
+            if (str_contains(strtoupper($path), 'SP_POLDA') || str_contains(strtoupper($path), 'SP-POLDA') || str_contains(strtoupper($path), 'SURAT PENGAJUAN - POLDA')) {
                 $config = $config['polda'];
-            } elseif (str_contains(strtoupper($path), 'SP_BALASAN_BAPENDA') || str_contains(strtoupper($path), 'SP-BALASAN-BAPENDA')) {
+                $config['filename'] = 'Surat Pengajuan - Polda kepada Bapenda dan Jasa Raharja No Pol ' . $nrkbStr;
+            } elseif (str_contains(strtoupper($path), 'SP_BALASAN_BAPENDA') || str_contains(strtoupper($path), 'SP-BALASAN-BAPENDA') || str_contains(strtoupper($path), 'BALASAN BAPENDA')) {
                 $config = $config['bapenda'];
+                $config['filename'] = 'Balasan Bapenda - Surat Penghapusan Regident No Pol ' . $nrkbStr;
+            } elseif (str_contains(strtoupper($path), 'SP_BALASAN_JR') || str_contains(strtoupper($path), 'SP-BALASAN-JR') || str_contains(strtoupper($path), 'BALASAN JR') || str_contains(strtoupper($path), 'PEMBEBASAN SW')) {
+                $config = $config['default'];
+                $config['filename'] = 'Balasan JR - Surat Pembebasan SW No Pol ' . $nrkbStr;
             } else {
                 $config = $config['default'];
+                $config['filename'] = 'Surat Pengajuan - Polda kepada Bapenda dan Jasa Raharja No Pol ' . $nrkbStr;
             }
         } else {
             $unitKerja = $user ? match (strtolower(trim((string) $user->unit_kerja))) {
@@ -132,10 +145,18 @@ class SuratPengajuanController extends Controller
             } else {
                 $config = $config['default'];
             }
+
+            if ($unitKerja === 'Polda') {
+                $config['filename'] = 'Surat Pengajuan - Polda kepada Bapenda dan Jasa Raharja No Pol ' . $nrkbStr;
+            } elseif ($unitKerja === 'Bapenda') {
+                $config['filename'] = 'Balasan Bapenda - Surat Penghapusan Regident No Pol ' . $nrkbStr;
+            } elseif ($unitKerja === 'Jasa Raharja') {
+                $config['filename'] = 'Balasan JR - Surat Pembebasan SW No Pol ' . $nrkbStr;
+            } else {
+                $config['filename'] = 'Surat Pengajuan - Polda kepada Bapenda dan Jasa Raharja No Pol ' . $nrkbStr;
+            }
         }
 
-        $config['filename'] = $data ? ($config['prefix'] ?? '') . $data->nomor_sp : 'DOKUMEN_SP';
-        
         return $config;
     }
 
@@ -394,6 +415,10 @@ class SuratPengajuanController extends Controller
             return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
+        $nrkbString = $kendaraans->count() === 1 
+            ? $kendaraans->first()->nrkb 
+            : $kendaraans->pluck('nrkb')->implode(', ');
+
         $dataPdf = [
             'kendaraans' => $kendaraans,
             'nomor_surat' => $request->nomor_surat,
@@ -419,7 +444,7 @@ class SuratPengajuanController extends Controller
             }
             $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
         } else {
-            $filename = 'SP_POLDA_' . time() . '.pdf';
+            $filename = 'Surat Pengajuan - Polda kepada Bapenda dan Jasa Raharja No Pol ' . $nrkbString . '.pdf';
             $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
         }
         Storage::disk('public')->put($storagePath, $pdf->output());
@@ -430,9 +455,6 @@ class SuratPengajuanController extends Controller
             // Dispatch WA notification
             $wpUser = $pengajuan->user;
             if ($wpUser && $wpUser->no_hp) {
-                $nrkbString = $kendaraans->count() === 1 
-                    ? $kendaraans->first()->nrkb 
-                    : $kendaraans->pluck('nrkb')->implode(', ');
                 try {
                     SendWhatsAppNotification::dispatch(
                         pengajuan:    $pengajuan,
@@ -478,6 +500,10 @@ class SuratPengajuanController extends Controller
             return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
+        $nrkbString = $kendaraans->count() === 1 
+            ? $kendaraans->first()->nrkb 
+            : $kendaraans->pluck('nrkb')->implode(', ');
+
         $dataPdf = [
             'kendaraans' => $kendaraans,
             // Dari Form Input
@@ -507,7 +533,7 @@ class SuratPengajuanController extends Controller
             }
             $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
         } else {
-            $filename = 'SP_BALASAN_BAPENDA_' . time() . '.pdf';
+            $filename = 'Balasan Bapenda - Surat Penghapusan Regident No Pol ' . $nrkbString . '.pdf';
             $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
         }
 
@@ -519,9 +545,6 @@ class SuratPengajuanController extends Controller
             // Dispatch WA notification
             $wpUser = $pengajuan->user;
             if ($wpUser && $wpUser->no_hp) {
-                $nrkbString = $kendaraans->count() === 1 
-                    ? $kendaraans->first()->nrkb 
-                    : $kendaraans->pluck('nrkb')->implode(', ');
                 try {
                     SendWhatsAppNotification::dispatch(
                         pengajuan:    $pengajuan,
@@ -567,6 +590,10 @@ class SuratPengajuanController extends Controller
             return back()->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
+        $nrkbString = $kendaraans->count() === 1 
+            ? $kendaraans->first()->nrkb 
+            : $kendaraans->pluck('nrkb')->implode(', ');
+
         $dataPdf = [
             'kendaraans' => $kendaraans,
             'nomor_surat' => strtoupper($request->nomor_surat),
@@ -602,7 +629,7 @@ class SuratPengajuanController extends Controller
             }
             $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
         } else {
-            $filename = 'SP_BALASAN_JR_' . time() . '.pdf';
+            $filename = 'Balasan JR - Surat Pembebasan SW No Pol ' . $nrkbString . '.pdf';
             $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
         }
 
@@ -614,9 +641,6 @@ class SuratPengajuanController extends Controller
             // Dispatch WA notification
             $wpUser = $pengajuan->user;
             if ($wpUser && $wpUser->no_hp) {
-                $nrkbString = $kendaraans->count() === 1 
-                    ? $kendaraans->first()->nrkb 
-                    : $kendaraans->pluck('nrkb')->implode(', ');
                 try {
                     SendWhatsAppNotification::dispatch(
                         pengajuan:    $pengajuan,
@@ -716,7 +740,7 @@ class SuratPengajuanController extends Controller
                     $pengajuan,
                     $k->id,
                     'Surat Pengajuan berhasil dibuat',
-                    'Catatan: ' . $request->catatan,
+                    'Diajukan ke Polda',
                     $data['local_pdf_path'] ?? null,
                     $sp->id
                 );

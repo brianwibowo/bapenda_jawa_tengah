@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="fw-bold mb-0">Tambah Cabang Samsat</h2>
+            <h2 class="fw-bold mb-0">Tambah Wilayah Samsat</h2>
             <a href="{{ route('admin.cabangs.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
         </div>
     </x-slot>
@@ -22,7 +22,7 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label class="form-label">Nama Cabang</label>
+                    <label class="form-label">Nama Wilayah</label>
                     <input type="text" name="nama" class="form-control" value="{{ old('nama') }}" required>
                 </div>
                 <div class="mb-3">
@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="text-end">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Cabang</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Wilayah</button>
                 </div>
             </form>
         </div>

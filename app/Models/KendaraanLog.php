@@ -154,31 +154,31 @@ class KendaraanLog extends Model implements HasMedia
             $creator = $log->user;
             if (!$creator) return;
 
-            // Jika yang membuat log adalah Wajib Pajak
-            if ($creator->hasRole('wajib_pajak')) {
-                // Beritahu Admin (Samsat / Bapenda) di cabang yang sama
-                $admins = \App\Models\User::where('cabang_id', $pengajuan->cabang_id)
-                    ->whereHas('roles', function($q) {
-                        $q->whereIn('name', ['samsat', 'bapenda', 'admin_instansi']);
-                    })->get();
-                
-                foreach ($admins as $admin) {
-                    $admin->notify(new \App\Notifications\LogAktivitasNotification(
-                        $log,
-                        "Wajib Pajak {$creator->name} menambah aktivitas: " . $log->aksi,
-                        route('admin.pengajuan.show', $pengajuan->id)
-                    ));
-                }
-            } else {
-                // Jika yang membuat log adalah Admin/Samsat/Bapenda dll
-                // Beritahu Wajib Pajak (Pemilik Pengajuan)
-                if ($pengajuan->user) {
-                    $pengajuan->user->notify(new \App\Notifications\LogAktivitasNotification(
-                        $log,
-                        "Admin menambahkan aktivitas: " . $log->aksi,
-                        route('pengajuan.show', $pengajuan->id)
-                    ));
-                }
+            // 1. Beritahu Wajib Pajak (jika pencipta log bukan Wajib Pajak itu sendiri)
+            if ($pengajuan->user && $creator->id !== $pengajuan->user_id) {
+                $pengajuan->user->notify(new \App\Notifications\LogAktivitasNotification(
+                    $log,
+                    "Admin/Instansi menambahkan aktivitas: " . $log->aksi,
+                    route('pengajuan.show', $pengajuan->id)
+                ));
+            }
+
+            // 2. Beritahu Admin/Verifikator lain yang relevan (di cabang yang sama atau tingkat wilayah/null)
+            $admins = \App\Models\User::where(function($query) use ($pengajuan) {
+                    $query->where('cabang_id', $pengajuan->cabang_id)
+                          ->orWhereNull('cabang_id');
+                })
+                ->where('id', '<>', $creator->id) // Jangan notifikasi diri sendiri
+                ->whereHas('roles', function($q) {
+                    $q->whereIn('name', ['superadmin', 'samsat', 'polda', 'bapenda', 'jasa_raharja', 'admin_instansi', 'staff_instansi', 'kepala_instansi']);
+                })->get();
+
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\LogAktivitasNotification(
+                    $log,
+                    "Aktivitas baru oleh {$creator->name}: " . $log->aksi,
+                    route('admin.pengajuan.show', $pengajuan->id)
+                ));
             }
         });
     }

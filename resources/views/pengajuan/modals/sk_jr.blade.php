@@ -1,7 +1,7 @@
 {{-- Modal Form SK Jasa Raharja Pembebasan SWDKLLJ --}}
 <div class="modal fade" id="modalSkJR" tabindex="-1" aria-labelledby="modalSkJRLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form id="formSkJR" class="modal-content border-0 shadow" method="POST" enctype="multipart/form-data">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 980px;">
+        <form id="formSkJR" class="modal-content border-0 shadow" style="min-height: 75vh;" method="POST" enctype="multipart/form-data">
             @csrf
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title" id="modalSkJRLabel">
@@ -109,9 +109,7 @@
                     </div>
 
                     {{-- Container Preview PDF --}}
-                    <div id="previewSkJRContainer" style="display:none;">
-                        <iframe id="iframePreviewSkJR" src="" style="width:100%; height:500px; border:1px solid #ddd; border-radius:8px;"></iframe>
-                    </div>
+                    <div id="previewSkJRContainer" style="display:none;"></div>
                 </div>
 
                 {{-- Footer: Mode Form --}}
@@ -139,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewContainer = document.getElementById('previewSkJRContainer');
     const footerForm = document.getElementById('footerFormSkJR');
     const footerPreview = document.getElementById('footerPreviewSkJR');
-    const iframePreview = document.getElementById('iframePreviewSkJR');
+    // Custom PDF.js Viewer will render here
     
     const signedUrl = @json($signedUrls['sk_buat'] ?? '');
     let currentBlobUrl = null;
@@ -178,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const pdfResponse = await fetch(pdfUrl);
             const blob = await pdfResponse.blob();
             currentBlobUrl = URL.createObjectURL(blob);
-            iframePreview.src = currentBlobUrl;
+            window.BapendaPdfViewer.render('previewSkJRContainer', currentBlobUrl, 'sk_jasa_raharja.pdf');
 
             formContainer.style.display = 'none';
             footerForm.style.display = 'none';
@@ -231,8 +229,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentBlobUrl) {
             URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = null;
-            iframePreview.src = '';
         }
+        window.BapendaPdfViewer.cleanup('previewSkJRContainer');
         previewContainer.style.display = 'none';
         footerPreview.style.display = 'none';
         formContainer.style.display = 'block';

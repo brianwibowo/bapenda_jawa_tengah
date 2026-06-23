@@ -108,7 +108,14 @@ class PengajuanController extends Controller
             $progress[$pengajuan->id] = $pengajuan->getTotalSurat();
         }
 
-        return view('pengajuan.index', compact('pengajuans', 'progress'));
+        $unreadPengajuanIds = Auth::user()
+            ? Auth::user()->unreadNotifications
+                ->pluck('data.pengajuan_id')
+                ->filter()
+                ->toArray()
+            : [];
+
+        return view('pengajuan.index', compact('pengajuans', 'progress', 'unreadPengajuanIds'));
     }
 
     /**
@@ -364,15 +371,25 @@ class PengajuanController extends Controller
             'suratPengajuan',
             'suratKeputusans.log'
         ]);
-        error_log("Test");
-        // Urutkan kendaraan berdasarkan created_at (yang pertama dibuat = nomor 1)
         $pengajuan->setRelation('kendaraans', $pengajuan->kendaraans->sortBy('created_at')->values());
 
         $progress = $pengajuan->getTotalSurat();
-        error_log("Test");
+
+        $unreadLogIds = [];
+        if (Auth::check()) {
+            $unreadNotifs = Auth::user()->unreadNotifications
+                ->filter(function ($n) use ($pengajuan) {
+                    return isset($n->data['pengajuan_id']) && $n->data['pengajuan_id'] == $pengajuan->id;
+                });
+            
+            $unreadLogIds = $unreadNotifs->pluck('data.log_id')->filter()->toArray();
+            $unreadNotifs->each(function ($n) {
+                $n->markAsRead();
+            });
+        }
 
         // 3. Tampilkan view
-        return view('pengajuan.show', compact('pengajuan', 'progress'));
+        return view('pengajuan.show', compact('pengajuan', 'progress', 'unreadLogIds'));
     }
 
     /**

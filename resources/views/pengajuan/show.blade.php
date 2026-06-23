@@ -42,7 +42,7 @@
                         </a>
                     </div>
                 </div>
-                <div class="progress-label mt-3">Progres ({{ $progressPercent }}%)</div>
+                <div class="progress-label mt-3">Progres ({{ $progressPercent }}% - {{ $progressValue }} / {{ $totalSurat }})</div>
                 <div class="progress slim-progress">
                     <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progressPercent }}%;"></div>
                 </div>

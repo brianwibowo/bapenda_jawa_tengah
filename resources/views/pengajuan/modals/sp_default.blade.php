@@ -4,7 +4,7 @@
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="modalSpDefaultLabel">
-                    <i class="fas fa-paper-plane me-2"></i>Kirim Surat Balasan
+                    <i class="fas fa-paper-plane me-2"></i>Kirim Persetujuan
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -12,7 +12,7 @@
                 @csrf
                 <div class="modal-body">
                     <p class="text-muted mb-3">
-                        Anda akan mengirim Surat Balasan kepada Samsat Jawa Tengah
+                        Anda akan mengirim Persetujuan kepada {{ $pengajuan->cabang?->nama ?? 'Samsat Jawa Tengah' }}
                         untuk pengajuan <strong>{{ $pengajuan->nomor_pengajuan }}</strong>.
                     </p>
                 </div>

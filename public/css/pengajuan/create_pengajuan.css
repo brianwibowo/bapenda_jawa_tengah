@@ -95,3 +95,22 @@
 .btn-add-file:active {
     transform: scale(0.95);
 }
+
+.kendaraan-form .card-body .form-control,
+.kendaraan-form .card-body .form-select,
+#finalizeCard .form-select {
+    border: 1.5px solid rgba(0, 0, 0, 0.38) !important;
+    /* Soft semi-transparent black border for clear presentation visibility without harshness */
+    border-radius: 6px;
+    background-color: #fafbfc !important;
+    /* Subtle gray background for premium card look */
+    transition: all 0.2s ease-in-out;
+}
+
+.kendaraan-form .card-body .form-control:focus,
+.kendaraan-form .card-body .form-select:focus,
+#finalizeCard .form-select:focus {
+    border-color: rgba(0, 0, 0, 0.7) !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08) !important;
+}

@@ -11,7 +11,7 @@
                     if (!empty($sk->pdf_url)) {
                         $docs->push((object)[
                             'pdf_url' => $sk->pdf_url,
-                            'display_name' => basename($sk->pdf_url),
+                            'display_name' => preg_replace('/^[a-f0-9\-]{36}_/', '', basename($sk->pdf_url)),
                             'created_at' => $sk->created_at,
                         ]);
                     }
@@ -25,7 +25,7 @@
                     if (!empty($sp->pdf_url)) {
                         $docs->push((object)[
                             'pdf_url' => $sp->pdf_url,
-                            'display_name' => basename($sp->pdf_url),
+                            'display_name' => preg_replace('/^[a-f0-9\-]{36}_/', '', basename($sp->pdf_url)),
                             'created_at' => $sp->created_at,
                         ]);
                     }
@@ -34,9 +34,10 @@
                     if (!empty($sp->persetujuan_unit_kerja) && is_array($sp->persetujuan_unit_kerja)) {
                         foreach ($sp->persetujuan_unit_kerja as $item) {
                             if (!empty($item['pdf_url'])) {
+                                $cleanFilename = preg_replace('/^[a-f0-9\-]{36}_/', '', basename($item['pdf_url']));
                                 $docs->push((object)[
                                     'pdf_url' => $item['pdf_url'],
-                                    'display_name' => 'SP Balasan (' . ($item['instansi'] ?? 'Instansi') . ') - ' . basename($item['pdf_url']),
+                                    'display_name' => 'SP Balasan (' . ($item['instansi'] ?? 'Instansi') . ') - ' . $cleanFilename,
                                     'created_at' => !empty($item['updated_at']) ? \Carbon\Carbon::parse($item['updated_at']) : $sp->updated_at,
                                 ]);
                             }
@@ -59,6 +60,12 @@
                                     $docPdfUrl = $doc->pdf_url;
                                     // Ambil nama file dari URL
                                     $name = $doc->display_name ?? basename($docPdfUrl);
+                                    $name = preg_replace('/^[a-f0-9\-]{36}_/', '', $name);
+                                    
+                                    // Untuk download attribute, hilangkan prefiks "SP Balasan (Instansi) - " jika ada
+                                    $downloadName = preg_replace('/^SP Balasan \([^)]+\) - /', '', $name);
+                                    $downloadName = preg_replace('/^[a-f0-9\-]{36}_/', '', $downloadName);
+
                                     $viewUrl = $docPdfUrl;
                                     $downloadUrl = $docPdfUrl;
                                     // Build safe URL: if localhost/127.0.0.1, force port 8000
@@ -79,7 +86,7 @@
                                 <a href="{{ $viewUrl }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-eye me-1"></i> Lihat PDF
                                 </a>
-                                <a href="{{ $downloadUrl }}" download class="btn btn-sm btn-outline-secondary ms-1">
+                                <a href="{{ $downloadUrl }}" download="{{ $downloadName }}" class="btn btn-sm btn-outline-secondary ms-1">
                                     <i class="fas fa-download me-1"></i> Unduh
                                 </a>
                             </div>

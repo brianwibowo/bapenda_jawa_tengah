@@ -107,6 +107,18 @@ class SuratKeputusanController extends Controller
 
         // Routing berbasis unit_kerja (lebih presisi dari routing berbasis step saja)
         $normalizedUK = $unitKerja ? self::normalizeUnitKerja($unitKerja) : null;
+        
+        if ($data instanceof SuratKeputusan) {
+            $path = $data->local_pdf_path ?? $data->pdf_url ?? '';
+            if (str_contains(strtoupper($path), 'SK_REGIDENT') || str_contains(strtoupper($path), 'SK POLDA')) {
+                $normalizedUK = 'Polda';
+            } elseif (str_contains(strtoupper($path), 'SK_PEMBEBASAN') || str_contains(strtoupper($path), 'SK BAPENDA')) {
+                $normalizedUK = 'Bapenda';
+            } elseif (str_contains(strtoupper($path), 'SK_JR') || str_contains(strtoupper($path), 'SK JR')) {
+                $normalizedUK = 'JR';
+            }
+        }
+
         if ($normalizedUK === 'Polda' && isset($config['polda2bapenda&jr'])) {
             $config = $config['polda2bapenda&jr'];
         } elseif ($normalizedUK === 'Bapenda' && isset($config['bapenda'])) {
@@ -122,7 +134,21 @@ class SuratKeputusanController extends Controller
             $config = $config['default'];
         }
 
-        $config['filename'] = $data ? ($config['prefix'] ?? '') . $data->nomor_sk : 'DOKUMEN_SK';
+        $nrkbStr = '';
+        if ($data instanceof SuratKeputusan && $data->kendaraan) {
+            $nrkbStr = $data->kendaraan->nrkb;
+        } elseif ($pengajuan && $pengajuan->kendaraans->isNotEmpty()) {
+            $nrkbStr = $pengajuan->kendaraans->first()->nrkb;
+        }
+
+        if ($normalizedUK === 'Polda') {
+            $config['filename'] = 'SK Polda - Surat Keterangan Penghapusan No Pol ' . $nrkbStr;
+        } elseif ($normalizedUK === 'Bapenda') {
+            $config['filename'] = 'SK Bapenda - Surat Keputusan Pembebasan No Pol ' . $nrkbStr;
+        } else {
+            $config['filename'] = 'SK JR - Surat Keputusan KANWIL Jateng Pembebasan No Pol ' . $nrkbStr;
+        }
+
         return $config;
     }
 
@@ -331,7 +357,7 @@ class SuratKeputusanController extends Controller
                 }
                 $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
             } else {
-                $filename    = 'SK_JR_' . str_replace(' ', '_', $k->nrkb) . '_' . time() . '.pdf';
+                $filename    = 'SK JR - Surat Keputusan KANWIL Jateng Pembebasan No Pol ' . $k->nrkb . '.pdf';
                 $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
             }
 
@@ -496,7 +522,7 @@ class SuratKeputusanController extends Controller
                 }
                 $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
             } else {
-                $filename   = 'SK_REGIDENT_' . str_replace('/', '_', $dataPdf['nomor_surat']) . '_' . str_replace(' ', '_', $k->nrkb) . '.pdf';
+                $filename   = 'SK Polda - Surat Keterangan Penghapusan No Pol ' . $k->nrkb . '.pdf';
                 $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
             }
             Storage::disk('public')->put($storagePath, $pdf->output());
@@ -674,7 +700,7 @@ class SuratKeputusanController extends Controller
                 }
                 $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
             } else {
-                $filename = 'SK_PEMBEBASAN_' . str_replace(' ', '_', $k->nrkb) . '_' . str_replace('/', '_', $dataPdf['nomor_surat_pembebasan']) . '.pdf';
+                $filename = 'SK Bapenda - Surat Keputusan Pembebasan No Pol ' . $k->nrkb . '.pdf';
                 $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
             }
             

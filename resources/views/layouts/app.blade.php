@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/kaiadmin.min.css') }}" />
     {{-- Custom overrides: sidebar colors per-role & notification UI --}}
     <link rel="stylesheet" href="{{ asset('kaiadmin/css/bapenda.css') }}" />
+    <link rel="stylesheet" href="{{ asset('css/pdf-viewer.css') }}" />
 </head>
 
 <body>
@@ -68,6 +69,9 @@
             }
         });
     </script>
+    <!-- PDF.js library & custom viewer script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="{{ asset('js/pdf-viewer.js') }}"></script>
 </body>
 
 </html>

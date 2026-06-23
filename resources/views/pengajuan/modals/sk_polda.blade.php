@@ -1,7 +1,7 @@
 {{-- Modal Form SK Polda (Non-Default, Draft) --}}
 <div class="modal fade" id="modalSkPolda" tabindex="-1" aria-labelledby="modalSkPoldaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <form id="formSkPoldaDraft" class="modal-content border-0 shadow" method="POST">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 980px;">
+        <form id="formSkPoldaDraft" class="modal-content border-0 shadow" style="min-height: 75vh;" method="POST">
             @csrf
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="modalSkPoldaLabel">Input Data SK Polda</h5>
@@ -66,9 +66,7 @@
                 </div>
 
                 {{-- Container Preview PDF --}}
-                <div id="previewSkPoldaContainer" style="display:none;">
-                    <iframe id="iframePreviewSkPolda" src="" style="width:100%; height:500px; border:1px solid #ddd; border-radius:8px;"></iframe>
-                </div>
+                <div id="previewSkPoldaContainer" style="display:none;"></div>
             </div>
 
             {{-- Footer: Mode Form --}}
@@ -95,7 +93,7 @@
         const previewContainer = document.getElementById('previewSkPoldaContainer');
         const footerForm = document.getElementById('footerFormSkPolda');
         const footerPreview = document.getElementById('footerPreviewSkPolda');
-        const iframePreview = document.getElementById('iframePreviewSkPolda');
+        // Custom PDF.js Viewer will render here
 
         const signedUrl = @json($signedUrls['sk_buat'] ?? '');
         let currentBlobUrl = null;
@@ -132,7 +130,7 @@
                 const pdfResponse = await fetch(pdfUrl);
                 const blob = await pdfResponse.blob();
                 currentBlobUrl = URL.createObjectURL(blob);
-                iframePreview.src = currentBlobUrl;
+                window.BapendaPdfViewer.render('previewSkPoldaContainer', currentBlobUrl, 'sk_polda.pdf');
 
                 formContainer.style.display = 'none';
                 footerForm.style.display = 'none';
@@ -185,8 +183,8 @@
             if (currentBlobUrl) {
                 URL.revokeObjectURL(currentBlobUrl);
                 currentBlobUrl = null;
-                iframePreview.src = '';
             }
+            window.BapendaPdfViewer.cleanup('previewSkPoldaContainer');
             previewContainer.style.display = 'none';
             footerPreview.style.display = 'none';
             formContainer.style.display = 'block';

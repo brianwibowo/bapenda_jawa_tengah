@@ -40,23 +40,23 @@
                     <div class="card-body">
                         {{-- Input Identitas Pemilik --}}
                         <div class="mb-3">
-                            <label for="nama_pemilik" class="form-label">Atas Nama</label>
+                            <label for="nama_pemilik" class="form-label">Atas Nama <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nama_pemilik" name="nama_pemilik" value="{{ old('nama_pemilik') }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="nik_pemilik" class="form-label">NIK/TDP/NIB/Kitas/Kitab</label>
+                            <label for="nik_pemilik" class="form-label">NIK/TDP/NIB/Kitas/Kitab <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nik_pemilik" name="nik_pemilik" value="{{ old('nik_pemilik') }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="alamat_pemilik" class="form-label">Alamat</label>
+                            <label for="alamat_pemilik" class="form-label">Alamat <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="alamat_pemilik" name="alamat_pemilik" rows="3" required>{{ old('alamat_pemilik') }}</textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="telp_pemilik" class="form-label">No. TLP/HP</label>
+                            <label for="telp_pemilik" class="form-label">No. TLP/HP <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="telp_pemilik" name="telp_pemilik" value="{{ old('telp_pemilik') }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="email_pemilik" class="form-label">Email</label>
+                            <label for="email_pemilik" class="form-label">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="email_pemilik" name="email_pemilik" value="{{ old('email_pemilik') }}" required>
                         </div>
                     </div>
@@ -72,58 +72,58 @@
                     <div class="card-body">
                         {{-- Input Identitas Kendaraan --}}
                         <div class="mb-3">
-                            <label for="nrkb" class="form-label">NRKB</label>
+                            <label for="nrkb" class="form-label">NRKB <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nrkb" name="nrkb" value="{{ old('nrkb') }}" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="jenis_kendaraan" class="form-label">Jenis</label>
+                                <label for="jenis_kendaraan" class="form-label">Jenis <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="jenis_kendaraan" name="jenis_kendaraan" value="{{ old('jenis_kendaraan') }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="model_kendaraan" class="form-label">Model</label>
+                                <label for="model_kendaraan" class="form-label">Model <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="model_kendaraan" name="model_kendaraan" value="{{ old('model_kendaraan') }}" required>
                             </div>
                         </div>
                          <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="merk_kendaraan" class="form-label">Merk</label>
+                                <label for="merk_kendaraan" class="form-label">Merk <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="merk_kendaraan" name="merk_kendaraan" value="{{ old('merk_kendaraan') }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="tipe_kendaraan" class="form-label">Tipe</label>
+                                <label for="tipe_kendaraan" class="form-label">Tipe <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="tipe_kendaraan" name="tipe_kendaraan" value="{{ old('tipe_kendaraan') }}" required>
                             </div>
                         </div>
                         <div class="row">
                              <div class="col-md-6 mb-3">
-                                <label for="tahun_pembuatan" class="form-label">Tahun Pembuatan</label>
+                                <label for="tahun_pembuatan" class="form-label">Tahun Pembuatan <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="tahun_pembuatan" name="tahun_pembuatan" value="{{ old('tahun_pembuatan') }}" required min="1901" max="{{ date('Y') }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="isi_silinder" class="form-label">Isi Silinder / Daya Listrik</label>
+                                <label for="isi_silinder" class="form-label">Isi Silinder / Daya Listrik <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="isi_silinder" name="isi_silinder" value="{{ old('isi_silinder') }}" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="jenis_bahan_bakar" class="form-label">Jenis Bahan Bakar / Sumber Energi</label>
+                            <label for="jenis_bahan_bakar" class="form-label">Jenis Bahan Bakar / Sumber Energi <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="jenis_bahan_bakar" name="jenis_bahan_bakar" value="{{ old('jenis_bahan_bakar') }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="nomor_rangka" class="form-label">Nomor Rangka</label>
+                            <label for="nomor_rangka" class="form-label">Nomor Rangka <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nomor_rangka" name="nomor_rangka" value="{{ old('nomor_rangka') }}" required>
                         </div>
                          <div class="mb-3">
-                            <label for="nomor_mesin" class="form-label">Nomor Mesin</label>
+                            <label for="nomor_mesin" class="form-label">Nomor Mesin <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nomor_mesin" name="nomor_mesin" value="{{ old('nomor_mesin') }}" required>
                         </div>
                          <div class="row">
                              <div class="col-md-6 mb-3">
-                                <label for="warna_tnkb" class="form-label">Warna TNKB</label>
+                                <label for="warna_tnkb" class="form-label">Warna TNKB <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="warna_tnkb" name="warna_tnkb" value="{{ old('warna_tnkb') }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="nomor_bpkb" class="form-label">Nomor BPKB</label>
+                                <label for="nomor_bpkb" class="form-label">Nomor BPKB <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="nomor_bpkb" name="nomor_bpkb" value="{{ old('nomor_bpkb') }}" required>
                             </div>
                         </div>
@@ -141,7 +141,7 @@
                  <div class="row">
                      <!-- Surat Permohonan -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">Surat permohonan penghapusan (PDF/DOCX)</label>
+                         <label class="form-label fw-bold">Surat permohonan penghapusan (PDF/DOCX) <span class="text-danger">*</span></label>
                          <div id="container_surat_permohonan">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="surat_permohonan[]" accept=".pdf,.docx" data-max-size="10240" required>
@@ -153,7 +153,7 @@
 
                      <!-- Surat Pernyataan -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">Surat pernyataan kepemilikan (PDF/DOCX)</label>
+                         <label class="form-label fw-bold">Surat pernyataan kepemilikan (PDF/DOCX) <span class="text-danger">*</span></label>
                          <div id="container_surat_pernyataan">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="surat_pernyataan[]" accept=".pdf,.docx" data-max-size="10240" required>
@@ -165,7 +165,7 @@
 
                      <!-- KTP -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">Tanda bukti identitas pemilik (KTP) (PDF/DOCX/JPG/PNG)</label>
+                         <label class="form-label fw-bold">Tanda bukti identitas pemilik (KTP) (PDF/DOCX/JPG/PNG) <span class="text-danger">*</span></label>
                          <div id="container_ktp">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="ktp[]" accept=".pdf,.docx,.jpg,.jpeg,.png" data-max-size="10240" required>
@@ -177,7 +177,7 @@
 
                      <!-- BPKB -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">BPKB (PDF/DOCX)</label>
+                         <label class="form-label fw-bold">BPKB (PDF/DOCX) <span class="text-danger">*</span></label>
                          <div id="container_bpkb">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="bpkb[]" accept=".pdf,.docx" data-max-size="10240" required>
@@ -189,7 +189,7 @@
 
                      <!-- TBPKP -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">TBPKP (PDF/DOCX)</label>
+                         <label class="form-label fw-bold">TBPKP (PDF/DOCX) <span class="text-danger">*</span></label>
                          <div id="container_tbpkp">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="tbpkp[]" accept=".pdf,.docx" data-max-size="10240" required>
@@ -201,7 +201,7 @@
 
                      <!-- Cek Fisik -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">Hasil pemeriksaan cek fisik (PDF/DOCX)</label>
+                         <label class="form-label fw-bold">Hasil pemeriksaan cek fisik (PDF/DOCX) <span class="text-danger">*</span></label>
                          <div id="container_cek_fisik">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="cek_fisik[]" accept=".pdf,.docx" data-max-size="10240" required>
@@ -213,7 +213,7 @@
 
                      <!-- Foto Ranmor -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">Foto Kendaraan (JPG/PNG)</label>
+                         <label class="form-label fw-bold">Foto Kendaraan (JPG/PNG) <span class="text-danger">*</span></label>
                          <div id="container_foto_ranmor">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="foto_ranmor[]" accept=".jpg,.jpeg,.png" data-max-size="10240" required>
@@ -225,7 +225,7 @@
 
                      <!-- STNK -->
                      <div class="col-md-6 mb-4">
-                         <label class="form-label fw-bold">STNK (PDF/DOCX)</label>
+                         <label class="form-label fw-bold">STNK (PDF/DOCX) <span class="text-danger">*</span></label>
                          <div id="container_stnk">
                              <div class="file-input-group mb-2">
                                  <input type="file" class="form-control file-input" name="stnk[]" accept=".pdf,.docx" data-max-size="10240" required>
