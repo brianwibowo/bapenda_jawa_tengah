@@ -6,12 +6,15 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 1.5cm 1.5cm 1.5cm 2.5cm;
+            margin: 2.5cm 1.5cm 2cm 2.5cm;
+        }
+        @page :first {
+            margin: 1.5cm 1.5cm 2cm 2.5cm;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
+            font-size: 12pt;
             line-height: 1.3;
             color: #000;
             margin: 0;
@@ -33,29 +36,37 @@
         .uc { text-transform: uppercase; }
         .tj { text-align: justify; }
         .tc { text-align: center; }
+        .tr { text-align: right; }
+        .tl { text-align: left; }
 
-        .lbl { width: 90px; font-weight: bold; }
+        .lbl { width: 150px; font-weight: light; }
         .sep { width: 15px; text-align: center; }
         .cl  { width: 22px; }
 
         .header-kop { text-align: center; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
-        .title-box { text-align: center; font-weight: bold; margin: 15px 0; }
+        .title-box { text-align: center; font-weight: bold; margin-top: 30px; }
 
         .stempel-container { position: relative; display: inline-block; }
+        .konten-tb { padding-top: 1cm; width: 100%;}
+
+        #header-kop { position: relative; top: 0; left: 0; right: 0; padding-bottom: 15px; }
+
+        #footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: right; font-size: 9pt; color: #666; padding: 0 0.5cm 0 0; }
+        #footer .page:after { content: counter(page); }
     </style>
+
 </head>
 <body>
 
-    <table style="width: 100%; margin-bottom: 10px;">
-        <tr>
-            <td class="tl">
-                <img src="{{ public_path('images/LOGO_JASA_RAHARJA_2024.png') }}" style="height:65px;"><br>
-                <div class="header-kop">
-                    <!-- PT JASA RAHARJA (PERSERO)<br><br> -->
-                </div>
-            </td>
-        </tr>
-    </table>
+    <div id="header-kop">
+        <table style="width: 100%; margin-bottom: 10px;">
+            <tr>
+                <td class="tl" style="width: 50%;">
+                    <img src="{{ public_path('images/LOGO_JASA_RAHARJA_2024.png') }}" style="height:65px;"><br>
+                </td>
+            </tr>
+        </table>
+    </div>
 
     <div class="title-box">
         <div class="uc" style="text-decoration: underline;">KEPUTUSAN KEPALA KANTOR WILAYAH</div>
@@ -65,10 +76,13 @@
             KEBIJAKAN PEMBEBASAN KEWAJIBAN PEMBAYARAN SUMBANGAN WAJIB DANA KECELAKAAN LALU LINTAS JALAN, KARTU DANA, DAN DENDA SUMBANGAN WAJIB DANA KECELAKAAN LALU LINTAS JALAN BAGI KENDARAAN BERMOTOR YANG DILAKSANAKAN PENGHAPUSAN REGISTRASI DAN IDENTIFIKASI KENDARAAN BERMOTOR ATAS DASAR PERMINTAAN PEMILIK KENDARAAN BERMOTOR
         </div>
         <br>
-        <div>KEPALA KANTOR WILAYAH UTAMA PT JASA RAHARJA JAWA TENGAH,</div>
+    </div>
+    <div>
+        <div class="uc tc">KEPALA KANTOR WILAYAH UTAMA PT JASA RAHARJA JAWA TENGAH,</div>
+<br>
     </div>
 
-    <table style="width: 100%;">
+    <table class="konten-tb">
         {{-- MENIMBANG --}}
         <tr>
             <td class="lbl">Menimbang</td>
@@ -177,7 +191,7 @@
         </tr>
     </table>
 
-    <div class="tc b" style="margin: 15px 0;">MEMUTUSKAN:</div>
+    <div class="tc b" style="margin: 30px 0;">MEMUTUSKAN:</div>
 
     <table style="width: 100%;">
         <tr>
@@ -210,8 +224,8 @@
     {{-- TTD --}}
     <table style="width: 100%; margin-top: 25px;">
         <tr>
-            <td style="width: 35%;"></td>
-            <td style="width: 65%; vertical-align: top; text-align: left; padding-left: 1px;">
+            <td style="width: 50%;"></td>
+            <td style="width: 50%; vertical-align: top; text-align: left; padding-left: 1px;">
                 Ditetapkan di {{ $tempat_sk }}<br>
                 Pada Tanggal: {{ $tanggal_sk }}<br><br>
                 <div class="b uc" style="margin-top: 5px; text-align: center;">
@@ -230,7 +244,30 @@
         </tr>
     </table>
 
-    <hr style="border: 1px solid #000; margin-top: 5px;">
+
+    <div id="footer">
+        <span class="page">Halaman </span>
+    </div>
+
+    <script type="text/php">
+        if (isset($pdf)) {
+            $font = $fontMetrics->getFont("Arial", "");
+            $pageW = $pdf->get_width();
+            $xNomor = $pageW - 170;
+            $nomor = "{{ $nomor_keputusan }}";
+            $tanggal = "{{ $tanggal_sk }}";
+            $logoBW = "{{ public_path('images/LOGO_JASA_RAHARJA_2024.png') }}";
+
+            $pdf->page_script(function ($PAGE_NUM, $PAGE_COUNT, $canvas, $fm) use ($font, $xNomor, $nomor, $tanggal, $logoBW) {
+                if ($PAGE_NUM >= 2) {
+                    $canvas->filled_rectangle(0, 0, 200, 52, [255, 255, 255]);
+                    $canvas->image($logoBW, 60, 10, 189, 49);
+                    $canvas->text($xNomor, 22, "Nomor   : $nomor", $font, 9);
+                    $canvas->text($xNomor, 36, "Tanggal : $tanggal", $font, 9);
+                }
+            });
+        }
+    </script>
 
 </body>
 </html>
