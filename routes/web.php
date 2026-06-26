@@ -138,7 +138,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/pengajuan/sk/upload-media', [SKController::class, 'uploadFileToMedia'])
             ->name('pengajuan.sk.upload_media');
-        
+
         Route::post('/pengajuan/sp/upload-media', [SPController::class, 'uploadFileToMedia'])
             ->name('pengajuan.sp.upload_media');
     });
@@ -147,12 +147,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // == SURAT TEMPLATE TEST (Superadmin Only) ==
     // ===========================================================
     Route::middleware(['role:superadmin'])->group(function () {
-        Route::get('/surat-template-test', [SuratTemplateTestController::class, 'index'])
-            ->name('surat-template-test.index');
+        Route::get('/surat-template-test', [SuratTemplateTestController::class, 'index'])->name('surat-template-test.index');
         Route::post('/surat-template-test/preview/{type}', [SuratTemplateTestController::class, 'preview'])
             ->name('surat-template-test.preview');
         Route::post('/surat-template-test/render-code', [SuratTemplateTestController::class, 'renderCode'])
             ->name('surat-template-test.render-code');
+        // Route baru untuk menampilkan modal
+        Route::get('/surat-template-test/{type}', [SuratTemplateTestController::class, 'showModal'])->name('surat-template-test.modal');
     });
 
     Route::prefix('kendaraan')->name('kendaraan.')->group(function () {
@@ -169,6 +170,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Centralized Render Route
     // Middleware 'signed' memastikan URL tidak bisa dimodifikasi/ditebak
     Route::get('/secure-frame/{type}/{category}/{id}', [FrameController::class, 'render'])
-        ->middleware(['signed']) 
+        ->middleware(['signed'])
         ->name('frame.secure.render');
 });

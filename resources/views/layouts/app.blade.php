@@ -57,6 +57,8 @@
     <script src="{{ asset('kaiadmin/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/plugin/select2/select2.full.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/kaiadmin.min.js') }}"></script>
+    <script src="{{ asset('kaiadmin/js/plugin/sweetalert/sweetalert.min.js')}}"></script>
+    <script src="{{ asset('js/jquery.repeater.min.js')}}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined') {
@@ -72,6 +74,7 @@
     <!-- PDF.js library & custom viewer script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="{{ asset('js/pdf-viewer.js') }}"></script>
+    @stack('scripts')
 </body>
 
 </html>

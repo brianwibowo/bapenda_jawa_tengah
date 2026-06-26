@@ -70,10 +70,10 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-search"></i>
                                     </span>
-                                    <input type="text" 
-                                           name="search" 
-                                           class="form-control" 
-                                           placeholder="Cari berdasarkan Nomor Pengajuan atau Nama..." 
+                                    <input type="text"
+                                           name="search"
+                                           class="form-control"
+                                           placeholder="Cari berdasarkan Nomor Pengajuan atau Nama..."
                                            value="{{ request('search') }}">
                                 </div>
                             </div>
@@ -94,7 +94,7 @@
                                     <i class="fas fa-search me-1"></i> Cari
                                 </button>
                                 @if(request('search') || (!$isSamsatUser && request('cabang_id')))
-                                    <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}" 
+                                    <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}"
                                        class="btn btn-outline-secondary">
                                         <i class="fas fa-times"></i>
                                     </a>

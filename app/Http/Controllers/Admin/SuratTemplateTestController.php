@@ -15,6 +15,52 @@ class SuratTemplateTestController extends Controller
         return view('admin.surat-template-test.index');
     }
 
+    public function showModal(string $type){
+        switch ($type){
+	    case "sp_default":
+		return view('admin.surat-template-test.modal.modalSpDefaultTest', []);
+		break;
+            case "sp_polda2bapendajr":
+                return view('admin.surat-template-test.modal.modalSpPolda2bapendajrTest',[
+                    'rujukan' => [
+                        "Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan;",
+                        "Peraturan Kepolisian Negara Republik Indonesia Nomor 7 Tahun 2021 tentang Registrasi dan Identifikasi Kendaraan Bermotor;",
+                        "Peraturan Kepala Badan Pengelola Pendapatan Daerah Provinsi Jawa Tengah Nomor 07 Tahun 2024 tentang Petunjuk Teknis Pemungutan Pajak Kendaraan Bermotor dan Bea Balik Nama Kendaraan Bermotor;",
+                        "Peraturan Direksi Nomor PER/25/2025 tanggal 25 Maret 2025 tentang Kebijakan Pembebasan Kewajiban Pembayaran Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan, Kartu Dana, dan Denda Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan yang Tertunggak bagi Kendaraan Bermotor yang dilaksanakan Penghapusan Registrasi dan Identifikasi Kendaraan Bermotor atas Dasar Permintaan Pemilik Kendaraan Bermotor;",
+                        "Surat Permohonan Kapolres Temanggung Polda Jateng Nomor: B/1/VII/YAN.1.3.2/2024/LANTAS tanggal 3 Juli 2024 hal permohonan penghapusan data."
+                        ],
+                    'tembusan' => [
+                        "Kapolda Jateng",
+                        "Irwasda Polda Jateng",
+                        "Kabidpropam Polda Jateng"
+                    ]
+                    ]);
+                break;
+	    case "sp_balasan_bapenda":
+		return view("admin.surat-template-test.modal.modalSpBalasanBapendaTest");
+		break;
+	    case "sp_balasan_jr":
+		return view("admin.surat-template-test.modal.modalSpBalasanJRTest");
+		break;
+	    case "sk_default":
+		return view("admin.surat-template-test.modal.modalSkDefaultTest");
+		break;
+	    case "sk_polda":
+		return view("admin.surat-template-test.modal.modalSkPoldaTest");
+		break;
+	    case "sk_bapenda":
+		return view("admin.surat-template-test.modal.modalSkBapendaTest");
+		break;
+	    case "sk_jr":
+		return view("admin.surat-template-test.modal.modalSkJRTest");
+		break;
+            default:
+                return response()->json(['error' => 'Tipe modal tidak ditemukan'], 404);
+		break;
+        }
+
+    }
+
     public function preview(Request $request, string $type)
     {
         $data = $request->all();
@@ -65,6 +111,12 @@ class SuratTemplateTestController extends Controller
         };
 
         $kendaraans = collect([$kendaraanDummy]);
+	$rawRujukan = $data['group-rujukan'] ?? [];
+	$parsedRujukan = collect($rawRujukan)->pluck('rujukan')->filter()->map(fn($item) => trim($item))->filter()->toArray();
+
+	$rawTembusan = $data['group-tembusan'] ?? [];
+	$parsedTembusan = collect($rawTembusan)->pluck('tembusan')->filter()->map(fn($item) => trim($item))->filter()->toArray();
+
 
         $viewData = array_merge($data, [
             'kendaraans' => $kendaraans,
@@ -95,11 +147,13 @@ class SuratTemplateTestController extends Controller
                 'nomor_sk' => $data['nomor_sk'] ?? 'SK-TEST/001/2026',
                 'kendaraan' => $kendaraanDummy,
             ],
+            'rujukan' => $parsedRujukan,
+            'tembusan' => $parsedTembusan
         ]);
 
         $viewMap = [
             'sp_default' => 'pdf.view_sp',
-            'sp_polda2bapendajr' => 'pdf.sp_polda2bapendaNjr',
+            'sp_polda2bapendajr' => 'pdf.sp_polda2bapendaNjrtest',
             'sp_balasan_bapenda' => 'pdf.sp_balasan_bapenda',
             'sp_balasan_jr' => 'pdf.sp_balasan_jr',
             'sk_default' => 'pdf.view_sk',
@@ -111,7 +165,6 @@ class SuratTemplateTestController extends Controller
         $view = $viewMap[$type] ?? abort(404);
 
         $pdf = Pdf::loadView($view, $viewData)->setPaper('a4', 'portrait');
-
         return $pdf->stream('preview_' . $type . '_' . time() . '.pdf');
     }
 
