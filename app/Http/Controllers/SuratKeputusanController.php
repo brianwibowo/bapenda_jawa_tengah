@@ -244,7 +244,8 @@ class SuratKeputusanController extends Controller
                 $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
             } else {
                 $filename    = 'SK_DEFAULT_' . str_replace(' ', '_', $k->nrkb) . '_' . time() . '.pdf';
-                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+                $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+                $storagePath = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
             }
 
             Storage::disk('public')->put($storagePath, $pdf->output());
@@ -358,7 +359,8 @@ class SuratKeputusanController extends Controller
                 $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
             } else {
                 $filename    = 'SK JR - Surat Keputusan KANWIL Jateng Pembebasan No Pol ' . $k->nrkb . '.pdf';
-                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+                $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+                $storagePath = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
             }
 
             Storage::disk('public')->put($storagePath, $pdf->output());
@@ -523,7 +525,8 @@ class SuratKeputusanController extends Controller
                 $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
             } else {
                 $filename   = 'SK Polda - Surat Keterangan Penghapusan No Pol ' . $k->nrkb . '.pdf';
-                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+                $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+                $storagePath = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
             }
             Storage::disk('public')->put($storagePath, $pdf->output());
             $pdfUrlAbsolute = asset('storage/' . $storagePath);
@@ -701,7 +704,8 @@ class SuratKeputusanController extends Controller
                 $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
             } else {
                 $filename = 'SK Bapenda - Surat Keputusan Pembebasan No Pol ' . $k->nrkb . '.pdf';
-                $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+                $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+                $storagePath = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
             }
             
             Storage::disk('public')->put($storagePath, $pdf->output());
@@ -781,10 +785,13 @@ class SuratKeputusanController extends Controller
                 },
             ],
         ]);
+        /** @var Pengajuan $pengajuan */
         $pengajuan = Pengajuan::with('kendaraans')->findOrFail($pengajuan_id);
+        
+        /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kendaraan> $kendaraan */
         $kendaraan = $request->kendaraan_id === 'all' 
-        ? $pengajuan->kendaraans 
-        : $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->get();
+            ? $pengajuan->kendaraans 
+            : $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->get();
 
         if ($kendaraan->isEmpty()) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
@@ -793,55 +800,21 @@ class SuratKeputusanController extends Controller
 
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
-            //  response()->json(['message' => 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".'], 400);
+                ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
         }
 
         $suratKeputusan = $pengajuan->suratKeputusans;
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = Auth::user();
 
         // Cek untuk unit_kerja user sekarang, apakah sudah ada SK yang diajukan untuk unit kerja tersebut
-        if ($request->kendaraan_id !== 'all' && $suratKeputusan->where('unit_kerja', $this->normalizeUnitKerja(Auth::user()->unit_kerja))->isNotEmpty()) {
-                // Map suratKeputusan with unit_kerja
+        if ($request->kendaraan_id !== 'all' && $suratKeputusan->where('unit_kerja', $this->normalizeUnitKerja($currentUser?->unit_kerja))->isNotEmpty()) {
             $skUnitKerja = $suratKeputusan->pluck('unit_kerja')->toArray();
             return redirect()->route('admin.pengajuan.show', $pengajuan)
-            ->with('error', 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja));
-            //  response()->json(['message' => 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja)], 400);
+                ->with('error', 'Surat Keputusan sudah diajukan oleh unit kerja: ' . implode(', ', $skUnitKerja));
         }
         
-        $data = [];
-        $isDraft = false;
-
-        switch ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
-            case 'Samsat':
-                $unitKerja = 'Samsat';
-                $data = $this->generateSkDefault($request, $pengajuan);
-                // Samsat default → no draft, langsung terbit
-                $isDraft = false;
-                break;
-            case 'Polda':
-                $unitKerja = 'Polda';
-                $data = $this->generateSkRegident($request, $pengajuan);
-                $isDraft = false; // Non-default → draft
-                break;
-            case 'Bapenda':
-                $unitKerja = 'Bapenda';
-                $data = $this->generateSkBapenda($request, $pengajuan);
-                // Draft only if TTD basah; TTD elektronik → langsung terbit
-                $isDraft = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah';
-                break;
-            case 'JR':
-                $unitKerja = 'Jasa Raharja';
-                $data = $this->generateSkJR($request, $pengajuan);
-                // Draft only if TTD basah; TTD elektronik → langsung terbit
-                $isDraft = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah';
-                break;
-            default:
-                $unitKerja = 'Unit Kerja Lain';
-                $data = [];
-                break;
-        }
-
-        $baseLogTime = now(); // Waktu dasar untuk log, agar semua log yang terkait memiliki timestamp yang konsisten
+        [$unitKerja, $data, $isDraft] = $this->generateSkDataByUnitKerja($request, $pengajuan);
 
         if ($request->has('preview')) {
             return response()->json([
@@ -853,7 +826,49 @@ class SuratKeputusanController extends Controller
                 })
             ]);
         }
-        // Loop setiap data hasil switch dengan kendaraan
+
+        $this->processSkCreation($pengajuan_id, $pengajuan, $kendaraan, $unitKerja, $isDraft, $data, $request);
+
+        $successMsg = $isDraft
+            ? 'Surat Keputusan berhasil disimpan sebagai draft.'
+            : 'Surat Keputusan berhasil diterbitkan.';
+
+        session()->flash('success', $successMsg);
+
+        return response()->json([
+            'success' => true,
+            'message' => $successMsg,
+            'redirect_url' => route('admin.pengajuan.show', $pengajuan_id),
+            'data' => $data
+        ]);
+    }
+
+    private function generateSkDataByUnitKerja(Request $request, Pengajuan $pengajuan): array
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        $unit = $this->normalizeUnitKerja($user?->unit_kerja);
+
+        switch ($unit) {
+            case 'Samsat':
+                return ['Samsat', $this->generateSkDefault($request, $pengajuan), false];
+            case 'Polda':
+                return ['Polda', $this->generateSkRegident($request, $pengajuan), false];
+            case 'Bapenda':
+                $isDraft = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah';
+                return ['Bapenda', $this->generateSkBapenda($request, $pengajuan), $isDraft];
+            case 'JR':
+                $isDraft = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah';
+                return ['Jasa Raharja', $this->generateSkJR($request, $pengajuan), $isDraft];
+            default:
+                return ['Unit Kerja Lain', [], false];
+        }
+    }
+
+    private function processSkCreation($pengajuan_id, Pengajuan $pengajuan, $kendaraan, string $unitKerja, bool $isDraft, array &$data, Request $request): void
+    {
+        $baseLogTime = now();
+
         foreach ($kendaraan as $k) {
             $sk = SuratKeputusan::create([
                 'pengajuan_id' => $pengajuan_id,
@@ -874,7 +889,6 @@ class SuratKeputusanController extends Controller
                 KendaraanLog::where('id', $data[$k->id]['log_id'])->update($updateData);
             }
 
-            // Hanya jalankan logic selesai jika BUKAN draft mode
             if (!$isDraft) {
                 $totalSkByUnitKerja = $k->suratKeputusans()
                     ->whereIn('unit_kerja', ['Polda', 'Bapenda', 'Jasa Raharja'])
@@ -886,29 +900,20 @@ class SuratKeputusanController extends Controller
 
                 if ($k->status == 'diproses' && $totalSkByUnitKerja >= 3) {
                     $k->update(['status' => 'selesai']);
-                    // Simpan log untuk status selesai.
                     $logSelesai = $this->logSuratActionByKendaraanId(
                         $pengajuan,
                         $k->id,
                         'Pengajuan Selesai',
                         'Pengajuan Selesai Setelah Ketiga Surat Keputusan Ditetapkan.'
                     );
-                    // Record 1 second after the SK log so chronological order is explicit.
                     $logSelesai->created_at = $baseLogTime->copy()->addSecond();
                     $logSelesai->updated_at = $baseLogTime->copy()->addSecond();
                     $logSelesai->save();
                 }
             }
 
-            $data[$k->id]['sk_id'] = $sk->id; // Simpan ID SK yang baru dibuat untuk referensi jika diperlukan
+            $data[$k->id]['sk_id'] = $sk->id;
         }
-
-        $successMsg = $isDraft
-            ? 'Surat Keputusan berhasil disimpan sebagai draft.'
-            : 'Surat Keputusan berhasil diterbitkan.';
-
-        return response()->json(['message' => $successMsg, 'data' => $data]);
-
     }
 
     public function uploadFileToMedia(Request $request)
@@ -933,7 +938,9 @@ class SuratKeputusanController extends Controller
         }
 
         $filename = $request->file->getClientOriginalName();
-        $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'pdf';
+        $storagePath    = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.' . $extension;
         Storage::disk('public')->put($storagePath, $request->file('file')->get());
         $localPdfPath = Storage::disk('public')->path($storagePath);
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
@@ -950,7 +957,7 @@ class SuratKeputusanController extends Controller
             ->with('success', 'File PDF berhasil diupload.');
     }
 
-    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null, int $sk_id = null): KendaraanLog
+    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null, ?int $sk_id = null): KendaraanLog
     {
         $log = KendaraanLog::create([
             'kendaraan_id' => $kendaraan_id,

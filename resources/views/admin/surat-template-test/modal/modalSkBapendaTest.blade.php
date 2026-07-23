@@ -60,14 +60,8 @@
 		        <label class="form-label fw-bold">Nama Direktur</label>
 		        <input type="text" class="form-control" name="nama_direktur" value="NADI SANTOSO">
 		    </div>
-		    <div class="col-md-6 mb-3">
-		        <label class="form-label fw-bold">Metode Penanda Tangan</label>
-		        <select name="metode_penanda_tangan" class="form-select">
-		            <option value="ttd_elektronik">TTD Elektronik</option>
-		            <option value="ttd_basah">TTD Basah</option>
-		        </select>
-		    </div>
 		</div>
+		<input type="hidden" name="metode_penanda_tangan" value="ttd_basah">
 		<hr>
 		<h6 class="fw-bold mb-3">Data Kendaraan</h6>
 		<div class="row">

@@ -67,7 +67,7 @@ class SuratPengajuan extends Model
     public function isFullyApprovedByAll()
     {
         $currentSp = $this->pengajuan?->getCurrentSuratPengajuan();
-        return $currentSp && $currentSp->id === $this->id && $this->isFullyApproved();
+        return $currentSp && $currentSp->id === $this->id && ($this->pengajuan?->isFullyApprovedByAll() ?? false);
     }
     
     public function isRejected()
@@ -79,5 +79,12 @@ class SuratPengajuan extends Model
         }
         }
         return false;
+    }
+
+    public function isApprovedBy($instansi)
+    {
+        if (empty($this->persetujuan_unit_kerja)) return false;
+        $item = collect($this->persetujuan_unit_kerja)->firstWhere('instansi', $instansi);
+        return $item && isset($item['status']) && $item['status'] === 'approved';
     }
 }

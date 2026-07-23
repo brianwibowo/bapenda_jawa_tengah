@@ -61,15 +61,7 @@
 		        <input type="text" class="form-control" name="jabatan_penandatangan" value="Kepala Kantor Wilayah PT Jasa Raharja Jawa Tengah">
 		    </div>
 		</div>
-		<div class="row">
-		    <div class="col-md-6 mb-3">
-		        <label class="form-label fw-bold">Metode Penanda Tangan</label>
-		        <select name="metode_penanda_tangan" class="form-select">
-		            <option value="ttd_elektronik">TTD Elektronik</option>
-		            <option value="ttd_basah">TTD Basah</option>
-		        </select>
-		    </div>
-		</div>
+		<input type="hidden" name="metode_penanda_tangan" value="ttd_basah">
 		<hr>
 		<h6 class="fw-bold mb-3">Data Kendaraan</h6>
 		<div class="row">

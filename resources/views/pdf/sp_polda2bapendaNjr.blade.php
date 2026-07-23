@@ -140,8 +140,7 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td style="padding-top: 8">Yth.</td>
-                        
+                        <td style="padding-top: 8"></td>
                     </tr>
                 </table>
                  
@@ -150,13 +149,20 @@
             <td style="width: 40%; vertical-align: top; padding-left: 20px;">
                 <br><br><br><br>
                 Kepada<br><br>
-                <table>
-                <tr>
-                    <td style="vertical-align: top;"> BAPENDA PROVINSI JAWA TENGAH</td>
-                </tr>
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <td style="vertical-align: top; width: 35px; padding-bottom: 3px;">Yth.</td>
+                        <td style="vertical-align: top; width: 20px; padding-bottom: 3px;">1.</td>
+                        <td style="vertical-align: top; padding-bottom: 3px;">BAPENDA PROVINSI JAWA TENGAH</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td style="vertical-align: top; padding-bottom: 3px;">2.</td>
+                        <td style="vertical-align: top; padding-bottom: 3px;">PT JASA RAHARJA CABANG JAWA TENGAH</td>
+                    </tr>
                 </table><br>
                 di<br><br>
-                Semarang
+                {{ $tempat ?? 'Semarang' }}
             </td>
         </tr>
     </table>
@@ -267,16 +273,16 @@
     @php
         $vData = (object)[
             'nrkb' => strtoupper($k->nrkb ?? '-'),
-            'nama' => strtoupper(optional($k->pemilik)->nama_pemilik ?? '-'),
-            'alamat' => strtoupper(optional($k->pemilik)->alamat_pemilik ?? '-'),
-            'jenis_model' => strtoupper(($k->jenis_kendaraan ?? '-') . '/' . ($k->model_kendaraan ?? '-')),
-            'merek_tipe' => strtoupper(($k->merk_kendaraan ?? '-') . '/' . ($k->tipe_kendaraan ?? '-')),
+            'nama' => optional($k->pemilik)->nama_pemilik ?? '-',
+            'alamat' => optional($k->pemilik)->alamat_pemilik ?? '-',
+            'jenis_model' => ($k->jenis_kendaraan ?? '-') . '/' . ($k->model_kendaraan ?? '-'),
+            'merek_tipe' => ($k->merk_kendaraan ?? '-') . '/' . ($k->tipe_kendaraan ?? '-'),
             'tahun' => $k->tahun_pembuatan ?? '-',
             'isi_silinder' => strtoupper($k->isi_silinder ?? '-'),
-            'bahan_bakar' => strtoupper($k->jenis_bahan_bakar ?? '-'),
+            'bahan_bakar' => $k->jenis_bahan_bakar ?? '-',
             'no_rangka' => strtoupper($k->nomor_rangka ?? '-'),
             'no_mesin' => strtoupper($k->nomor_mesin ?? '-'),
-            'warna' => strtoupper($k->warna_kendaraan ?? '-'),
+            'warna' => $k->warna_kendaraan ?? '-',
             'no_bpkb' => strtoupper($k->nomor_bpkb ?? '-'),
         ];
     @endphp

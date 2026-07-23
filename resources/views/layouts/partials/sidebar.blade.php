@@ -1,6 +1,7 @@
 @php
     $sidebarColor = 'dark';
     if(Auth::check()) {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         
         // Priority checks: Admin roles first

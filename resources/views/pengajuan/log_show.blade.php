@@ -239,12 +239,14 @@
                                             <i class="fas fa-cloud-upload-alt d-block mb-2" style="font-size: 2.5rem; color: #198754;"></i>
                                             <h6 class="fw-bold text-dark mb-2">Upload Dokumen Bertandatangan</h6>
                                             <p class="text-muted small mb-3">Unggah dokumen SK yang telah ditandatangani resmi untuk menerbitkan SK ini.</p>
-                                            <button class="btn btn-success fw-bold px-4 btn-publish-sk"
-                                                    data-bs-toggle="modal" data-bs-target="#modalPublishSKDetail"
-                                                    data-log-id="{{ $log->id }}"
-                                                    data-sk-id="{{ $log->sk_id }}">
-                                                <i class="fas fa-stamp me-1"></i> Upload & Terbitkan SK
-                                            </button>
+                                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah berkas SK bertandatangan untuk menerbitkan SK secara resmi">
+                                                <button class="btn btn-success fw-bold px-4 btn-publish-sk"
+                                                        data-bs-toggle="modal" data-bs-target="#modalPublishSKDetail"
+                                                        data-log-id="{{ $log->id }}"
+                                                        data-sk-id="{{ $log->sk_id }}">
+                                                    <i class="fas fa-stamp me-1"></i> Upload & Terbitkan SK
+                                                </button>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -258,12 +260,14 @@
                                             <i class="fas fa-cloud-upload-alt d-block mb-2" style="font-size: 2.5rem; color: #0d6efd;"></i>
                                             <h6 class="fw-bold text-dark mb-2">Upload Dokumen Bertandatangan</h6>
                                             <p class="text-muted small mb-3">Unggah dokumen SP yang telah ditandatangani resmi untuk menerbitkan SP ini.</p>
-                                            <button class="btn btn-primary fw-bold px-4 btn-publish-sp"
-                                                    data-bs-toggle="modal" data-bs-target="#modalPublishSPDetail"
-                                                    data-log-id="{{ $log->id }}"
-                                                    data-sp-id="{{ $log->sp_id }}">
-                                                <i class="fas fa-stamp me-1"></i> Upload & Terbitkan SP
-                                            </button>
+                                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah berkas SP bertandatangan untuk menerbitkan SP secara resmi">
+                                                <button class="btn btn-primary fw-bold px-4 btn-publish-sp"
+                                                        data-bs-toggle="modal" data-bs-target="#modalPublishSPDetail"
+                                                        data-log-id="{{ $log->id }}"
+                                                        data-sp-id="{{ $log->sp_id }}">
+                                                    <i class="fas fa-stamp me-1"></i> Upload & Terbitkan SP
+                                                </button>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -363,9 +367,11 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSKDetail" disabled>
-                        <i class="fas fa-stamp me-1"></i> Terbitkan SK
-                    </button>
+                    <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SK">
+                        <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSKDetail" disabled style="pointer-events: none;">
+                            <i class="fas fa-stamp me-1"></i> Terbitkan SK
+                        </button>
+                    </span>
                 </div>
             </form>
         </div>
@@ -381,7 +387,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkReady() {
         const hasFile = fileInput && fileInput.files.length > 0;
         const hasCheck = checkbox && checkbox.checked;
-        if (btn) btn.disabled = !(hasFile && hasCheck);
+        if (btn) {
+            btn.disabled = !(hasFile && hasCheck);
+            btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
+        }
     }
 
     if (fileInput) {
@@ -480,9 +489,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSPDetail" disabled>
-                        <i class="fas fa-stamp me-1"></i> Terbitkan SP
-                    </button>
+                    <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SP">
+                        <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSPDetail" disabled style="pointer-events: none;">
+                            <i class="fas fa-stamp me-1"></i> Terbitkan SP
+                        </button>
+                    </span>
                 </div>
             </form>
         </div>

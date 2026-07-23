@@ -77,8 +77,10 @@
                 </button>
                 <button type="button" class="btn btn-danger" id="btnTolakSpBalasanBapenda">
                     <i class="fas fa-ban me-1"></i>Tolak
+                <button type="button" class="btn btn-outline-danger me-auto" id="btnTolakSpBalasanBapenda" data-bs-toggle="tooltip" data-bs-placement="top" title="Tolak permohonan Surat Pengajuan ini">
+                    <i class="fas fa-times me-1"></i>Tolak Pengajuan
                 </button>
-                <button type="button" class="btn btn-outline-primary" id="btnPreviewSpBalasanBapenda">
+                <button type="button" class="btn btn-outline-primary" id="btnPreviewSpBalasanBapenda" data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat pratinjau Surat Balasan Bapenda">
                     <i class="fas fa-eye me-1"></i>Lihat Preview
                 </button>
             </div>
@@ -86,7 +88,7 @@
             {{-- Footer: Mode Preview --}}
             <div class="modal-footer" id="footerPreviewSpBalasanBapenda" style="display:none;">
                 <button type="button" class="btn btn-warning" id="btnEditSpBalasanBapenda">Kembali Edit</button>
-                <button type="button" class="btn btn-success" id="btnSubmitSpBalasanBapendaPreview">
+                <button type="button" class="btn btn-success" id="btnSubmitSpBalasanBapendaPreview" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan Surat Balasan Bapenda sebagai draft">
                     <i class="fas fa-save me-1"></i>Simpan sebagai Draft
                 </button>
             </div>
@@ -168,15 +170,24 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST', body: formData,
             headers: { 
                 'X-CSRF-TOKEN': '{{ csrf_token() }}', 
-                'Accept': 'text/html',
+                'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(r => {
-            if (r.redirected) { window.location.href = r.url; return; }
-            return r.text().then(() => { window.location.reload(); });
+        .then(async r => {
+            const res = await r.json().catch(() => ({}));
+            if (r.ok || res.success) {
+                const msg = res.message || 'Status berhasil diperbarui.';
+                sessionStorage.setItem('toast_success', msg);
+                window.location.href = res.redirect_url || window.location.href;
+            } else {
+                alert(res.error || res.message || 'Gagal menolak.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-ban me-1"></i>Tolak';
+            }
         })
-        .catch(() => {
+        .catch(err => {
+            console.error('Tolak error:', err);
             alert('Gagal menolak.');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-ban me-1"></i>Tolak';
@@ -193,15 +204,24 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST', body: formData,
             headers: { 
                 'X-CSRF-TOKEN': '{{ csrf_token() }}', 
-                'Accept': 'text/html',
+                'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(r => {
-            if (r.redirected) { window.location.href = r.url; return; }
-            return r.text().then(() => { window.location.reload(); });
+        .then(async r => {
+            const res = await r.json().catch(() => ({}));
+            if (r.ok || res.success) {
+                const msg = res.message || 'Surat Pengajuan berhasil disimpan sebagai draft.';
+                sessionStorage.setItem('toast_success', msg);
+                window.location.href = res.redirect_url || window.location.href;
+            } else {
+                alert(res.error || res.message || 'Gagal menyimpan.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save me-1"></i>Simpan sebagai Draft';
+            }
         })
-        .catch(() => {
+        .catch(err => {
+            console.error('Submit error:', err);
             alert('Gagal menyimpan.');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save me-1"></i>Simpan sebagai Draft';

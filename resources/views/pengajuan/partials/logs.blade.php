@@ -47,38 +47,142 @@
         <div class="mb-3 mt-3 d-flex justify-content-end align-items-center">
             <div class="d-flex justify-content-end gap-2 w-100">
                 @if(!empty($admin) && $admin)
-                    {{-- Tombol Dinamis SP (Hanya Admin) — Standalone Modal --}}
-                    @if(!empty($permissionSurat['canAjukanSP']))
-                        @if($unitkerja == 'Samsat')
-                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpSamsat">
+                    {{-- SAMSAT ROLE --}}
+                    @if($unitkerja == 'Samsat')
+                        @if(!empty($permissionSurat['canAjukanSP']))
+                            <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpSamsat" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Pengajuan (SP) ke Ditlantas Polda">
                                 <i class="fas fa-paper-plane me-1"></i> Buat Pengajuan ke Polda
                             </button>
                         @else
-                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSpPolda2bapendajr">
-                                <i class="fas fa-file-signature me-1"></i> Buat Pengajuan ke Bapenda/Jasa Raharja
-                            </button>
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Pengajuan (SP) ke Ditlantas Polda sudah berhasil dikirimkan" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SP ke Polda Telah Dikirimkan
+                                </button>
+                            </span>
                         @endif
-                    @elseif(!empty($permissionSurat['canRespondSP']))
-                        @php
-                            $modalName = '';
-                            if ($unitkerja == 'Polda'){
-                                $modalName = 'modalSpDefault';
-                            } else if ($unitkerja == 'Bapenda'){
-                                $modalName = 'modalSpBalasanBapenda';
-                            } else if($unitkerja == 'Jasa Raharja'){
-                                $modalName = 'modalSpBalasanJR';
-                            }
-                        @endphp
-                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#{{$modalName}}">
-                            <i class="fas fa-reply me-1"></i> Review & Balas SP
-                        </button>
                     @endif
 
-                    @if($unitkerja != 'Samsat')
-                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" {{ $permissionSurat['canAjukanSK'] ? '' : 'disabled'}}
-                                data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK">
-                            <i class="fas fa-file-contract me-1"></i> Buat Surat Keputusan
-                        </button>
+                    {{-- POLDA ROLE --}}
+                    @if($unitkerja == 'Polda')
+                        {{-- Tombol 1: Review & Balas SP --}}
+                        @if(!empty($permissionSurat['canRespondSP']))
+                            <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpDefault" data-bs-toggle="tooltip" title="Klik untuk meninjau dan merespon Surat Pengajuan dari Samsat">
+                                <i class="fas fa-reply me-1"></i> Review & Balas SP
+                            </button>
+                        @elseif($lastSp && $lastSp->isFullyApproved())
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Pengajuan dari Samsat telah selesai ditinjau dan direspon" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SP Samsat Telah Direspon
+                                </button>
+                            </span>
+                        @else
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Pengajuan (SP) dari Samsat dikirimkan terlebih dahulu" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-clock me-1 text-warning"></i> Review & Balas SP
+                                </button>
+                            </span>
+                        @endif
+
+                        {{-- Tombol 2: Buat SK Polda --}}
+                        @if(!empty($permissionSurat['canAjukanSK']))
+                            <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Keputusan (SK) Penghapusan Regident Ranmor">
+                                <i class="fas fa-file-contract me-1"></i> Buat SK Polda
+                            </button>
+                        @elseif(!$suratkeputusan->where('unit_kerja', 'Polda')->isEmpty())
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan (SK) Penghapusan Regident Ditlantas Polda telah diterbitkan" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SK Polda Telah Diterbitkan
+                                </button>
+                            </span>
+                        @else
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Pengajuan (SP) dari Samsat dikirimkan terlebih dahulu" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-clock me-1 text-warning"></i> Buat SK Polda
+                                </button>
+                            </span>
+                        @endif
+                    @endif
+
+                    {{-- BAPENDA ROLE --}}
+                    @if($unitkerja == 'Bapenda')
+                        {{-- Tombol 1: Review & Balas SP --}}
+                        @if(!empty($permissionSurat['canRespondSP']))
+                            <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpBalasanBapenda" data-bs-toggle="tooltip" title="Klik untuk merespon dan membuat Surat Balasan Bapenda">
+                                <i class="fas fa-reply me-1"></i> Review & Balas SP
+                            </button>
+                        @elseif($lastSp && $lastSp->isApprovedBy('Bapenda'))
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Balasan Bapenda telah selesai dikirimkan" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> Surat Balasan Bapenda Dikirim
+                                </button>
+                            </span>
+                        @else
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-clock me-1 text-warning"></i> Review & Balas SP
+                                </button>
+                            </span>
+                        @endif
+
+                        {{-- Tombol 2: Buat SK Pembebasan Bapenda --}}
+                        @if(!empty($permissionSurat['canAjukanSK']))
+                            <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Keputusan Pembebasan Pokok & Sanksi PKB">
+                                <i class="fas fa-file-contract me-1"></i> Buat SK Bapenda
+                            </button>
+                        @elseif(!$suratkeputusan->where('unit_kerja', 'Bapenda')->isEmpty())
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan Pembebasan PKB Bapenda telah diterbitkan" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SK Bapenda Telah Diterbitkan
+                                </button>
+                            </span>
+                        @else
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-clock me-1 text-warning"></i> Buat SK Bapenda
+                                </button>
+                            </span>
+                        @endif
+                    @endif
+
+                    {{-- JASA RAHARJA ROLE --}}
+                    @if($unitkerja == 'Jasa Raharja')
+                        {{-- Tombol 1: Review & Balas SP --}}
+                        @if(!empty($permissionSurat['canRespondSP']))
+                            <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpBalasanJR" data-bs-toggle="tooltip" title="Klik untuk merespon dan membuat Surat Balasan Jasa Raharja">
+                                <i class="fas fa-reply me-1"></i> Review & Balas SP
+                            </button>
+                        @elseif($lastSp && $lastSp->isApprovedBy('Jasa Raharja'))
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Balasan Jasa Raharja telah selesai dikirimkan" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> Surat Balasan JR Dikirim
+                                </button>
+                            </span>
+                        @else
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-clock me-1 text-warning"></i> Review & Balas SP
+                                </button>
+                            </span>
+                        @endif
+
+                        {{-- Tombol 2: Buat SK Pembebasan SWDKLLJ --}}
+                        @if(!empty($permissionSurat['canAjukanSK']))
+                            <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Keputusan Pembebasan SWDKLLJ & Denda Jasa Raharja">
+                                <i class="fas fa-file-contract me-1"></i> Buat SK Jasa Raharja
+                            </button>
+                        @elseif(!$suratkeputusan->where('unit_kerja', 'Jasa Raharja')->isEmpty())
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan Pembebasan SWDKLLJ Jasa Raharja telah diterbitkan" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SK JR Telah Diterbitkan
+                                </button>
+                            </span>
+                        @else
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-clock me-1 text-warning"></i> Buat SK Jasa Raharja
+                                </button>
+                            </span>
+                        @endif
                     @endif
                 @endif
 
@@ -191,20 +295,24 @@
                                         </a>
                                     @endif
                                     @if($log->isSkDraft() && $log->user && $log->user->unit_kerja === auth()->user()->unit_kerja)
-                                        <button class="btn btn-sm btn-success fw-semibold btn-publish-sk"
-                                                data-bs-toggle="modal" data-bs-target="#modalPublishSK"
-                                                data-log-id="{{ $log->id }}"
-                                                data-sk-id="{{ $log->sk_id }}">
-                                            <i class="fas fa-stamp me-1"></i>Terbitkan SK
-                                        </button>
+                                        <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah berkas SK bertandatangan untuk menerbitkan SK">
+                                            <button class="btn btn-sm btn-success fw-semibold btn-publish-sk"
+                                                    data-bs-toggle="modal" data-bs-target="#modalPublishSK"
+                                                    data-log-id="{{ $log->id }}"
+                                                    data-sk-id="{{ $log->sk_id }}">
+                                                <i class="fas fa-stamp me-1"></i>Terbitkan SK
+                                            </button>
+                                        </span>
                                     @endif
                                     @if($log->isSpDraft() && $log->user && $log->user->unit_kerja === auth()->user()->unit_kerja)
-                                        <button class="btn btn-sm btn-success fw-semibold btn-publish-sp"
-                                                data-bs-toggle="modal" data-bs-target="#modalPublishSP"
-                                                data-log-id="{{ $log->id }}"
-                                                data-sp-id="{{ $log->sp_id }}">
-                                            <i class="fas fa-stamp me-1"></i>Terbitkan SP
-                                        </button>
+                                        <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah berkas SP bertandatangan untuk menerbitkan SP">
+                                            <button class="btn btn-sm btn-success fw-semibold btn-publish-sp"
+                                                    data-bs-toggle="modal" data-bs-target="#modalPublishSP"
+                                                    data-log-id="{{ $log->id }}"
+                                                    data-sp-id="{{ $log->sp_id }}">
+                                                <i class="fas fa-stamp me-1"></i>Terbitkan SP
+                                            </button>
+                                        </span>
                                     @endif
                                     {{-- Tombol Kirim Revisi — muncul jika log ini revisi pending & user punya permission --}}
                                     @if($log->isRevisionPending() && auth()->user()->can('submit_revision'))
@@ -892,9 +1000,11 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSK" disabled>
-                        <i class="fas fa-stamp me-1"></i> Terbitkan SK
-                    </button>
+                    <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SK">
+                        <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSK" disabled style="pointer-events: none;">
+                            <i class="fas fa-stamp me-1"></i> Terbitkan SK
+                        </button>
+                    </span>
                 </div>
             </form>
         </div>
@@ -961,9 +1071,11 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSP" disabled>
-                        <i class="fas fa-stamp me-1"></i> Terbitkan SP
-                    </button>
+                    <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SP">
+                        <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSP" disabled style="pointer-events: none;">
+                            <i class="fas fa-stamp me-1"></i> Terbitkan SP
+                        </button>
+                    </span>
                 </div>
             </form>
         </div>

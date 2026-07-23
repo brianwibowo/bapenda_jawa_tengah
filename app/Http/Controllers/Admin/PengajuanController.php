@@ -601,7 +601,9 @@ class PengajuanController extends Controller
 
         // Upload file ke storage
         $filename = $request->file->getClientOriginalName();
-        $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'pdf';
+        $storagePath = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.' . $extension;
         Storage::disk('public')->put($storagePath, $request->file('file')->get());
         $localPdfPath = Storage::disk('public')->path($storagePath);
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
@@ -706,7 +708,9 @@ class PengajuanController extends Controller
 
         // Upload file ke storage
         $filename = $request->file->getClientOriginalName();
-        $storagePath = 'sp/' . Str::uuid() . '_' . $filename;
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'pdf';
+        $storagePath = 'sp/' . $nameWithoutExt . '_' . Str::uuid() . '.' . $extension;
         Storage::disk('public')->put($storagePath, $request->file('file')->get());
         $localPdfPath = Storage::disk('public')->path($storagePath);
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
@@ -749,6 +753,36 @@ class PengajuanController extends Controller
 
         // Update sp_status ke terbit
         $log->update(['sp_status' => 'terbit']);
+
+        // Jika semua instansi sudah approved dan mempublikasikan (terbit) SP Balasan
+        if ($sp && $pengajuan->fresh()->isFullyApprovedByAll()) {
+            foreach ($pengajuan->kendaraans as $k) {
+                if ($k->status !== 'diproses') {
+                    $k->update(['status' => 'diproses']);
+                }
+            }
+
+            $alreadyLogged = KendaraanLog::where('sp_id', $sp->id)
+                ->where('aksi', 'Surat Pengajuan Diterima oleh Semua Instansi')
+                ->exists();
+
+            if (!$alreadyLogged) {
+                foreach ($pengajuan->kendaraans as $k) {
+                    $logDiterima = KendaraanLog::create([
+                        'kendaraan_id' => $k->id,
+                        'user_id' => Auth::id(),
+                        'aksi' => 'Surat Pengajuan Diterima oleh Semua Instansi',
+                        'status_baru' => 'diproses',
+                        'tipe' => 'system',
+                        'catatan' => 'Status kendaraan diperbarui ke Diproses.',
+                        'sp_id' => $sp->id,
+                    ]);
+                    $logDiterima->created_at = now();
+                    $logDiterima->updated_at = now();
+                    $logDiterima->save();
+                }
+            }
+        }
 
         // Dispatch WhatsApp notification
         if ($sp) {
@@ -838,11 +872,12 @@ class PengajuanController extends Controller
         $pdf->setPaper('a4', 'portrait');
         
         $filename   = 'SK Polda - Surat Keterangan Penghapusan No Pol ' . $kendaraan->nrkb . '.pdf';
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
         
         if (!$request->has('preview')) {
-            $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+            $storagePath = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
             Storage::disk('public')->put($storagePath, $pdf->output());
-            $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+            $pdfUrlAbsolute = url(Storage::url($storagePath));
 
             // Catat log
             $this->logSuratActionByKendaraanId(
@@ -937,7 +972,7 @@ class PengajuanController extends Controller
             // Save PDF to storage
             $storagePath = 'sk/' . $filename;
             Storage::disk('public')->put($storagePath, $pdf->output());
-            $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+            $pdfUrlAbsolute = url(Storage::url($storagePath));
             $localPdfPath = Storage::disk('public')->path($storagePath);
             
             // Add PDF to pengajuan media
@@ -1052,9 +1087,10 @@ class PengajuanController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_bapenda_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
         $filename = 'SK Bapenda - Surat Keputusan Pembebasan No Pol ' . $kendaraan->nrkb . '.pdf';
-        $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $storagePath    = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
         Storage::disk('public')->put($storagePath, $pdf->output());
-        $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+        $pdfUrlAbsolute = url(Storage::url($storagePath));
         
 
         if (!$request->has('preview')) {
@@ -1147,9 +1183,10 @@ class PengajuanController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         $filename = 'SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf';
-        $storagePath    = 'sk/' . Str::uuid() . '_' . $filename;
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $storagePath    = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
         Storage::disk('public')->put($storagePath, $pdf->output());
-        $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+        $pdfUrlAbsolute = url(Storage::url($storagePath));
 
         // Catat log
         $this->logSuratActionByKendaraanId(
@@ -1252,12 +1289,13 @@ class PengajuanController extends Controller
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sk_jasa_raharja_pembebasan', $dataPdf);
         $pdf->setPaper('a4', 'portrait');
         $filename = 'SK JR - Surat Keputusan KANWIL Jateng Pembebasan No Pol ' . $kendaraan->nrkb . '.pdf';
-        $storagePath = 'sk/' . Str::uuid() . '_' . $filename;
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $storagePath = 'sk/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
         
         $ttd_basah = $request->metode_penanda_tangan == 'ttd_basah';
         if (!$ttd_basah || $request->has('preview')) {
             Storage::disk('public')->put($storagePath, $pdf->output());
-            $pdfUrlAbsolute = url(Storage::disk('public')->url($storagePath));
+            $pdfUrlAbsolute = url(Storage::url($storagePath));
         } else {
             $pdfUrlAbsolute = null;
         }
@@ -1336,7 +1374,8 @@ class PengajuanController extends Controller
 
         // Simpan PDF & log aksi (skip jika preview)
         if (!$request->has('preview')) {
-            $storagePath = 'sp/' . Str::uuid() . '_' . $filename;
+            $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+            $storagePath = 'sp/' . $nameWithoutExt . '_' . Str::uuid() . '.pdf';
             Storage::disk('public')->put($storagePath, $pdf->output());
 
             $this->logSuratActionByKendaraanId(

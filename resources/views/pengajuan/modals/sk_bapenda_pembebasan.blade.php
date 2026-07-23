@@ -95,18 +95,7 @@
                                 <small class="text-muted d-block mt-1">Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H.</small>
                             </div>
                         </div>
-                        <hr>
-                        <h6 class="fw-bold mb-3">Metode Penanda Tangan</h6>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="metode_penanda_tangan" class="form-label fw-bold">Metode Penanda Tangan</label>
-                                <select name="metode_penanda_tangan" id="metode_penanda_tangan" class="form-select" required>
-                                    <option value="" selected>Pilih Metode Penanda Tangan </option>
-                                    <option value="ttd_elektronik">TTD Elektronik</option>
-                                    <option value="ttd_basah">TTD Basah</option>
-                                </select>
-                            </div>
-                        </div>
+                        <input type="hidden" name="metode_penanda_tangan" id="metode_penanda_tangan" value="ttd_basah">
                     </div>
 
                     {{-- Container Preview PDF --}}
@@ -116,7 +105,7 @@
                 {{-- Footer: Mode Form --}}
                 <div class="modal-footer" id="footerFormSkPembebasan">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-outline-primary" id="btnShowPreviewSkPembebasan">
+                    <button type="button" class="btn btn-outline-primary" id="btnShowPreviewSkPembebasan" data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat pratinjau Surat Keputusan Bapenda sebelum diterbitkan">
                         <i class="fas fa-eye me-1"></i>Lihat Preview
                     </button>
                 </div>
@@ -124,7 +113,7 @@
                 {{-- Footer: Mode Preview --}}
                 <div class="modal-footer" id="footerPreviewSkPembebasan" style="display:none;">
                     <button type="button" class="btn btn-warning" id="btnEditSkPembebasan">Kembali Edit</button>
-                    <button type="button" class="btn btn-success" id="btnSubmitSkPembebasanDraftPreview">
+                    <button type="button" class="btn btn-success" id="btnSubmitSkPembebasanDraftPreview" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan dan terbitkan Surat Keputusan Bapenda">
                         <i class="fas fa-save me-1"></i> Terbitkan SK
                     </button>
                 </div>
@@ -198,26 +187,39 @@
            footerForm.style.display = 'flex';
        });
 
-       // Submit
-       const submitForm = function (btn) {
-           if (!form.checkValidity()) { form.reportValidity(); return; }
-           btn.disabled = true;
-           btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
-           const formData = new FormData(form);
-           fetch(signedUrl, {
-               method: 'POST', body: formData,
-               headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'text/html' }
-           })
-           .then(r => {
-               if (r.redirected) { window.location.href = r.url; return; }
-               return r.text().then(() => { window.location.reload(); });
-           })
-           .catch(() => {
-               alert('Gagal menyimpan draft.');
-               btn.disabled = false;
-               btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
-           });
-       };
+        // Submit
+        const submitForm = function (btn) {
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+            const formData = new FormData(form);
+            fetch(signedUrl, {
+                method: 'POST', body: formData,
+                headers: { 
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(async r => {
+                const res = await r.json().catch(() => ({}));
+                if (r.ok || res.success) {
+                    const msg = res.message || 'Surat Keputusan Bapenda berhasil disimpan.';
+                    sessionStorage.setItem('toast_success', msg);
+                    window.location.href = res.redirect_url || window.location.href;
+                } else {
+                    alert(res.error || res.message || 'Gagal menyimpan draft.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
+                }
+            })
+            .catch(err => {
+                console.error('Submit error:', err);
+                alert('Gagal menyimpan draft.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
+            });
+        };
 
        document.getElementById('btnSubmitSkPembebasanDraftPreview').addEventListener('click', function () {
            submitForm(this);

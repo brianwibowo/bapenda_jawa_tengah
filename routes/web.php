@@ -37,11 +37,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/notifications/mark-as-read', function () {
-        Auth::user()->unreadNotifications->markAsRead();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($user) {
+            $user->unreadNotifications->markAsRead();
+        }
         return response()->json(['success' => true]);
     })->name('notifications.markAsRead');
     Route::post('/notifications/{id}/mark-as-read', function ($id) {
-        $notification = Auth::user()->notifications()->find($id);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $notification = $user ? $user->notifications()->find($id) : null;
         if ($notification) {
             $notification->markAsRead();
         }

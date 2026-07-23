@@ -6,70 +6,167 @@
      2. Notification Dropdown (UI & UX) - MOVED TO notifications.css
    ============================================================================= */
 
-
-/* =============================================================================
-   1. SIDEBAR COLORS — Override untuk warna yang tidak disupport Kaiadmin
-      Kaiadmin default hanya support: dark, dark2, white, grey pada .sidebar
-      Kita tambahkan: blue, blue2, purple
-   ============================================================================= */
-
 /* --- Background sidebar utama & logo header --- */
-.sidebar[data-background-color="blue"], .logo-header[data-background-color="blue"]   { background: #1a2c4e !important; }
-.sidebar[data-background-color="blue2"], .logo-header[data-background-color="blue2"]  { background: #0c2b42 !important; }
-.sidebar[data-background-color="purple"], .logo-header[data-background-color="purple"] { background: #26173d !important; }
-.sidebar[data-background-color="darkwp"], .logo-header[data-background-color="darkwp"] { background: #1b2029 !important; }
+.sidebar[data-background-color="blue"],
+.logo-header[data-background-color="blue"] {
+    background: #1a2c4e !important;
+}
 
-/* --- Teks & ikon nav item --- */
-.sidebar[data-background-color="blue"] .nav-item > a,
-.sidebar[data-background-color="blue"] .nav-item > a p,
-.sidebar[data-background-color="blue"] .nav-item > a i,
-.sidebar[data-background-color="blue2"] .nav-item > a,
-.sidebar[data-background-color="blue2"] .nav-item > a p,
-.sidebar[data-background-color="blue2"] .nav-item > a i,
-.sidebar[data-background-color="purple"] .nav-item > a,
-.sidebar[data-background-color="purple"] .nav-item > a p,
-.sidebar[data-background-color="purple"] .nav-item > a i,
-.sidebar[data-background-color="darkwp"] .nav-item > a,
-.sidebar[data-background-color="darkwp"] .nav-item > a p,
-.sidebar[data-background-color="darkwp"] .nav-item > a i {
+.sidebar[data-background-color="blue2"],
+.logo-header[data-background-color="blue2"] {
+    background: #0c2b42 !important;
+}
+
+.sidebar[data-background-color="purple"],
+.logo-header[data-background-color="purple"] {
+    background: #26173d !important;
+}
+
+.sidebar[data-background-color="darkwp"],
+.logo-header[data-background-color="darkwp"] {
+    background: #1b2029 !important;
+}
+
+/* --- Teks & ikon nav item default (semua sidebar gelap) --- */
+.sidebar[data-background-color="dark"] .nav > .nav-item a,
+.sidebar[data-background-color="dark"] .nav > .nav-item a p,
+.sidebar[data-background-color="dark"] .nav > .nav-item a i,
+.sidebar[data-background-color="dark2"] .nav > .nav-item a,
+.sidebar[data-background-color="dark2"] .nav > .nav-item a p,
+.sidebar[data-background-color="dark2"] .nav > .nav-item a i,
+.sidebar[data-background-color="blue"] .nav > .nav-item a,
+.sidebar[data-background-color="blue"] .nav > .nav-item a p,
+.sidebar[data-background-color="blue"] .nav > .nav-item a i,
+.sidebar[data-background-color="blue2"] .nav > .nav-item a,
+.sidebar[data-background-color="blue2"] .nav > .nav-item a p,
+.sidebar[data-background-color="blue2"] .nav > .nav-item a i,
+.sidebar[data-background-color="purple"] .nav > .nav-item a,
+.sidebar[data-background-color="purple"] .nav > .nav-item a p,
+.sidebar[data-background-color="purple"] .nav > .nav-item a i,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item a,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item a p,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item a i {
     color: rgba(255, 255, 255, 0.75) !important;
 }
 
-/* --- Hover state nav item --- */
-.sidebar[data-background-color="blue"] .nav-item > a:hover,
-.sidebar[data-background-color="blue"] .nav-item > a:hover p,
-.sidebar[data-background-color="blue"] .nav-item > a:hover i,
-.sidebar[data-background-color="blue2"] .nav-item > a:hover,
-.sidebar[data-background-color="blue2"] .nav-item > a:hover p,
-.sidebar[data-background-color="blue2"] .nav-item > a:hover i,
-.sidebar[data-background-color="purple"] .nav-item > a:hover,
-.sidebar[data-background-color="purple"] .nav-item > a:hover p,
-.sidebar[data-background-color="purple"] .nav-item > a:hover i,
-.sidebar[data-background-color="darkwp"] .nav-item > a:hover,
-.sidebar[data-background-color="darkwp"] .nav-item > a:hover p,
-.sidebar[data-background-color="darkwp"] .nav-item > a:hover i {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.12) !important;
+/* --- Hover state nav item (hanya row `a` yang ber-background, bukan p/i) --- */
+.sidebar[data-background-color="dark"] .nav > .nav-item a:hover,
+.sidebar[data-background-color="dark2"] .nav > .nav-item a:hover,
+.sidebar[data-background-color="blue"] .nav > .nav-item a:hover,
+.sidebar[data-background-color="blue2"] .nav > .nav-item a:hover,
+.sidebar[data-background-color="purple"] .nav > .nav-item a:hover,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item a:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* --- Item aktif (halaman yang sedang dikunjungi) --- */
-.sidebar[data-background-color="blue"] .nav-item.active > a,
-.sidebar[data-background-color="blue2"] .nav-item.active > a,
-.sidebar[data-background-color="purple"] .nav-item.active > a,
-.sidebar[data-background-color="darkwp"] .nav-item.active > a {
-    background: rgba(255, 255, 255, 0.18) !important;
+.sidebar[data-background-color="dark"] .nav > .nav-item a:hover p,
+.sidebar[data-background-color="dark"] .nav > .nav-item a:hover i,
+.sidebar[data-background-color="dark2"] .nav > .nav-item a:hover p,
+.sidebar[data-background-color="dark2"] .nav > .nav-item a:hover i,
+.sidebar[data-background-color="blue"] .nav > .nav-item a:hover p,
+.sidebar[data-background-color="blue"] .nav > .nav-item a:hover i,
+.sidebar[data-background-color="blue2"] .nav > .nav-item a:hover p,
+.sidebar[data-background-color="blue2"] .nav > .nav-item a:hover i,
+.sidebar[data-background-color="purple"] .nav > .nav-item a:hover p,
+.sidebar[data-background-color="purple"] .nav > .nav-item a:hover i,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item a:hover p,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item a:hover i {
     color: #ffffff !important;
+    background: transparent !important;
+}
+
+/* --- Item aktif: warna teks & ikon putih --- */
+.sidebar[data-background-color="dark"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="dark"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="dark"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="dark2"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="dark2"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="dark2"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="blue"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="blue"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="blue"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="blue2"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="blue2"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="blue2"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="purple"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="purple"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="purple"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="dark"] .nav.nav-secondary > .nav-item.active a i,
+.sidebar[data-background-color="dark2"] .nav.nav-secondary > .nav-item.active a i,
+.sidebar[data-background-color="blue"] .nav.nav-secondary > .nav-item.active a i,
+.sidebar[data-background-color="blue2"] .nav.nav-secondary > .nav-item.active a i,
+.sidebar[data-background-color="purple"] .nav.nav-secondary > .nav-item.active a i,
+.sidebar[data-background-color="darkwp"] .nav.nav-secondary > .nav-item.active a i {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+/* --- Item aktif: row 'a' ber-background lembut, p & i selalu transparent --- */
+.sidebar[data-background-color="dark"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="dark2"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="blue"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="blue2"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="purple"] .nav > .nav-item.active > a,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item.active > a {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar[data-background-color="dark"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="dark"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="dark2"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="dark2"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="blue"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="blue"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="blue2"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="blue2"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="purple"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="purple"] .nav > .nav-item.active > a i,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item.active > a p,
+.sidebar[data-background-color="darkwp"] .nav > .nav-item.active > a i {
+    background: transparent !important;
+}
+
+/* --- Aksen warna aktif per role --- */
+.sidebar[data-background-color="dark"] .nav > .nav-item.active > a {
+    border-left: 4px solid #1572e8 !important;
+}
+
+.sidebar[data-background-color="dark2"] .nav > .nav-item.active > a {
+    border-left: 4px solid #31ce36 !important;
+}
+
+.sidebar[data-background-color="blue"] .nav > .nav-item.active > a {
+    border-left: 4px solid #6861ce !important;
+}
+
+.sidebar[data-background-color="blue2"] .nav > .nav-item.active > a {
+    border-left: 4px solid #48abf7 !important;
+}
+
+.sidebar[data-background-color="purple"] .nav > .nav-item.active > a {
+    border-left: 4px solid #a259ff !important;
+}
+
+.sidebar[data-background-color="darkwp"] .nav > .nav-item.active > a {
+    border-left: 4px solid #ffad46 !important;
 }
 
 /* --- Label section (e.g. "PENGAJUAN", "NAVIGASI") --- */
+.sidebar[data-background-color="dark"] .nav-section .text-section,
+.sidebar[data-background-color="dark2"] .nav-section .text-section,
 .sidebar[data-background-color="blue"] .nav-section .text-section,
 .sidebar[data-background-color="blue2"] .nav-section .text-section,
 .sidebar[data-background-color="purple"] .nav-section .text-section,
 .sidebar[data-background-color="darkwp"] .nav-section .text-section {
-    color: rgba(255, 255, 255, 0.45) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* --- Garis pemisah di bawah logo header --- */
+.sidebar[data-background-color="dark"] .logo-header,
+.sidebar[data-background-color="dark2"] .logo-header,
 .sidebar[data-background-color="blue"] .logo-header,
 .sidebar[data-background-color="blue2"] .logo-header,
 .sidebar[data-background-color="purple"] .logo-header,
@@ -139,9 +236,11 @@
     color: #ffffff;
     border-color: rgba(0, 0, 0, 0.08);
 }
+
 .sidebar[data-background-color="white"] .brand-identity .brand-role {
     color: #1a1a1a;
 }
+
 .sidebar[data-background-color="white"] .brand-identity .brand-user {
     color: rgba(0, 0, 0, 0.55);
 }
@@ -152,3 +251,39 @@ body.sidebar_minimize .brand-identity .brand-text {
     display: none;
 }
 
+/* =============================================================================
+   4. ALERT & TOAST NOTIFICATION STYLING
+   ============================================================================= */
+.alert-success {
+    background-color: #d4edda !important;
+    border-color: #c3e6cb !important;
+    color: #155724 !important;
+    border-left: 5px solid #28a745 !important;
+    border-radius: 8px !important;
+    padding: 0.85rem 1.25rem !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.12) !important;
+}
+
+.alert-success .btn-close {
+    padding: 1.1rem 1.25rem !important;
+}
+
+.alert-danger {
+    background-color: #f8d7da !important;
+    border-color: #f5c6cb !important;
+    color: #721c24 !important;
+    border-left: 5px solid #dc3545 !important;
+    border-radius: 8px !important;
+    padding: 0.85rem 1.25rem !important;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.12) !important;
+}
+
+.alert-info {
+    background-color: #cce5ff !important;
+    border-color: #b8daff !important;
+    color: #004085 !important;
+    border-left: 5px solid #17a2b8 !important;
+    border-radius: 8px !important;
+    padding: 0.85rem 1.25rem !important;
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.12) !important;
+}

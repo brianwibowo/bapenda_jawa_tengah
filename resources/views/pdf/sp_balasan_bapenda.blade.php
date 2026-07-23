@@ -84,12 +84,6 @@
             margin-top: 4px;
             font-size: 10pt;
         }
-        .footer {
-            margin-top: 15px;
-            font-size: 7.5pt;
-            color: #333;
-            line-height: 1.2;
-        }
     </style>
 </head>
 <body>
@@ -100,16 +94,16 @@
         @php
             $vData = (object)[
                 'nrkb' => strtoupper($k->nrkb ?? '-'),
-                'nama' => strtoupper(optional($k->pemilik)->nama_pemilik ?? '-'),
-                'alamat' => strtoupper(optional($k->pemilik)->alamat_pemilik ?? '-'),
-                'jenis_model' => strtoupper(($k->jenis_kendaraan ?? '-') . '/' . ($k->model_kendaraan ?? '-')),
-                'merek_tipe' => strtoupper(($k->merk_kendaraan ?? '-') . '/' . ($k->tipe_kendaraan ?? '-')),
+                'nama' => optional($k->pemilik)->nama_pemilik ?? '-',
+                'alamat' => optional($k->pemilik)->alamat_pemilik ?? '-',
+                'jenis_model' => ($k->jenis_kendaraan ?? '-') . '/' . ($k->model_kendaraan ?? '-'),
+                'merek_tipe' => ($k->merk_kendaraan ?? '-') . '/' . ($k->tipe_kendaraan ?? '-'),
                 'tahun' => $k->tahun_pembuatan ?? '-',
                 'isi_silinder' => strtoupper($k->isi_silinder ?? '-'),
-                'bahan_bakar' => strtoupper($k->jenis_bahan_bakar ?? '-'),
+                'bahan_bakar' => $k->jenis_bahan_bakar ?? '-',
                 'no_rangka' => strtoupper($k->nomor_rangka ?? '-'),
                 'no_mesin' => strtoupper($k->nomor_mesin ?? '-'),
-                'warna' => strtoupper($k->warna_kendaraan ?? '-'),
+                'warna' => $k->warna_kendaraan ?? '-',
                 'no_bpkb' => strtoupper($k->nomor_bpkb ?? '-'),
             ];
         @endphp
@@ -183,10 +177,10 @@
             <p style="margin-top: 8px;">Demikian atas kerjasamanya and disampaikan terima kasih.</p>
         </div>
 
-        <div class="signature" style="margin-bottom: 20px;">
+        <div class="signature" style="margin-top: 12px; margin-bottom: 10px;">
             <div class="sign-right">
                 <div class="title">Kepala Badan Pengelola Pendapatan Daerah Provinsi {{ $provinsi ?? 'Jawa Tengah' }}</div>
-                <div style="height: 80px;"></div>
+                <div style="height: 35px;"></div>
                 <div class="name">{{ $nama_penandatangan ?? '-' }}</div>
                 <div>{{ $jabatan ?? '-' }}</div>
                 <div class="nip">NIP {{ $nip ?? '-' }}</div>
@@ -194,9 +188,5 @@
             <div style="clear: both;"></div>
         </div>
     @endforeach
-
-    <div class="footer">
-        Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik yang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara.
-    </div>
 </body>
 </html>

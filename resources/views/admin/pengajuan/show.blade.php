@@ -44,11 +44,36 @@
 
     {{-- Pesan Sukses/Error --}}
     @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-3" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
     @if (session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-3" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
+    <div id="dynamicToastContainer"></div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const storedToast = sessionStorage.getItem('toast_success');
+        if (storedToast) {
+            sessionStorage.removeItem('toast_success');
+            if (!document.querySelector('.alert-success')) {
+                const container = document.getElementById('dynamicToastContainer');
+                if (container) {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show shadow-sm border-0 mb-3';
+                    alertDiv.setAttribute('role', 'alert');
+                    alertDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>${storedToast}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+                    container.appendChild(alertDiv);
+                }
+            }
+        }
+    });
+    </script>
     @if ($errors->any())
         <div class="alert alert-danger">
              <h4 class="alert-title">Gagal Menyimpan!</h4>

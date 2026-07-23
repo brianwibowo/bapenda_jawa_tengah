@@ -1,4 +1,8 @@
 {{-- resources/views/layouts/partials/header.blade.php --}}
+@php
+    /** @var \App\Models\User $authUser */
+    $authUser = Auth::user();
+@endphp
 <link rel="stylesheet" href="{{ asset('kaiadmin/css/notifications.css') }}">
 <div class="main-header">
     <div class="main-header-logo">
@@ -25,7 +29,7 @@
             <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
                 <li class="nav-item topbar-icon dropdown hidden-caret">
                     <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        @php $unreadCount = Auth::user()->unreadNotifications()->count(); @endphp
+                        @php $unreadCount = $authUser ? $authUser->unreadNotifications()->count() : 0; @endphp
                         <div class="notification-icon-wrapper">
                             <i class="fa fa-bell"></i>
                             @if($unreadCount > 0)
@@ -47,7 +51,7 @@
                         <li>
                             <div class="notif-scroll scrollbar-outer">
                                 <div class="notif-center">
-                                    @forelse(Auth::user()->notifications()->take(5)->get() as $notification)
+                                    @forelse($authUser ? $authUser->notifications()->take(5)->get() : [] as $notification)
                                         <a href="{{ $notification->data['url'] ?? '#' }}" class="single-notif-link {{ $notification->read_at ? '' : 'unread' }}" data-id="{{ $notification->id }}">
                                             <div class="notif-icon notif-primary"> <i class="fa fa-info-circle"></i> </div>
                                             <div class="notif-content">
@@ -72,13 +76,13 @@
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
                         <div class="avatar-sm">
-                            <img src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=0D8ABC&color=fff' }}"
+                            <img src="{{ $authUser && $authUser->profile_photo_path ? asset('storage/' . $authUser->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($authUser->name ?? 'User') . '&background=0D8ABC&color=fff' }}"
                                 alt="..." class="avatar-img rounded-circle" />
                         </div>
                         <span class="profile-username d-flex flex-column align-items-start ms-2">
-                            <span class="fw-bold">{{ Auth::user()->name }}</span>
+                            <span class="fw-bold">{{ $authUser->name ?? '' }}</span>
                             <span class="badge bg-secondary" style="font-size: 0.65rem;"><i
-                                    class="fas fa-id-badge me-1"></i>{{ Auth::user()->hasRole('wajib_pajak') ? 'Wajib Pajak' : (Auth::user()->jabatan ?? 'Pegawai') }}</span>
+                                    class="fas fa-id-badge me-1"></i>{{ $authUser && $authUser->hasRole('wajib_pajak') ? 'Wajib Pajak' : ($authUser->jabatan ?? 'Pegawai') }}</span>
                         </span>
                     </a>
                     <ul class="dropdown-menu dropdown-user animated fadeIn">
@@ -86,14 +90,14 @@
                             <li>
                                 <div class="user-box">
                                     <div class="avatar-lg">
-                                        <img src="{{ Auth::user()->profile_photo_path ? asset('storage/' . Auth::user()->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=0D8ABC&color=fff' }}"
+                                        <img src="{{ $authUser && $authUser->profile_photo_path ? asset('storage/' . $authUser->profile_photo_path) : 'https://ui-avatars.com/api/?name=' . urlencode($authUser->name ?? 'User') . '&background=0D8ABC&color=fff' }}"
                                             alt="image profile" class="avatar-img rounded" />
                                     </div>
                                     <div class="u-text">
-                                        <h4 class="mb-1">{{ Auth::user()->name }}</h4>
+                                        <h4 class="mb-1">{{ $authUser->name ?? '' }}</h4>
                                         <div class="text-muted small mb-1"><i class="fas fa-id-badge me-1"></i>
-                                            {{ Auth::user()->hasRole('wajib_pajak') ? 'Wajib Pajak' : (Auth::user()->jabatan ?? 'Pegawai') }}</div>
-                                        <p class="text-muted">{{ Auth::user()->email }}</p>
+                                            {{ $authUser && $authUser->hasRole('wajib_pajak') ? 'Wajib Pajak' : ($authUser->jabatan ?? 'Pegawai') }}</div>
+                                        <p class="text-muted">{{ $authUser->email ?? '' }}</p>
                                     </div>
                                 </div>
                             </li>

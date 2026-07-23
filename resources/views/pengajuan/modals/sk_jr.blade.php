@@ -92,20 +92,8 @@
                                 <input type="text" class="form-control" name="nama_penandatangan" required>
                                 <small class="text-muted d-block mt-1">Contoh: Triadi, S.H., M.H.</small>
                                 <small class="text-muted d-block mt-1">Jabatan: Kepala Kantor Wilayah PT Jasa Raharja Jawa Tengah</small>
-                            </div>
                         </div>
-
-                        <h6 class="fw-bold mb-3">Metode Penanda Tangan</h6>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="metode_penanda_tangan_jr" class="form-label fw-bold">Metode Penanda Tangan</label>
-                                <select name="metode_penanda_tangan" id="metode_penanda_tangan_jr" class="form-select" required>
-                                    <option value="" selected>Pilih Metode Penanda Tangan</option>
-                                    <option value="ttd_elektronik">TTD Elektronik</option>
-                                    <option value="ttd_basah">TTD Basah</option>
-                                </select>
-                            </div>
-                        </div>
+                        <input type="hidden" name="metode_penanda_tangan" id="metode_penanda_tangan_jr" value="ttd_basah">
                     </div>
 
                     {{-- Container Preview PDF --}}
@@ -115,13 +103,13 @@
                 {{-- Footer: Mode Form --}}
                 <div class="modal-footer" id="footerFormSkJR">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-warning text-dark" id="btnShowPreviewSkJR">Lihat Preview</button>
+                    <button type="button" class="btn btn-warning text-dark" id="btnShowPreviewSkJR" data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat pratinjau Surat Keputusan Jasa Raharja sebelum diterbitkan">Lihat Preview</button>
                 </div>
                 
                 {{-- Footer: Mode Preview --}}
                 <div class="modal-footer" id="footerPreviewSkJR" style="display:none;">
                     <button type="button" class="btn btn-secondary" id="btnEditSkJR">Kembali Edit</button>
-                    <button type="button" class="btn btn-success" id="btnSubmitSkJRDraft">
+                    <button type="button" class="btn btn-success" id="btnSubmitSkJRDraft" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan dan terbitkan Surat Keputusan Jasa Raharja">
                         <i class="fas fa-save me-1"></i> Terbitkan SK
                     </button>
                 </div>
@@ -207,13 +195,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData(form);
         fetch(signedUrl, {
             method: 'POST', body: formData,
-            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'text/html' }
+            headers: { 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(r => {
-            if (r.redirected) { window.location.href = r.url; return; }
-            return r.text().then(() => { window.location.reload(); });
+        .then(async r => {
+            const res = await r.json().catch(() => ({}));
+            if (r.ok || res.success) {
+                const msg = res.message || 'Surat Keputusan Jasa Raharja berhasil disimpan.';
+                sessionStorage.setItem('toast_success', msg);
+                window.location.href = res.redirect_url || window.location.href;
+            } else {
+                alert(res.error || res.message || 'Gagal menyimpan.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save me-1"></i> Terbitkan SK';
+            }
         })
-        .catch(() => {
+        .catch(err => {
+            console.error('Submit error:', err);
             alert('Gagal menyimpan.');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save me-1"></i> Terbitkan SK';

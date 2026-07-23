@@ -144,7 +144,25 @@ class Pengajuan extends Model implements HasMedia
     public function isFullyApprovedByAll(): bool
     {
         $currentSp = $this->getCurrentSuratPengajuan();
-        return (bool) $currentSp?->isFullyApproved();
+        if (!$currentSp || !$currentSp->isFullyApproved()) {
+            return false;
+        }
+
+        // Cek bahwa semua SP Balasan dari instansi tujuan (Bapenda, Jasa Raharja, dll.) sudah TERBIT (bukan draft)
+        $targets = collect($currentSp->persetujuan_unit_kerja ?? [])->pluck('instansi')->toArray();
+        foreach ($targets as $instansi) {
+            $hasDraft = KendaraanLog::where('sp_id', $currentSp->id)
+                ->where('sp_status', 'draft')
+                ->whereHas('user', function ($q) use ($instansi) {
+                    $q->where('unit_kerja', $instansi);
+                })
+                ->exists();
+            if ($hasDraft) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function getTotalSurat(): int

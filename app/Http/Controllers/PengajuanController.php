@@ -453,6 +453,7 @@ class PengajuanController extends Controller
             'kendaraan_id' => 'required|exists:kendaraans,id',
         ]);
 
+        /** @var Kendaraan $kendaraan */
         $kendaraan = $pengajuan->kendaraans()->where('id', $request->kendaraan_id)->first();
         if (!$kendaraan) {
             return back()->with('error', 'Data kendaraan tidak ditemukan.');

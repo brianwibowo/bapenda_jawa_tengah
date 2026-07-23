@@ -166,13 +166,13 @@
                         <td class="cl">a.</td>
                         <td class="lbl">Nama Pemilik</td>
                         <td class="sep">:</td>
-                        <td class="val uc">{{ $data->nama ?? 'PEMERINTAH DESA GANDUWETAN' }}</td>
+                        <td class="val">{{ $data->nama ?? 'Pemerintah Desa Ganduwetan' }}</td>
                     </tr>
                     <tr>
                         <td class="cl">b.</td>
                         <td class="lbl">Alamat</td>
                         <td class="sep">:</td>
-                        <td class="val uc">{{ $data->alamat ?? 'JL JUMO NO 03 KEC. NGADIREJO KAB. TEMANGGUNG' }}</td>
+                        <td class="val">{{ $data->alamat ?? 'Jl. Jumo No. 03 Kec. Ngadirejo Kab. Temanggung' }}</td>
                     </tr>
                     <tr>
                         <td class="cl">c.</td>
@@ -335,21 +335,6 @@
             </td>
         </tr>
     </table>
-
-    {{-- ===== FOOTER ===== --}}
-    <table style="width:100%; margin-top:6px; border-top:0.5px solid #ccc; padding-top:4px;">
-        <tr>
-            <td style="vertical-align:bottom; font-size:7pt; color:#333; line-height:1.3; width:62%;">
-                Dokumen ini ditandatangani secara elektronik menggunakan Sertifikat Elektronik yang diterbitkan oleh
-                Balai
-                Sertifikasi Elektronik (BSrE) BSSN dan dapat dibuktikan keasliannya melalui pemindaian QR di samping.
-            </td>
-            <td style="vertical-align:bottom; text-align:right; padding-right:8px; width:22%;">
-                <img src="{{ public_path('images/bsre.png') }}" style="height:32px;">
-            </td>
-        </tr>
-    </table>
-
 </body>
 
 </html>

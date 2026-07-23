@@ -63,6 +63,25 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+    <div id="dynamicToastContainer"></div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const storedToast = sessionStorage.getItem('toast_success');
+        if (storedToast) {
+            sessionStorage.removeItem('toast_success');
+            if (!document.querySelector('.alert-success')) {
+                const container = document.getElementById('dynamicToastContainer');
+                if (container) {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show shadow-sm border-0 mb-3';
+                    alertDiv.setAttribute('role', 'alert');
+                    alertDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>${storedToast}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+                    container.appendChild(alertDiv);
+                }
+            }
+        }
+    });
+    </script>
 
     <!-- === TABS: Log & Diskusi | Pilih Kendaraan | Dokumen === -->
     <div class="col-12 mt-0">

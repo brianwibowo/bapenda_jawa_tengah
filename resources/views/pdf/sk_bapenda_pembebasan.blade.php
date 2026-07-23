@@ -177,8 +177,8 @@
             <td class="sep">:</td>
             <td class="tj">Membebaskan Pokok Dan Tunggakan PKB Serta Sanksi Administrasi PKB untuk kendaraan bermotor, dengan identitas kendaraan sebagai berikut:
                 <table style="width: 100%; margin-top: 5px;">
-                    <tr><td style="width: 130px;">Nama Pemilik</td><td style="width: 15px;">:</td><td class="uc">{{ $data->nama ?? '-' }}</td></tr>
-                    <tr><td>Alamat</td><td>:</td><td class="uc">{{ $data->alamat ?? '-' }}</td></tr>
+                    <tr><td style="width: 130px;">Nama Pemilik</td><td style="width: 15px;">:</td><td>{{ $data->nama ?? '-' }}</td></tr>
+                    <tr><td>Alamat</td><td>:</td><td>{{ $data->alamat ?? '-' }}</td></tr>
                     <tr><td>Nomor Polisi</td><td>:</td><td>{{ $data->nrkb ?? '-' }}</td></tr>
                     <tr><td>Merk/Type</td><td>:</td><td>{{ $data->merek ?? '-' }} / {{ $data->tipe ?? '-' }}</td></tr>
                     <tr><td>Tahun Pembuatan</td><td>:</td><td>{{ $data->tahun ?? '-' }}</td></tr>
@@ -203,21 +203,20 @@
         </tr>
     </table>
 
-    {{-- TTD - tetap di page 1 setelah MEMUTUSKAN --}}
-    <table style="width: 100%; margin-top: 25px;">
+    {{-- TTD - menyambung di page 1 --}}
+    <table style="width: 100%; margin-top: 12px;">
         <tr>
             <td style="width: 35%;"></td>
             <!-- Tempat & Tanggal -->
             <td style="width: 65%; vertical-align: top; text-align: left; padding-left: 1px;">
                 Ditetapkan di Semarang<br>
-                Pada Tanggal: {{ $tanggal_sk ?? '-' }}<br><br>
-                <div class="b uc" style="margin-top: 5px; text-align: center;">
+                Pada Tanggal: {{ $tanggal_sk ?? '-' }}<br>
+                <div class="b uc" style="margin-top: 4px; text-align: center;">
                     Kepala Badan Pengelola Pendapatan Daerah<br>Provinsi Jawa Tengah
                 </div>
-                <div class="stempel-container" style="height: 70px;">
+                <div class="stempel-container" style="height: 45px;">
                     <!-- <img src="{{ public_path('images/stempel_bapenda.png') }}" alt=""> -->
                 </div>
-                <br>
                 <div class="b" style="text-align: center;">
                     {{ $nama_direktur ?? 'NADI SANTOSO' }}
                 </div>
@@ -225,8 +224,8 @@
         </tr>
     </table>
 
-    {{-- Salinan - selalu di page 2 --}}
-    <table style="width: 100%; page-break-before: always;">
+    {{-- Salinan - langsung menyambung di bawah TTD --}}
+    <table style="width: 100%; margin-top: 15px;">
         <tr>
             <td style="vertical-align: top;">
                 <div style="font-size: 8pt; line-height: 1.2;">Salinan : Keputusan ini disampaikan kepada Yth:<br>1. Dirlantas Polda Jawa Tengah;<br>2. Inspektur Provinsi Jawa Tengah;<br>3. Kepala BPKAD Provinsi Jawa Tengah;<br>4. Kepala Biro Hukum SETDA Provinsi Jawa Tengah;<br>5. Kepala PT. Jasa Raharja Kantor Wilayah Jawa Tengah;<br>6. Sekretaris Bapenda Prov. Jateng;<br>7. Kepala Bidang Pajak Kendaraan Bermotor, Bapenda Provinsi Jawa Tengah;<br>8. Kepala Bidang Evaluasi dan Pembinaan, Bapenda Provinsi Jawa Tengah;<br>9. Kepala Bidang Pengolahan Data dan Pengembangan Pendapatan Bapenda Provinsi Jawa Tengah;<br>10. Kepala UPPD Kabupaten {{ $tempat_pembuat_surat_regident ?? '-' }};<br>11. Kepala Desa Ganduwetan, Kecamatan Ngadirejo, Kabupaten Temanggung;<br>12. Pertinggal.</div>

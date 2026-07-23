@@ -57,13 +57,13 @@
             {{-- Footer: Mode Form --}}
             <div class="modal-footer" id="footerFormSpPolda2bapendajr">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-outline-primary" id="btnPreviewSpPolda2bapendajr">Lihat Preview</button>
+                <button type="button" class="btn btn-outline-primary" id="btnPreviewSpPolda2bapendajr" data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat pratinjau dokumen PDF Surat Pengajuan">Lihat Preview</button>
             </div>
 
             {{-- Footer: Mode Preview --}}
             <div class="modal-footer" id="footerPreviewSpPolda2bapendajr" style="display:none;">
                 <button type="button" class="btn btn-secondary" id="btnEditSpPolda2bapendajr">Kembali Edit</button>
-                <button type="button" class="btn btn-success" id="btnSubmitSpPolda2bapendajrPreview">
+                <button type="button" class="btn btn-success" id="btnSubmitSpPolda2bapendajrPreview" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan Surat Pengajuan ini sebagai draft">
                     <i class="fas fa-save me-1"></i> Simpan sebagai Draft
                 </button>
             </div>
@@ -137,13 +137,26 @@
             const formData = new FormData(form);
             fetch(signedUrl, {
                 method: 'POST', body: formData,
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'text/html' }
+                headers: { 
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
-            .then(r => {
-                if (r.redirected) { window.location.href = r.url; return; }
-                return r.text().then(() => { window.location.reload(); });
+            .then(async r => {
+                const res = await r.json().catch(() => ({}));
+                if (r.ok || res.success) {
+                    const msg = res.message || 'Surat Pengajuan berhasil disimpan sebagai draft.';
+                    sessionStorage.setItem('toast_success', msg);
+                    window.location.href = res.redirect_url || window.location.href;
+                } else {
+                    alert(res.error || res.message || 'Gagal menyimpan.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';
+                }
             })
-            .catch(() => {
+            .catch(err => {
+                console.error('Submit error:', err);
                 alert('Gagal menyimpan.');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save me-1"></i> Simpan sebagai Draft';

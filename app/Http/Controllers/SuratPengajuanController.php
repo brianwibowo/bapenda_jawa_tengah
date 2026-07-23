@@ -445,7 +445,8 @@ class SuratPengajuanController extends Controller
             $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
         } else {
             $filename = 'Surat Pengajuan - Polda kepada Bapenda dan Jasa Raharja No Pol ' . $nrkbString . '.pdf';
-            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+            $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+            $storagePath = 'sp/' . $nameWithoutExt . '_' . \Illuminate\Support\Str::uuid() . '.pdf';
         }
         Storage::disk('public')->put($storagePath, $pdf->output());
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
@@ -534,7 +535,8 @@ class SuratPengajuanController extends Controller
             $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
         } else {
             $filename = 'Balasan Bapenda - Surat Penghapusan Regident No Pol ' . $nrkbString . '.pdf';
-            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+            $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+            $storagePath = 'sp/' . $nameWithoutExt . '_' . \Illuminate\Support\Str::uuid() . '.pdf';
         }
 
         Storage::disk('public')->put($storagePath, $pdf->output());
@@ -630,7 +632,8 @@ class SuratPengajuanController extends Controller
             $storagePath = $previewDir . '/' . $prefix . time() . '.pdf';
         } else {
             $filename = 'Balasan JR - Surat Pembebasan SW No Pol ' . $nrkbString . '.pdf';
-            $storagePath = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+            $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+            $storagePath = 'sp/' . $nameWithoutExt . '_' . \Illuminate\Support\Str::uuid() . '.pdf';
         }
 
         Storage::disk('public')->put($storagePath, $pdf->output());
@@ -739,8 +742,8 @@ class SuratPengajuanController extends Controller
                 $log = $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
-                    'Surat Pengajuan berhasil dibuat',
-                    'Diajukan ke Polda',
+                    'Pengajuan berhasil dikirimkan ke Ditlantas Polda',
+                    'Menunggu respon Ditlantas Polda',
                     $data['local_pdf_path'] ?? null,
                     $sp->id
                 );
@@ -751,6 +754,16 @@ class SuratPengajuanController extends Controller
         $successMsg = $isDraft
             ? 'Surat Pengajuan berhasil disimpan sebagai draft.'
             : 'Surat Pengajuan berhasil diajukan.';
+
+        session()->flash('success', $successMsg);
+
+        if ($request->ajax() || $request->expectsJson() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'redirect_url' => route('admin.pengajuan.show', $pengajuan->id)
+            ]);
+        }
 
         return isset($data['redirect']) ? $data['redirect'] : redirect()->route('admin.pengajuan.show', $pengajuan->id)
             ->with('success', $successMsg);
@@ -806,7 +819,18 @@ class SuratPengajuanController extends Controller
             $surat->id
         );
 
-        return redirect()->route('admin.pengajuan.show', $surat->pengajuan_id)->with('success', 'Status berhasil diperbarui');
+        $successMsg = 'Status berhasil diperbarui';
+        session()->flash('success', $successMsg);
+
+        if ($request->ajax() || $request->expectsJson() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'redirect_url' => route('admin.pengajuan.show', $surat->pengajuan_id)
+            ]);
+        }
+
+        return redirect()->route('admin.pengajuan.show', $surat->pengajuan_id)->with('success', $successMsg);
     }
 
     public function terima(Request $request, SuratPengajuan $surat)
@@ -912,8 +936,19 @@ class SuratPengajuanController extends Controller
                 }
             }
 
+            $successMsg = 'Surat Pengajuan berhasil disimpan sebagai draft.';
+            session()->flash('success', $successMsg);
+
+            if ($request->ajax() || $request->expectsJson() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMsg,
+                    'redirect_url' => route('admin.pengajuan.show', $pengajuan->id)
+                ]);
+            }
+
             return redirect()->route('admin.pengajuan.show', $pengajuan->id)
-                ->with('success', 'Surat Pengajuan berhasil disimpan sebagai draft.');
+                ->with('success', $successMsg);
         }
 
         // ── KELOMPOK REDIRECT FLOW (NON-AJAX / FALLBACK) ──
@@ -1015,7 +1050,9 @@ class SuratPengajuanController extends Controller
         }
 
         $filename = $request->file->getClientOriginalName();
-        $storagePath    = 'sp/' . \Illuminate\Support\Str::uuid() . '_' . $filename;
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'pdf';
+        $storagePath    = 'sp/' . $nameWithoutExt . '_' . \Illuminate\Support\Str::uuid() . '.' . $extension;
         Storage::disk('public')->put($storagePath, $request->file('file')->get());
         $localPdfPath = Storage::disk('public')->path($storagePath);
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
@@ -1041,7 +1078,7 @@ class SuratPengajuanController extends Controller
         }
     }
 
-    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null, int $sp_id = null): KendaraanLog
+    private function logSuratActionByKendaraanId(Pengajuan $pengajuan, string $kendaraan_id, string $actionLabel, string $notes, $file = null, ?int $sp_id = null): KendaraanLog
     {
         $log = KendaraanLog::create([
             'kendaraan_id' => $kendaraan_id,
