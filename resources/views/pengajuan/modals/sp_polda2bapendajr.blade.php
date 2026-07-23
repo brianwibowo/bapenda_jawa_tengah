@@ -48,6 +48,64 @@
                             <small class="text-muted d-block mt-1">Contoh: KOMBES POL</small>
                         </div>
                     </div>
+
+                    <hr>
+                    <h6 class="fw-bold mb-3">Rujukan Surat</h6>
+                    <div class="repeater-rujukan-sp">
+                        <div data-repeater-list="group-rujukan">
+                            <div data-repeater-item class="row align-items-center mb-3">
+                                <div class="col">
+                                    <div class="input-group shadow-sm">
+                                        <span class="input-group-text bg-light text-muted">
+                                            <i class="fas fa-file-alt"></i>
+                                        </span>
+                                        <input type="text" class="form-control" name="rujukan" placeholder="Masukkan rujukan (contoh: Undang-Undang No...)" value="Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan;">
+                                    </div>
+                                </div>
+                                <div class="col-auto ps-0">
+                                    <button data-repeater-delete type="button" class="btn btn-outline-danger btn-border d-flex align-items-center justify-content-center" style="height: 40px; width: 40px;" title="Hapus Rujukan">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <button data-repeater-create type="button" class="btn btn-sm btn-info shadow-sm px-3 text-white">
+                                    <i class="fas fa-plus me-1"></i> Tambah Rujukan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="fw-bold mb-3">Tembusan Surat</h6>
+                    <div class="repeater-tembusan-sp">
+                        <div data-repeater-list="group-tembusan">
+                            <div data-repeater-item class="row align-items-center mb-3">
+                                <div class="col">
+                                    <div class="input-group shadow-sm">
+                                        <span class="input-group-text bg-light text-muted">
+                                            <i class="fas fa-file-alt"></i>
+                                        </span>
+                                        <input type="text" class="form-control" name="tembusan" placeholder="Masukkan terusan (contoh: Kapolda...)" value="Kapolda Jateng.">
+                                    </div>
+                                </div>
+                                <div class="col-auto ps-0">
+                                    <button data-repeater-delete type="button" class="btn btn-outline-danger btn-border d-flex align-items-center justify-content-center" style="height: 40px; width: 40px;" title="Hapus Tembusan">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <button data-repeater-create type="button" class="btn btn-sm btn-info shadow-sm px-3 text-white">
+                                    <i class="fas fa-plus me-1"></i> Tambah Tembusan Surat
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Container Preview PDF --}}
@@ -76,8 +134,12 @@
         const previewContainer = document.getElementById('previewSpPolda2bapendajrContainer');
         const footerForm = document.getElementById('footerFormSpPolda2bapendajr');
         const footerPreview = document.getElementById('footerPreviewSpPolda2bapendajr');
-        // Custom PDF.js Viewer will render here
         
+        if (typeof $ !== 'undefined' && $.fn.repeater) {
+            $('.repeater-rujukan-sp').repeater({ initEmpty: false });
+            $('.repeater-tembusan-sp').repeater({ initEmpty: false });
+        }
+
         const signedUrl = @json($signedUrls['sp_ajukan'] ?? '');
         let currentBlobUrl = null;
 

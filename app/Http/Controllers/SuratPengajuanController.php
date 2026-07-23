@@ -419,6 +419,12 @@ class SuratPengajuanController extends Controller
             ? $kendaraans->first()->nrkb 
             : $kendaraans->pluck('nrkb')->implode(', ');
 
+        $rawRujukan = $request->input('group-rujukan', []);
+        $parsedRujukan = collect($rawRujukan)->pluck('rujukan')->filter()->map(fn($item) => trim($item))->filter()->toArray();
+
+        $rawTembusan = $request->input('group-tembusan', []);
+        $parsedTembusan = collect($rawTembusan)->pluck('tembusan')->filter()->map(fn($item) => trim($item))->filter()->toArray();
+
         $dataPdf = [
             'kendaraans' => $kendaraans,
             'nomor_surat' => $request->nomor_surat,
@@ -427,6 +433,8 @@ class SuratPengajuanController extends Controller
             'tanggal_keluar' => $request->tanggal_keluar,
             'nama_direktur' => $request->nama_direktur,
             'pangkat_direktur' => $request->pangkat_direktur,
+            'rujukan' => $parsedRujukan,
+            'tembusan' => $parsedTembusan,
         ];
 
         // Generate PDF

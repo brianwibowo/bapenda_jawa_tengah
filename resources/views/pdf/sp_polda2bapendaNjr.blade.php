@@ -174,26 +174,35 @@
             <td class="tj">
                 Rujukan:
                 <table style="margin-top: 5px;">
-                    <tr>
-                        <td class="cl">a.</td>
-                        <td class="tj">Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan;</td>
-                    </tr>
-                    <tr>
-                        <td class="cl">b.</td>
-                        <td class="tj">Peraturan Kepolisian Negara Republik Indonesia Nomor 7 Tahun 2021 tentang Registrasi dan Identifikasi Kendaraan Bermotor;</td>
-                    </tr>
-                    <tr>
-                        <td class="cl">c.</td>
-                        <td class="tj">Peraturan Kepala Badan Pengelola Pendapatan Daerah Provinsi Jawa Tengah Nomor 07 Tahun 2024 tentang Petunjuk Teknis Pemungutan Pajak Kendaraan Bermotor dan Bea Balik Nama Kendaraan Bermotor;</td>
-                    </tr>
-                    <tr>
-                        <td class="cl">d.</td>
-                        <td class="tj">Peraturan Direksi Nomor PER/25/2025 tanggal 25 Maret 2025 tentang Kebijakan Pembebasan Kewajiban Pembayaran Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan, Kartu Dana, dan Denda Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan yang Tertunggak bagi Kendaraan Bermotor yang dilaksanakan Penghapusan Registrasi dan Identifikasi Kendaraan Bermotor atas Dasar Permintaan Pemilik Kendaraan Bermotor;</td>
-                    </tr>
-                    <tr>
-                        <td class="cl">e.</td>
-                        <td class="tj">Surat Permohonan Kapolres Temanggung Polda Jateng Nomor: B/1/VII/YAN.1.3.2/2024/LANTAS tanggal 3 Juli 2024 hal permohonan penghapusan data.</td>
-                    </tr>
+                    @if(isset($rujukan) && count($rujukan) > 0)
+                        @foreach ($rujukan as $idx => $item)
+                            <tr>
+                                <td class="cl" style="vertical-align: top;">{{ chr(97 + $idx) }}.</td>
+                                <td class="tj">{{ $item }}</td>
+                            </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td class="cl">a.</td>
+                            <td class="tj">Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan;</td>
+                        </tr>
+                        <tr>
+                            <td class="cl">b.</td>
+                            <td class="tj">Peraturan Kepolisian Negara Republik Indonesia Nomor 7 Tahun 2021 tentang Registrasi dan Identifikasi Kendaraan Bermotor;</td>
+                        </tr>
+                        <tr>
+                            <td class="cl">c.</td>
+                            <td class="tj">Peraturan Kepala Badan Pengelola Pendapatan Daerah Provinsi Jawa Tengah Nomor 07 Tahun 2024 tentang Petunjuk Teknis Pemungutan Pajak Kendaraan Bermotor dan Bea Balik Nama Kendaraan Bermotor;</td>
+                        </tr>
+                        <tr>
+                            <td class="cl">d.</td>
+                            <td class="tj">Peraturan Direksi Nomor PER/25/2025 tanggal 25 Maret 2025 tentang Kebijakan Pembebasan Kewajiban Pembayaran Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan, Kartu Dana, dan Denda Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan yang Tertunggak bagi Kendaraan Bermotor yang dilaksanakan Penghapusan Registrasi dan Identifikasi Kendaraan Bermotor atas Dasar Permintaan Pemilik Kendaraan Bermotor;</td>
+                        </tr>
+                        <tr>
+                            <td class="cl">e.</td>
+                            <td class="tj">Surat Permohonan Kapolres Temanggung Polda Jateng Nomor: B/1/VII/YAN.1.3.2/2024/LANTAS tanggal 3 Juli 2024 hal permohonan penghapusan data.</td>
+                        </tr>
+                    @endif
                 </table>
             </td>
         </tr>
@@ -221,10 +230,17 @@
     <table style="margin-top: 20px; page-break-inside: avoid;">
         <tr>
             <td style="width: 50%; vertical-align: top;">
-                Tembusan:<br>
-                1. Kapolda Jateng.<br>
-                2. Irwasda Polda Jateng.<br>
-                3. Kabidpropam Polda Jateng.
+                @if(isset($tembusan) && count($tembusan) > 0)
+                    Tembusan:<br>
+                    @foreach ($tembusan as $idx => $item)
+                        {{ $idx + 1 }}. {{ $item }}<br>
+                    @endforeach
+                @else
+                    Tembusan:<br>
+                    1. Kapolda Jateng.<br>
+                    2. Irwasda Polda Jateng.<br>
+                    3. Kabidpropam Polda Jateng.
+                @endif
             </td>
             <td style="width: 50%; text-align: center; vertical-align: top; position: relative;">
                 <p>
