@@ -136,7 +136,7 @@
                                 </button>
                             </span>
                         @else
-                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Pengajuan (SP) 2-in-1 dari Ditlantas Polda" style="cursor: not-allowed;">
                                 <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                     <i class="fas fa-clock me-1 text-warning"></i> Review & Balas SP
                                 </button>
@@ -155,7 +155,7 @@
                                 </button>
                             </span>
                         @else
-                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Balasan SP dari semua instansi terbit" style="cursor: not-allowed;">
                                 <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                     <i class="fas fa-clock me-1 text-warning"></i> Buat SK Bapenda
                                 </button>
@@ -177,7 +177,7 @@
                                 </button>
                             </span>
                         @else
-                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Pengajuan (SP) 2-in-1 dari Ditlantas Polda" style="cursor: not-allowed;">
                                 <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                     <i class="fas fa-clock me-1 text-warning"></i> Review & Balas SP
                                 </button>
@@ -192,11 +192,11 @@
                         @elseif(!$suratkeputusan->where('unit_kerja', 'Jasa Raharja')->isEmpty())
                             <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan Pembebasan SWDKLLJ Jasa Raharja telah diterbitkan" style="cursor: not-allowed;">
                                 <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
-                                    <i class="fas fa-check-circle me-1 text-success"></i> SK JR Telah Diterbitkan
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SK Jasa Raharja Diterbitkan
                                 </button>
                             </span>
                         @else
-                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Keputusan (SK) Penghapusan Regident dari Ditlantas Polda" style="cursor: not-allowed;">
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Balasan SP dari semua instansi terbit" style="cursor: not-allowed;">
                                 <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                     <i class="fas fa-clock me-1 text-warning"></i> Buat SK Jasa Raharja
                                 </button>
