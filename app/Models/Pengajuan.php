@@ -123,7 +123,7 @@ class Pengajuan extends Model implements HasMedia
         return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    public function getSliceSuratPengajuanLastRejected()
+    public function getSliceSuratPengajuanLastRejected(): \Illuminate\Support\Collection
     {
         $suratPengajuan = $this->suratPengajuan;
         $lastRejectedIndex = $suratPengajuan
