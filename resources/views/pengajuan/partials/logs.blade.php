@@ -1015,7 +1015,9 @@
                                 Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
                             </label>
                         </div>
-                               <div class="modal-footer border-0 pt-0">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SK">
                         <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSK" disabled>
