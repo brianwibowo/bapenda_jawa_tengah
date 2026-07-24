@@ -11,6 +11,7 @@ use App\Models\KendaraanLog;
 use App\Models\SuratKeputusan;
 use App\Models\SuratPengajuan;
 use App\Models\User;
+use \App\Http\Controllers\SuratKeputusanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -125,26 +126,27 @@ class PengajuanController extends Controller
 
         $lastSp = $pengajuan->getCurrentSuratPengajuan();
 
-        // Jika progres masih awal (0) dan belum ada SP
+        // 1. Samsat mengajukan SP ke Polda (Awal)
         if ($progress == 0 && $suratpengajuan->isEmpty() && $user->unit_kerja == 'Samsat') {
             $permissionSurat['canAjukanSP'] = true;
         }
-        // Bapenda/JR merespon SP dari Polda
-        elseif ($lastSp && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
-            // Cek apakah user ini termasuk dalam daftar tujuan yang belum approve
+        // 2. User merespon SP yang ditujukan kepadanya (jika statusnya masih pending)
+        if ($lastSp && !$lastSp->isFullyApproved() && !$lastSp->isRejected()) {
             $statusInstansi = $lastSp->persetujuan_unit_kerja
                 ? collect($lastSp->persetujuan_unit_kerja)->firstWhere('instansi', $user->unit_kerja)
                 : null;
-            if ($statusInstansi && $statusInstansi['status'] == 'pending') {
+            if ($statusInstansi && ($statusInstansi['status'] ?? null) == 'pending') {
                 $permissionSurat['canRespondSP'] = true;
             }
         }
-        // Polda ke Bapenda (Jika SP pertama sudah approved)
-        elseif ($progress == 2 && $user->unit_kerja == 'Polda') {
+        // 3. Polda mengajukan SP ke Bapenda & JR (Jika SP Samsat sudah disetujui Polda, dan SP Polda ke Bapenda/JR belum dikirim)
+        $hasSpPoldaToBapenda = $pengajuan->hasSuratPengajuanByInstansi($suratpengajuan, 'Bapenda') 
+            || $pengajuan->hasSuratPengajuanByInstansi($suratpengajuan, 'Jasa Raharja');
+        if ($user->unit_kerja == 'Polda' && $lastSp && $lastSp->isApprovedBy('Polda') && !$hasSpPoldaToBapenda) {
             $permissionSurat['canAjukanSP'] = true;
         }
-        // Jika sudah fully approved tapi belum ada SK
-        elseif ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || $progress > 6) && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","Jasa Raharja"])) {
+        // 4. Jika semua SP sudah disetujui tapi belum ada SK
+        if ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || $progress > 6) && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","Jasa Raharja"])) {
             $permissionSurat['canAjukanSK'] = true;
         }
 
@@ -538,7 +540,7 @@ class PengajuanController extends Controller
         $this->authorizeBranch($pengajuan);
 
         // Panggil method ajukan yang existing di SuratKeputusanController
-        $skController = app(\App\Http\Controllers\SuratKeputusanController::class);
+        $skController = app(SuratKeputusanController::class);
 
         // Tambahin flag agar ajukan tahu ini draft mode
         $request->merge(['draft_mode' => true]);

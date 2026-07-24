@@ -64,15 +64,15 @@
 
                     {{-- POLDA ROLE --}}
                     @if($unitkerja == 'Polda')
-                        {{-- Tombol 1: Review & Balas SP --}}
+                        {{-- Tombol 1: Review & Balas SP dari Samsat --}}
                         @if(!empty($permissionSurat['canRespondSP']))
                             <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpDefault" data-bs-toggle="tooltip" title="Klik untuk meninjau dan merespon Surat Pengajuan dari Samsat">
-                                <i class="fas fa-reply me-1"></i> Review & Balas SP
+                                <i class="fas fa-reply me-1"></i> Review & Balas SP Samsat
                             </button>
-                        @elseif($lastSp && $lastSp->isFullyApproved())
-                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Pengajuan dari Samsat telah selesai ditinjau dan direspon" style="cursor: not-allowed;">
+                        @elseif($lastSp && $lastSp->isApprovedBy('Polda'))
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Pengajuan dari Samsat telah disetujui oleh Ditlantas Polda" style="cursor: not-allowed;">
                                 <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
-                                    <i class="fas fa-check-circle me-1 text-success"></i> SP Samsat Telah Direspon
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SP Samsat Telah Disetujui
                                 </button>
                             </span>
                         @else
@@ -83,7 +83,26 @@
                             </span>
                         @endif
 
-                        {{-- Tombol 2: Buat SK Polda --}}
+                        {{-- Tombol 2: Buat SP Polda ke Bapenda & Jasa Raharja --}}
+                        @if(!empty($permissionSurat['canAjukanSP']))
+                            <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpPolda2bapendajr" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Pengajuan (SP) Polda ke Bapenda dan Jasa Raharja">
+                                <i class="fas fa-paper-plane me-1"></i> Buat SP ke Bapenda & JR
+                            </button>
+                        @elseif($pengajuan->hasSuratPengajuanByInstansi($suratpengajuan, 'Bapenda'))
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Pengajuan (SP) Polda ke Bapenda dan Jasa Raharja telah berhasil dikirimkan" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-check-circle me-1 text-success"></i> SP ke Bapenda & JR Telah Dikirim
+                                </button>
+                            </span>
+                        @else
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Pengajuan (SP) dari Samsat disetujui oleh Ditlantas Polda terlebih dahulu" style="cursor: not-allowed;">
+                                <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                    <i class="fas fa-clock me-1 text-warning"></i> Buat SP ke Bapenda & JR
+                                </button>
+                            </span>
+                        @endif
+
+                        {{-- Tombol 3: Buat SK Polda --}}
                         @if(!empty($permissionSurat['canAjukanSK']))
                             <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Keputusan (SK) Penghapusan Regident Ranmor">
                                 <i class="fas fa-file-contract me-1"></i> Buat SK Polda
@@ -95,7 +114,7 @@
                                 </button>
                             </span>
                         @else
-                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Pengajuan (SP) dari Samsat dikirimkan terlebih dahulu" style="cursor: not-allowed;">
+                            <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu Surat Balasan SP dari Bapenda dan Jasa Raharja terbit" style="cursor: not-allowed;">
                                 <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                     <i class="fas fa-clock me-1 text-warning"></i> Buat SK Polda
                                 </button>

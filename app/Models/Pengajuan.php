@@ -281,7 +281,7 @@ class Pengajuan extends Model implements HasMedia
         return $step;
     }
 
-    private function hasSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
+    public function hasSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
     {
         return $suratPengajuanCollection->contains(function ($sp) use ($instansi) {
             return collect($sp->persetujuan_unit_kerja ?? [])->contains(function ($item) use ($instansi) {
@@ -290,7 +290,7 @@ class Pengajuan extends Model implements HasMedia
         });
     }
 
-    private function hasApprovedSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
+    public function hasApprovedSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
     {
         return $suratPengajuanCollection->contains(function ($sp) use ($instansi) {
             return collect($sp->persetujuan_unit_kerja ?? [])->contains(function ($item) use ($instansi) {
@@ -300,7 +300,7 @@ class Pengajuan extends Model implements HasMedia
         });
     }
 
-    private function hasPendingSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
+    public function hasPendingSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
     {
         return $suratPengajuanCollection->contains(function ($sp) use ($instansi) {
             return collect($sp->persetujuan_unit_kerja ?? [])->contains(function ($item) use ($instansi) {
@@ -310,7 +310,7 @@ class Pengajuan extends Model implements HasMedia
         });
     }
 
-    private function hasPublishedSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
+    public function hasPublishedSuratPengajuanByInstansi($suratPengajuanCollection, string $instansi): bool
     {
         return $suratPengajuanCollection->contains(function ($sp) use ($instansi) {
             // Cek apakah SP ini ditargetkan ke instansi tersebut
