@@ -1015,12 +1015,10 @@
                                 Dengan ini menyatakan bahwa dokumen telah lengkap, ditandatangani secara sah oleh pejabat berwenang sesuai ketentuan birokrasi yang berlaku, dan dinyatakan resmi diterbitkan.
                             </label>
                         </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
+                               <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SK">
-                        <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSK" disabled style="pointer-events: none;">
+                        <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSK" disabled>
                             <i class="fas fa-stamp me-1"></i> Terbitkan SK
                         </button>
                     </span>
@@ -1091,7 +1089,7 @@
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SP">
-                        <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSP" disabled style="pointer-events: none;">
+                        <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSP" disabled>
                             <i class="fas fa-stamp me-1"></i> Terbitkan SP
                         </button>
                     </span>
@@ -1140,11 +1138,15 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('publishFileInput').value = '';
             document.getElementById('publishDropContent').style.display = '';
             document.getElementById('publishFilePreview').style.display = 'none';
-            document.getElementById('btnPublishSK').disabled = true;
+            const btnSK = document.getElementById('btnPublishSK');
+            if (btnSK) {
+                btnSK.disabled = true;
+                btnSK.style.pointerEvents = 'none';
+            }
         });
     });
 
-    // === File upload preview ===
+    // === SK File upload preview ===
     const publishFileInput = document.getElementById('publishFileInput');
     if (publishFileInput) {
         publishFileInput.addEventListener('change', function() {
@@ -1185,7 +1187,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasFile = publishFileInput && publishFileInput.files.length > 0;
         const hasCheck = publishCheckbox && publishCheckbox.checked;
         const btn = document.getElementById('btnPublishSK');
-        if (btn) btn.disabled = !(hasFile && hasCheck);
+        if (btn) {
+            btn.disabled = !(hasFile && hasCheck);
+            btn.style.pointerEvents = (hasFile && hasCheck) ? 'auto' : 'none';
+        }
     }
 
     // === Publish SP Modal: Dynamic data binding ===
@@ -1207,7 +1212,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (spFileInput) spFileInput.value = '';
             document.getElementById('publishSpDropContent').style.display = '';
             document.getElementById('publishSpFilePreview').style.display = 'none';
-            document.getElementById('btnPublishSP').disabled = true;
+            const btnSP = document.getElementById('btnPublishSP');
+            if (btnSP) {
+                btnSP.disabled = true;
+                btnSP.style.pointerEvents = 'none';
+            }
         });
     });
 
@@ -1252,7 +1261,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasFile = publishSpFileInput && publishSpFileInput.files.length > 0;
         const hasCheck = publishSpCheckbox && publishSpCheckbox.checked;
         const btn = document.getElementById('btnPublishSP');
-        if (btn) btn.disabled = !(hasFile && hasCheck);
+        if (btn) {
+            btn.disabled = !(hasFile && hasCheck);
+            btn.style.pointerEvents = (hasFile && hasCheck) ? 'auto' : 'none';
+        }
     }
 
     // === Publish SK Form Confirmation ===

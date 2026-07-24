@@ -368,7 +368,7 @@
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SK">
-                        <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSKDetail" disabled style="pointer-events: none;">
+                        <button type="submit" class="btn btn-success fw-bold px-4" id="btnPublishSKDetail" disabled>
                             <i class="fas fa-stamp me-1"></i> Terbitkan SK
                         </button>
                     </span>
@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasCheck = checkbox && checkbox.checked;
         if (btn) {
             btn.disabled = !(hasFile && hasCheck);
-            btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
+            btn.style.pointerEvents = (hasFile && hasCheck) ? 'auto' : 'none';
         }
     }
 
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                     <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="Unggah dokumen bertandatangan dan centang pernyataan persetujuan untuk menerbitkan SP">
-                        <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSPDetail" disabled style="pointer-events: none;">
+                        <button type="submit" class="btn btn-primary fw-bold px-4" id="btnPublishSPDetail" disabled>
                             <i class="fas fa-stamp me-1"></i> Terbitkan SP
                         </button>
                     </span>
@@ -509,7 +509,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkReady() {
         const hasFile = fileInput && fileInput.files.length > 0;
         const hasCheck = checkbox && checkbox.checked;
-        if (btn) btn.disabled = !(hasFile && hasCheck);
+        if (btn) {
+            btn.disabled = !(hasFile && hasCheck);
+            btn.style.pointerEvents = (hasFile && hasCheck) ? 'auto' : 'none';
+        }
     }
 
     if (fileInput) {
