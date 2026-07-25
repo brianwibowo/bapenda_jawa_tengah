@@ -49,7 +49,7 @@
                 {{-- SAMSAT ROLE --}}
                 @if($unitkerja == 'Samsat')
                     @if(!empty($permissionSurat['canAjukanSP']))
-                        <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpSamsat" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Pengajuan (SP) ke Ditlantas Polda">
+                        <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpSamsat" title="Klik untuk membuat Surat Pengajuan (SP) ke Ditlantas Polda">
                             <i class="fas fa-paper-plane me-1"></i> Buat Pengajuan ke Polda
                         </button>
                     @else
@@ -65,7 +65,7 @@
                 @if($unitkerja == 'Polda')
                     {{-- Tombol 1: Review & Balas SP dari Samsat --}}
                     @if(!empty($permissionSurat['canRespondSP']))
-                        <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpDefault" data-bs-toggle="tooltip" title="Klik untuk meninjau dan merespon Surat Pengajuan dari Samsat">
+                        <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpDefault" title="Klik untuk meninjau dan merespon Surat Pengajuan dari Samsat">
                             <i class="fas fa-reply me-1"></i> Review & Balas SP Samsat
                         </button>
                     @elseif($lastSp && $lastSp->isApprovedBy('Polda'))
@@ -84,7 +84,7 @@
 
                     {{-- Tombol 2: Buat SP Polda ke Bapenda & Jasa Raharja --}}
                     @if(!empty($permissionSurat['canAjukanSP']))
-                        <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpPolda2bapendajr" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Pengajuan (SP) Polda ke Bapenda dan Jasa Raharja">
+                        <button class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpPolda2bapendajr" title="Klik untuk membuat Surat Pengajuan (SP) Polda ke Bapenda dan Jasa Raharja">
                             <i class="fas fa-paper-plane me-1"></i> Buat SP ke Bapenda & JR
                         </button>
                     @elseif($pengajuan->hasSuratPengajuanByInstansi($suratpengajuan, 'Bapenda'))
@@ -102,11 +102,25 @@
                     @endif
 
                     {{-- Tombol 3: Buat SK Polda --}}
-                    @if(!empty($permissionSurat['canAjukanSK']))
-                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Keputusan (SK) Penghapusan Regident Ranmor">
+                    @php
+                        $poldaSkLog = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->whereNotNull('sk_id')->filter(fn($l) => optional($l->user)->unit_kerja === 'Polda')->sortByDesc('created_at')->first();
+                        $isPoldaSkDraft = $poldaSkLog && $poldaSkLog->isSkDraft();
+                        $isPoldaSkTerbit = $poldaSkLog && $poldaSkLog->isSkPublished();
+                        if (!$isPoldaSkTerbit && !$suratkeputusan->where('unit_kerja', 'Polda')->isEmpty() && !$isPoldaSkDraft) {
+                            $isPoldaSkTerbit = true;
+                        }
+                    @endphp
+                    @if(!empty($permissionSurat['canAjukanSK']) && !$isPoldaSkDraft && !$isPoldaSkTerbit)
+                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalSkPolda" title="Klik untuk membuat Surat Keputusan (SK) Penghapusan Regident Ranmor">
                             <i class="fas fa-file-contract me-1"></i> Buat SK Polda
                         </button>
-                    @elseif(!$suratkeputusan->where('unit_kerja', 'Polda')->isEmpty())
+                    @elseif($isPoldaSkDraft)
+                        <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="📝 Draf SK Polda telah terbuat. Silakan klik 'Terbitkan SK' pada tabel histori log di bawah untuk menerbitkan SK resmi." style="cursor: pointer;">
+                            <button class="btn text-dark fw-semibold border-warning" style="background-color: #fff3cd;" disabled style="pointer-events: none;">
+                                <i class="fas fa-file-alt me-1 text-warning"></i> Draf SK Polda Terbuat (Siap Diterbitkan)
+                            </button>
+                        </span>
+                    @elseif($isPoldaSkTerbit)
                         <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan (SK) Penghapusan Regident Ditlantas Polda telah diterbitkan" style="cursor: not-allowed;">
                             <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                 <i class="fas fa-check-circle me-1 text-success"></i> SK Polda Telah Diterbitkan
@@ -125,7 +139,7 @@
                 @if($unitkerja == 'Bapenda')
                     {{-- Tombol 1: Review & Balas SP --}}
                     @if(!empty($permissionSurat['canRespondSP']))
-                        <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpBalasanBapenda" data-bs-toggle="tooltip" title="Klik untuk merespon dan membuat Surat Balasan Bapenda">
+                        <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpBalasanBapenda" title="Klik untuk merespon dan membuat Surat Balasan Bapenda">
                             <i class="fas fa-reply me-1"></i> Review & Balas SP
                         </button>
                     @elseif($lastSp && $lastSp->isApprovedBy('Bapenda'))
@@ -143,11 +157,25 @@
                     @endif
 
                     {{-- Tombol 2: Buat SK Pembebasan Bapenda --}}
-                    @if(!empty($permissionSurat['canAjukanSK']))
-                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Keputusan Pembebasan Pokok & Sanksi PKB">
+                    @php
+                        $bapendaSkLog = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->whereNotNull('sk_id')->filter(fn($l) => optional($l->user)->unit_kerja === 'Bapenda')->sortByDesc('created_at')->first();
+                        $isBapendaSkDraft = $bapendaSkLog && $bapendaSkLog->isSkDraft();
+                        $isBapendaSkTerbit = $bapendaSkLog && $bapendaSkLog->isSkPublished();
+                        if (!$isBapendaSkTerbit && !$suratkeputusan->where('unit_kerja', 'Bapenda')->isEmpty() && !$isBapendaSkDraft) {
+                            $isBapendaSkTerbit = true;
+                        }
+                    @endphp
+                    @if(!empty($permissionSurat['canAjukanSK']) && !$isBapendaSkDraft && !$isBapendaSkTerbit)
+                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalSkPembebasan" title="Klik untuk membuat Surat Keputusan Pembebasan Pokok & Sanksi PKB">
                             <i class="fas fa-file-contract me-1"></i> Buat SK Bapenda
                         </button>
-                    @elseif(!$suratkeputusan->where('unit_kerja', 'Bapenda')->isEmpty())
+                    @elseif($isBapendaSkDraft)
+                        <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="📝 Draf SK Bapenda telah terbuat. Silakan klik 'Terbitkan SK' pada tabel histori log di bawah untuk menerbitkan SK resmi." style="cursor: pointer;">
+                            <button class="btn text-dark fw-semibold border-warning" style="background-color: #fff3cd;" disabled style="pointer-events: none;">
+                                <i class="fas fa-file-alt me-1 text-warning"></i> Draf SK Bapenda Terbuat (Siap Diterbitkan)
+                            </button>
+                        </span>
+                    @elseif($isBapendaSkTerbit)
                         <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan Pembebasan PKB Bapenda telah diterbitkan" style="cursor: not-allowed;">
                             <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                 <i class="fas fa-check-circle me-1 text-success"></i> SK Bapenda Telah Diterbitkan
@@ -166,7 +194,7 @@
                 @if($unitkerja == 'Jasa Raharja')
                     {{-- Tombol 1: Review & Balas SP --}}
                     @if(!empty($permissionSurat['canRespondSP']))
-                        <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpBalasanJR" data-bs-toggle="tooltip" title="Klik untuk merespon dan membuat Surat Balasan Jasa Raharja">
+                        <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpBalasanJR" title="Klik untuk merespon dan membuat Surat Balasan Jasa Raharja">
                             <i class="fas fa-reply me-1"></i> Review & Balas SP
                         </button>
                     @elseif($lastSp && $lastSp->isApprovedBy('Jasa Raharja'))
@@ -184,11 +212,25 @@
                     @endif
 
                     {{-- Tombol 2: Buat SK Pembebasan SWDKLLJ --}}
-                    @if(!empty($permissionSurat['canAjukanSK']))
-                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalPilihJenisSK" data-bs-toggle="tooltip" title="Klik untuk membuat Surat Keputusan Pembebasan SWDKLLJ & Denda Jasa Raharja">
+                    @php
+                        $jrSkLog = $pengajuan->kendaraans->flatMap(fn($k) => $k->logs)->whereNotNull('sk_id')->filter(fn($l) => optional($l->user)->unit_kerja === 'Jasa Raharja')->sortByDesc('created_at')->first();
+                        $isJrSkDraft = $jrSkLog && $jrSkLog->isSkDraft();
+                        $isJrSkTerbit = $jrSkLog && $jrSkLog->isSkPublished();
+                        if (!$isJrSkTerbit && !$suratkeputusan->where('unit_kerja', 'Jasa Raharja')->isEmpty() && !$isJrSkDraft) {
+                            $isJrSkTerbit = true;
+                        }
+                    @endphp
+                    @if(!empty($permissionSurat['canAjukanSK']) && !$isJrSkDraft && !$isJrSkTerbit)
+                        <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalSkJR" title="Klik untuk membuat Surat Keputusan Pembebasan SWDKLLJ & Denda Jasa Raharja">
                             <i class="fas fa-file-contract me-1"></i> Buat SK Jasa Raharja
                         </button>
-                    @elseif(!$suratkeputusan->where('unit_kerja', 'Jasa Raharja')->isEmpty())
+                    @elseif($isJrSkDraft)
+                        <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="📝 Draf SK Jasa Raharja telah terbuat. Silakan klik 'Terbitkan SK' pada tabel histori log di bawah untuk menerbitkan SK resmi." style="cursor: pointer;">
+                            <button class="btn text-dark fw-semibold border-warning" style="background-color: #fff3cd;" disabled style="pointer-events: none;">
+                                <i class="fas fa-file-alt me-1 text-warning"></i> Draf SK JR Terbuat (Siap Diterbitkan)
+                            </button>
+                        </span>
+                    @elseif($isJrSkTerbit)
                         <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan Pembebasan SWDKLLJ Jasa Raharja telah diterbitkan" style="cursor: not-allowed;">
                             <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                 <i class="fas fa-check-circle me-1 text-success"></i> SK Jasa Raharja Diterbitkan
@@ -331,11 +373,50 @@
                                     @endif
                                     {{-- Tombol Kirim Revisi — muncul jika log ini revisi pending & user punya permission --}}
                                     @if($log->isRevisionPending() && auth()->user()->can('submit_revision'))
+                                        @php
+                                            $kendaraanData = $log->kendaraan ? [
+                                                'nrkb' => $log->kendaraan->nrkb,
+                                                'merk_kendaraan' => $log->kendaraan->merk_kendaraan,
+                                                'tipe_kendaraan' => $log->kendaraan->tipe_kendaraan,
+                                                'jenis_kendaraan' => $log->kendaraan->jenis_kendaraan,
+                                                'model_kendaraan' => $log->kendaraan->model_kendaraan,
+                                                'tahun_pembuatan' => $log->kendaraan->tahun_pembuatan,
+                                                'isi_silinder' => $log->kendaraan->isi_silinder,
+                                                'nomor_rangka' => $log->kendaraan->nomor_rangka,
+                                                'nomor_mesin' => $log->kendaraan->nomor_mesin,
+                                                'warna_kendaraan' => $log->kendaraan->warna_kendaraan,
+                                                'jenis_bahan_bakar' => $log->kendaraan->jenis_bahan_bakar,
+                                                'warna_tnkb' => $log->kendaraan->warna_tnkb,
+                                                'nomor_bpkb' => $log->kendaraan->nomor_bpkb,
+                                            ] : [];
+                                            $pemilikData = optional($log->kendaraan)->pemilik ? [
+                                                'nama_pemilik' => $log->kendaraan->pemilik->nama_pemilik,
+                                                'nik_pemilik' => $log->kendaraan->pemilik->nik_pemilik,
+                                                'alamat_pemilik' => $log->kendaraan->pemilik->alamat_pemilik,
+                                                'telp_pemilik' => $log->kendaraan->pemilik->telp_pemilik,
+                                                'email_pemilik' => $log->kendaraan->pemilik->email_pemilik,
+                                            ] : [];
+                                            $mediaUrls = [];
+                                            if ($log->kendaraan) {
+                                                foreach (['surat_permohonan', 'surat_pernyataan', 'ktp', 'bpkb', 'tbpkp', 'cek_fisik', 'foto_ranmor', 'stnk'] as $collection) {
+                                                    $media = $log->kendaraan->getFirstMedia($collection);
+                                                    if ($media) {
+                                                        $mediaUrls[$collection] = [
+                                                            'name' => $media->file_name,
+                                                            'url' => $media->getUrl()
+                                                        ];
+                                                    }
+                                                }
+                                            }
+                                        @endphp
                                         <button class="btn btn-sm btn-warning text-dark fw-semibold btn-open-revision-modal"
                                                 data-bs-toggle="modal" data-bs-target="#revisionModal"
                                                 data-log-id="{{ $log->id }}"
                                                 data-kendaraan-id="{{ $log->kendaraan_id }}"
-                                                data-revisi-fields="{{ json_encode($log->revisi_fields) }}">
+                                                data-revisi-fields="{{ json_encode($log->revisi_fields) }}"
+                                                data-kendaraan-data="{{ json_encode($kendaraanData) }}"
+                                                data-pemilik-data="{{ json_encode($pemilikData) }}"
+                                                data-media-urls="{{ json_encode($mediaUrls) }}">
                                             <i class="fas fa-edit me-1"></i> Kirim Revisi
                                         </button>
                                     @endif
@@ -867,32 +948,69 @@
                 const logId = button.getAttribute('data-log-id');
                 const kendaraanId = button.getAttribute('data-kendaraan-id');
                 const revisiFields = JSON.parse(button.getAttribute('data-revisi-fields') || '[]');
+                const kendaraanData = JSON.parse(button.getAttribute('data-kendaraan-data') || '{}');
+                const pemilikData = JSON.parse(button.getAttribute('data-pemilik-data') || '{}');
+                const mediaUrls = JSON.parse(button.getAttribute('data-media-urls') || '{}');
 
                 // Set hidden inputs
                 revisionModal.querySelector('#revisionLogIdInput').value = logId;
                 revisionModal.querySelector('#revisionKendaraanIdInput').value = kendaraanId;
 
-                // Hide all field inputs and group cards
+                // Reset and hide all field inputs, previews, and group cards
                 revisionModal.querySelectorAll('.revision-field').forEach(el => el.style.display = 'none');
                 revisionModal.querySelectorAll('.revision-group').forEach(el => el.style.display = 'none');
+                revisionModal.querySelectorAll('.current-val-info').forEach(el => el.remove());
+                revisionModal.querySelectorAll('.current-media-preview').forEach(el => el.remove());
 
-                // Track which groups need to be shown
                 const activeGroups = new Set();
 
-                // Show only requested fields
                 revisiFields.forEach(field => {
-                    // Individual field (pemilik/kendaraan)
                     const fieldEl = revisionModal.querySelector(`.revision-field[data-field="${field}"]`);
-                    if (fieldEl) {
-                        fieldEl.style.display = '';
-                        // Track parent group
-                        if (fieldGroupMap[field]) {
-                            activeGroups.add(fieldGroupMap[field]);
+                    if (!fieldEl) return;
+
+                    fieldEl.style.display = '';
+                    if (fieldGroupMap[field]) {
+                        activeGroups.add(fieldGroupMap[field]);
+                    }
+
+                    // Pre-fill text inputs & display current data info badge
+                    const input = fieldEl.querySelector('input[type="text"], input[type="email"], textarea');
+                    if (input) {
+                        const currentVal = fieldGroupMap[field] === 'pemilik' 
+                            ? (pemilikData[field] || '') 
+                            : (kendaraanData[field] || '');
+                        
+                        input.value = currentVal;
+                        
+                        if (currentVal) {
+                            const infoSpan = document.createElement('small');
+                            infoSpan.className = 'text-muted d-block mt-1 current-val-info';
+                            infoSpan.innerHTML = `<i class="fas fa-history me-1 text-primary"></i> Data saat ini: <strong>${currentVal}</strong>`;
+                            fieldEl.appendChild(infoSpan);
+                        }
+                    }
+
+                    // Display media preview for document upload fields
+                    if (mediaUrls[field]) {
+                        const cardBody = fieldEl.querySelector('.card-body');
+                        if (cardBody) {
+                            const mediaInfo = mediaUrls[field];
+                            const mediaDiv = document.createElement('div');
+                            mediaDiv.className = 'mb-3 p-2 bg-light rounded border current-media-preview d-flex align-items-center justify-content-between';
+                            mediaDiv.innerHTML = `
+                                <div>
+                                    <small class="text-muted d-block"><i class="fas fa-file-alt me-1 text-primary"></i> File saat ini yang terunggah:</small>
+                                    <span class="fw-semibold text-dark small">${mediaInfo.name}</span>
+                                </div>
+                                <a href="${mediaInfo.url}" target="_blank" class="btn btn-xs btn-outline-primary text-nowrap ms-2">
+                                    <i class="fas fa-eye me-1"></i> Lihat File Lama
+                                </a>
+                            `;
+                            cardBody.insertBefore(mediaDiv, cardBody.firstChild);
                         }
                     }
                 });
 
-                // Show parent group cards that have visible fields
                 activeGroups.forEach(group => {
                     const groupCard = revisionModal.querySelector(`.revision-group[data-group="${group}"]`);
                     if (groupCard) groupCard.style.display = '';
@@ -903,6 +1021,8 @@
             revisionModal.addEventListener('hidden.bs.modal', function () {
                 revisionModal.querySelectorAll('.revision-field').forEach(el => el.style.display = 'none');
                 revisionModal.querySelectorAll('.revision-group').forEach(el => el.style.display = 'none');
+                revisionModal.querySelectorAll('.current-val-info').forEach(el => el.remove());
+                revisionModal.querySelectorAll('.current-media-preview').forEach(el => el.remove());
                 revisionModal.querySelectorAll('input, textarea').forEach(el => {
                     if (el.type !== 'hidden') el.value = '';
                 });
@@ -944,16 +1064,14 @@
 </div>
 @endif
 {{-- Include existing SK modals --}}
-@if ($permissionSurat['canAjukanSK'] ?? null)
-        @if ($unitkerja == 'Polda')
-            @include('pengajuan.modals.sk_polda')
-        @elseif ($unitkerja == 'Bapenda')
-            @include('pengajuan.modals.sk_bapenda_pembebasan')
-        @elseif ($unitkerja == 'Jasa Raharja')
-            @include('pengajuan.modals.sk_jr')
-        @else
-            @include('pengajuan.modals.sk_default')
-        @endif
+@if ($unitkerja == 'Polda')
+    @include('pengajuan.modals.sk_polda')
+@elseif ($unitkerja == 'Bapenda')
+    @include('pengajuan.modals.sk_bapenda_pembebasan')
+@elseif ($unitkerja == 'Jasa Raharja')
+    @include('pengajuan.modals.sk_jr')
+@else
+    @include('pengajuan.modals.sk_default')
 @endif
 
 {{-- Include SP modals --}}

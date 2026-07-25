@@ -24,19 +24,19 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Nama Pembuat Surat Keterangan</label>
-                                <input type="text" class="form-control" name="nama_pembuat_surat_permohonan" required>
+                                <input type="text" class="form-control" name="nama_pembuat_surat_permohonan" value="Dwiyanto Setyo Budi" placeholder="Contoh: Dwiyanto Setyo Budi" required>
                                 <small class="text-muted d-block mt-1">Contoh: Dwiyanto Setyo Budi</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Tempat Pembuatan Surat</label>
-                                <input type="text" class="form-control" name="tempat_pembuat_surat_permohonan" required>
+                                <input type="text" class="form-control" name="tempat_pembuat_surat_permohonan" value="Temanggung" placeholder="Contoh: Temanggung" required>
                                 <small class="text-muted d-block mt-1">Contoh: Temanggung</small>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Tanggal Pembuatan Surat</label>
-                                <input type="text" class="form-control" name="tanggal_pembuat_surat_permohonan" required>
+                                <input type="text" class="form-control" name="tanggal_pembuat_surat_permohonan" value="13 Mei 2024" placeholder="Contoh: 13 Mei 2024" required>
                                 <small class="text-muted d-block mt-1">Contoh: 13 Mei 2024</small>
                             </div>
                         </div>
@@ -45,24 +45,24 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Nomor Surat Keterangan Penghapusan Regident</label>
-                                <input type="text" class="form-control" name="nomor_surat_regident" required>
+                                <input type="text" class="form-control" name="nomor_surat_regident" value="SKET/ 01 /VI/YAN.1/2025/Ditlantas" placeholder="Contoh: SKET/ 01 /VI/YAN.1/2025/Ditlantas" required>
                                 <small class="text-muted d-block mt-1">Contoh: SKET/ 01 /VI/YAN.1/2025/Ditlantas</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Nama Pembuat Surat Keterangan</label>
-                                <input type="text" class="form-control" name="nama_pembuat_surat_regident" required>
+                                <input type="text" class="form-control" name="nama_pembuat_surat_regident" value="Dwiyanto Setyo Budi" placeholder="Contoh: Dwiyanto Setyo Budi" required>
                                 <small class="text-muted d-block mt-1">Contoh: Dwiyanto Setyo Budi</small>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Tempat Pembuatan Surat</label>
-                                <input type="text" class="form-control" name="tempat_pembuat_surat_regident" required>
+                                <input type="text" class="form-control" name="tempat_pembuat_surat_regident" value="Temanggung" placeholder="Contoh: Temanggung" required>
                                 <small class="text-muted d-block mt-1">Contoh: Temanggung</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Tanggal Pembuatan Surat</label>
-                                <input type="text" class="form-control" name="tanggal_pembuat_surat_regident" required>
+                                <input type="text" class="form-control" name="tanggal_pembuat_surat_regident" value="20 Juni 2025" placeholder="Contoh: 20 Juni 2025" required>
                                 <small class="text-muted d-block mt-1">Contoh: 20 Juni 2025</small>
                             </div>
                         </div>
@@ -71,17 +71,17 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Nomor Surat Keterangan Pembebasan</label>
-                                <input type="text" class="form-control" name="nomor_surat_pembebasan" required>
+                                <input type="text" class="form-control" name="nomor_surat_pembebasan" value="900.1.13.1 /1865/2025" placeholder="Contoh: 900.1.13.1 /1865/2025" required>
                                 <small class="text-muted d-block mt-1">Contoh: 900.1.13.1 /1865/2025</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Tempat Dikeluarkan SK</label>
-                                <input type="text" class="form-control" name="tempat_sk" value="Semarang" required>
+                                <input type="text" class="form-control" name="tempat_sk" value="Semarang" placeholder="Contoh: Semarang" required>
                                 <small class="text-muted d-block mt-1">Contoh: Semarang</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Tanggal Dikeluarkan SK</label>
-                                <input type="text" class="form-control" name="tanggal_sk" value="{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" required>
+                                <input type="text" class="form-control" name="tanggal_sk" value="{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" placeholder="Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" required>
                                 <small class="text-muted d-block mt-1">Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</small>
                             </div>
                         </div>
@@ -90,8 +90,8 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Nama Direktur (Beserta Pangkat/Gelar)</label>
-                                <input type="text" class="form-control" name="nama_direktur" required>
-                                <small class="text-muted d-block mt-1">Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H.</small>
+                                <input type="text" class="form-control" name="nama_direktur" value="NADIATUL ANWARAH, S.H., M.H." placeholder="Contoh: NADIATUL ANWARAH, S.H., M.H." required>
+                                <small class="text-muted d-block mt-1">Contoh: NADIATUL ANWARAH, S.H., M.H.</small>
                             </div>
                         </div>
                         <input type="hidden" name="metode_penanda_tangan" id="metode_penanda_tangan" value="ttd_basah">
@@ -112,8 +112,8 @@
                 {{-- Footer: Mode Preview --}}
                 <div class="modal-footer" id="footerPreviewSkPembebasan" style="display:none;">
                     <button type="button" class="btn btn-warning" id="btnEditSkPembebasan">Kembali Edit</button>
-                    <button type="button" class="btn btn-success" id="btnSubmitSkPembebasanDraftPreview" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan dan terbitkan Surat Keputusan Bapenda">
-                        <i class="fas fa-save me-1"></i> Terbitkan SK
+                    <button type="button" class="btn btn-success" id="btnSubmitSkPembebasanDraftPreview" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan sebagai draf Surat Keputusan Bapenda">
+                        <i class="fas fa-save me-1"></i> Simpan Draf SK
                     </button>
                 </div>
         </form>
@@ -163,12 +163,13 @@
                const pdfResponse = await fetch(pdfUrl);
                const blob = await pdfResponse.blob();
                currentBlobUrl = URL.createObjectURL(blob);
-               window.BapendaPdfViewer.render('previewSkPembebasanContainer', currentBlobUrl, 'sk_bapenda_pembebasan.pdf');
 
                formContainer.style.display = 'none';
                footerForm.style.display = 'none';
                previewContainer.style.display = 'block';
                footerPreview.style.display = 'flex';
+
+               window.BapendaPdfViewer.render('previewSkPembebasanContainer', currentBlobUrl, 'sk_bapenda_pembebasan.pdf');
            } catch (error) {
                console.error('Preview load failed:', error);
                alert('Gagal memuat preview PDF.');

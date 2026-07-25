@@ -14,12 +14,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat</label>
-                            <input type="text" class="form-control" name="nomor_surat" required>
-                            <small class="text-muted d-block mt-1">Contoh: SKET/ {{ date('m') }}/{{ date('m/Y') }}/Ditlantas</small>
+                            <input type="text" class="form-control" name="nomor_surat" value="SKET/01/06/2025/Ditlantas" placeholder="Contoh: SKET/01/06/2025/Ditlantas" required>
+                            <small class="text-muted d-block mt-1">Contoh: SKET/01/06/2025/Ditlantas</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Sifat</label>
-                            <input type="text" class="form-control" name="sifat" required>
+                            <input type="text" class="form-control" name="sifat" value="Segera" placeholder="Contoh: Segera" required>
                             <small class="text-muted d-block mt-1">Contoh: Segera</small>
                         </div>
                     </div>
@@ -27,12 +27,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Lampiran</label>
-                            <input type="text" class="form-control" name="lampiran" required>
+                            <input type="text" class="form-control" name="lampiran" value="1 Berkas" placeholder="Contoh: 1 Berkas" required>
                             <small class="text-muted d-block mt-1">Contoh: 1 Berkas</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Hal</label>
-                            <input type="text" class="form-control" name="hal" required>
+                            <input type="text" class="form-control" name="hal" value="Pembebasan Pajak Kendaraan Bermotor" placeholder="Contoh: Pembebasan Pajak Kendaraan Bermotor" required>
                             <small class="text-muted d-block mt-1">Contoh: Pembebasan Pajak Kendaraan Bermotor</small>
                         </div>
                     </div>
@@ -42,12 +42,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Provinsi</label>
-                            <input type="text" class="form-control" name="provinsi" value="Jawa Tengah" required>
+                            <input type="text" class="form-control" name="provinsi" value="Jawa Tengah" placeholder="Contoh: Jawa Tengah" required>
                             <small class="text-muted d-block mt-1">Contoh: Jawa Tengah</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nama Penandatangan (Beserta Gelar)</label>
-                            <input type="text" class="form-control" name="nama_penandatangan" required>
+                            <input type="text" class="form-control" name="nama_penandatangan" value="NADIATUL ANWARAH, S.H., M.H." placeholder="Contoh: NADIATUL ANWARAH, S.H., M.H." required>
                             <small class="text-muted d-block mt-1">Contoh: NADIATUL ANWARAH, S.H., M.H.</small>
                         </div>
                     </div>
@@ -55,12 +55,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Jabatan</label>
-                            <input type="text" class="form-control" name="jabatan" value="Kepala Bidang Pajak Kendaraan Bermotor" required>
+                            <input type="text" class="form-control" name="jabatan" value="Kepala Bidang Pajak Kendaraan Bermotor" placeholder="Contoh: Kepala Bidang Pajak Kendaraan Bermotor" required>
                             <small class="text-muted d-block mt-1">Contoh: Kepala Bidang Pajak Kendaraan Bermotor</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">NIP</label>
-                            <input type="text" class="form-control" name="nip" required>
+                            <input type="text" class="form-control" name="nip" value="19780211 200501 2 007" placeholder="Contoh: 19780211 200501 2 007" required>
                             <small class="text-muted d-block mt-1">Contoh: 19780211 200501 2 007</small>
                         </div>
                     </div>

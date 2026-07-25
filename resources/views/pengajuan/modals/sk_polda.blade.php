@@ -24,27 +24,25 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat</label>
-                            <input type="text" class="form-control" name="nomor_surat" required>
-                            <small class="text-muted d-block mt-1">Contoh: SKET/ {{ date('m') }}
-                                /{{ date('m/Y') }}/Ditlantas</small>
+                            <input type="text" class="form-control" name="nomor_surat" value="SKET/01/VI/YAN.1/2025/Ditlantas" placeholder="Contoh: SKET/01/VI/YAN.1/2025/Ditlantas" required>
+                            <small class="text-muted d-block mt-1">Contoh: SKET/01/VI/YAN.1/2025/Ditlantas</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nama Pembuat Pernyataan</label>
-                            <input type="text" class="form-control" name="nama_pembuat" required>
+                            <input type="text" class="form-control" name="nama_pembuat" value="Dwiyanto Setyo Budi" placeholder="Contoh: Dwiyanto Setyo Budi" required>
                             <small class="text-muted d-block mt-1">Contoh: Dwiyanto Setyo Budi</small>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Tempat Dikeluarkan</label>
-                            <input type="text" class="form-control" name="tempat" required>
+                            <input type="text" class="form-control" name="tempat" value="Semarang" placeholder="Contoh: Semarang" required>
                             <small class="text-muted d-block mt-1">Contoh: Semarang</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Tanggal Dikeluarkan</label>
-                            <input type="text" class="form-control" name="tanggal_keluar" required>
-                            <small class="text-muted d-block mt-1">Contoh:
-                                {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</small>
+                            <input type="text" class="form-control" name="tanggal_keluar" value="{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" placeholder="Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" required>
+                            <small class="text-muted d-block mt-1">Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</small>
                         </div>
                     </div>
                     <hr>
@@ -52,13 +50,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nama Direktur (Beserta Pangkat/Gelar)</label>
-                            <input type="text" class="form-control" name="nama_direktur" required>
-                            <small class="text-muted d-block mt-1">Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H.,
-                                M.H.</small>
+                            <input type="text" class="form-control" name="nama_direktur" value="M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H." placeholder="Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H." required>
+                            <small class="text-muted d-block mt-1">Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H.</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Pangkat / NRP</label>
-                            <input type="text" class="form-control" name="pangkat_direktur" required>
+                            <input type="text" class="form-control" name="pangkat_direktur" value="KOMISARIS BESAR POLISI NRP 680903" placeholder="Contoh: KOMISARIS BESAR POLISI NRP 680903" required>
                             <small class="text-muted d-block mt-1">Contoh: KOMISARIS BESAR POLISI NRP 680903</small>
                         </div>
                     </div>
@@ -79,8 +76,8 @@
             {{-- Footer: Mode Preview --}}
             <div class="modal-footer" id="footerPreviewSkPolda" style="display:none;">
                 <button type="button" class="btn btn-warning" id="btnEditSkPolda">Kembali Edit</button>
-                <button type="button" class="btn btn-success" id="btnSubmitSkPoldaDraftPreview" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan dan terbitkan Surat Keputusan Polda">
-                    <i class="fas fa-save me-1"></i> Terbitkan SK
+                <button type="button" class="btn btn-success" id="btnSubmitSkPoldaDraftPreview" data-bs-toggle="tooltip" data-bs-placement="top" title="Simpan sebagai draf Surat Keputusan Polda">
+                    <i class="fas fa-save me-1"></i> Simpan Draf SK
                 </button>
             </div>
         </form>
@@ -129,15 +126,16 @@
                 const pdfResponse = await fetch(pdfUrl);
                 const blob = await pdfResponse.blob();
                 currentBlobUrl = URL.createObjectURL(blob);
-                window.BapendaPdfViewer.render('previewSkPoldaContainer', currentBlobUrl, 'sk_polda.pdf');
 
                 formContainer.style.display = 'none';
                 footerForm.style.display = 'none';
                 previewContainer.style.display = 'block';
                 footerPreview.style.display = 'flex';
+
+                window.BapendaPdfViewer.render('previewSkPoldaContainer', currentBlobUrl, 'sk_polda.pdf');
             } catch (error) {
                 console.error('Preview load failed:', error);
-                alert('Gagal memuat preview PDF. Silakan coba lagi.');
+                alert('Gagal memuat preview PDF.');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-eye me-1"></i>Lihat Preview';

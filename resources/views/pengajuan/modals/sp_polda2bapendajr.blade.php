@@ -13,12 +13,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat</label>
-                            <input type="text" class="form-control" name="nomor_surat" required>
+                            <input type="text" class="form-control" name="nomor_surat" value="B/9660-QE/IV/YAN.1./2025/DITLANTAS" placeholder="Contoh: B/9660-QE/IV/YAN.1./2025/DITLANTAS" required>
                             <small class="text-muted d-block mt-1">Contoh: B/9660-QE/IV/YAN.1./2025/DITLANTAS</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nama Pembuat Pernyataan</label>
-                            <input type="text" class="form-control" name="nama_pembuat" required>
+                            <input type="text" class="form-control" name="nama_pembuat" value="Dwiyanto Setyo Budi" placeholder="Contoh: Dwiyanto Setyo Budi" required>
                             <small class="text-muted d-block mt-1">Contoh: Dwiyanto Setyo Budi</small>
                         </div>
                     </div>
@@ -26,12 +26,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Tempat</label>
-                            <input type="text" class="form-control" name="tempat" value="Semarang" required>
+                            <input type="text" class="form-control" name="tempat" value="Semarang" placeholder="Contoh: Semarang" required>
                             <small class="text-muted d-block mt-1">Contoh: Semarang</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Tanggal Dikeluarkan SP</label>
-                            <input type="text" class="form-control" name="tanggal_keluar" value="{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" required>
+                            <input type="text" class="form-control" name="tanggal_keluar" value="{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" placeholder="Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" required>
                             <small class="text-muted d-block mt-1">Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</small>
                         </div>
                     </div>
@@ -39,12 +39,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nama Direktur (Beserta Gelar)</label>
-                            <input type="text" class="form-control" name="nama_direktur" required>
+                            <input type="text" class="form-control" name="nama_direktur" value="M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H." placeholder="Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H." required>
                             <small class="text-muted d-block mt-1">Contoh: M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H.</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Pangkat Direktur</label>
-                            <input type="text" class="form-control" name="pangkat_direktur" value="KOMBES POL" required>
+                            <input type="text" class="form-control" name="pangkat_direktur" value="KOMBES POL" placeholder="Contoh: KOMBES POL" required>
                             <small class="text-muted d-block mt-1">Contoh: KOMBES POL</small>
                         </div>
                     </div>
@@ -53,21 +53,32 @@
                     <h6 class="fw-bold mb-3">Rujukan Surat</h6>
                     <div class="repeater-rujukan-sp">
                         <div data-repeater-list="group-rujukan">
-                            <div data-repeater-item class="row align-items-center mb-3">
-                                <div class="col">
-                                    <div class="input-group shadow-sm">
-                                        <span class="input-group-text bg-light text-muted">
-                                            <i class="fas fa-file-alt"></i>
-                                        </span>
-                                        <input type="text" class="form-control" name="rujukan" placeholder="Masukkan rujukan (contoh: Undang-Undang No...)" value="Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan;">
+                            @php
+                                $defaultRujukan = [
+                                    "Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan;",
+                                    "Peraturan Kepolisian Negara Republik Indonesia Nomor 7 Tahun 2021 tentang Registrasi dan Identifikasi Kendaraan Bermotor;",
+                                    "Peraturan Kepala Badan Pengelola Pendapatan Daerah Provinsi Jawa Tengah Nomor 07 Tahun 2024 tentang Petunjuk Teknis Pemungutan Pajak Kendaraan Bermotor dan Bea Balik Nama Kendaraan Bermotor;",
+                                    "Peraturan Direksi Nomor PER/25/2025 tanggal 25 Maret 2025 tentang Kebijakan Pembebasan Kewajiban Pembayaran Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan, Kartu Dana, dan Denda Sumbangan Wajib Dana Kecelakaan Lalu Lintas Jalan yang Tertunggak bagi Kendaraan Bermotor yang dilaksanakan Penghapusan Registrasi dan Identifikasi Kendaraan Bermotor atas Dasar Permintaan Pemilik Kendaraan Bermotor;",
+                                    "Surat Permohonan Kapolres Temanggung Polda Jateng Nomor: B/1/VII/YAN.1.3.2/2024/LANTAS tanggal 3 Juli 2024 hal permohonan penghapusan data."
+                                ];
+                            @endphp
+                            @foreach($defaultRujukan as $itemRujukan)
+                                <div data-repeater-item class="row align-items-center mb-3">
+                                    <div class="col">
+                                        <div class="input-group shadow-sm">
+                                            <span class="input-group-text bg-light text-muted">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <input type="text" class="form-control" name="rujukan" placeholder="Masukkan rujukan (contoh: Undang-Undang No...)" value="{{ $itemRujukan }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-auto ps-0">
+                                        <button data-repeater-delete type="button" class="btn btn-outline-danger btn-border d-flex align-items-center justify-content-center" style="height: 40px; width: 40px;" title="Hapus Rujukan">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="col-auto ps-0">
-                                    <button data-repeater-delete type="button" class="btn btn-outline-danger btn-border d-flex align-items-center justify-content-center" style="height: 40px; width: 40px;" title="Hapus Rujukan">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                         <div class="row mt-2">
                             <div class="col">
@@ -82,21 +93,30 @@
                     <h6 class="fw-bold mb-3">Tembusan Surat</h6>
                     <div class="repeater-tembusan-sp">
                         <div data-repeater-list="group-tembusan">
-                            <div data-repeater-item class="row align-items-center mb-3">
-                                <div class="col">
-                                    <div class="input-group shadow-sm">
-                                        <span class="input-group-text bg-light text-muted">
-                                            <i class="fas fa-file-alt"></i>
-                                        </span>
-                                        <input type="text" class="form-control" name="tembusan" placeholder="Masukkan terusan (contoh: Kapolda...)" value="Kapolda Jateng.">
+                            @php
+                                $defaultTembusan = [
+                                    "Kapolda Jateng",
+                                    "Irwasda Polda Jateng",
+                                    "Kabidpropam Polda Jateng"
+                                ];
+                            @endphp
+                            @foreach($defaultTembusan as $itemTembusan)
+                                <div data-repeater-item class="row align-items-center mb-3">
+                                    <div class="col">
+                                        <div class="input-group shadow-sm">
+                                            <span class="input-group-text bg-light text-muted">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <input type="text" class="form-control" name="tembusan" placeholder="Masukkan terusan (contoh: Kapolda...)" value="{{ $itemTembusan }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-auto ps-0">
+                                        <button data-repeater-delete type="button" class="btn btn-outline-danger btn-border d-flex align-items-center justify-content-center" style="height: 40px; width: 40px;" title="Hapus Tembusan">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="col-auto ps-0">
-                                    <button data-repeater-delete type="button" class="btn btn-outline-danger btn-border d-flex align-items-center justify-content-center" style="height: 40px; width: 40px;" title="Hapus Tembusan">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                         <div class="row mt-2">
                             <div class="col">

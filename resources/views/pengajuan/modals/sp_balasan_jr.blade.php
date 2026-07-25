@@ -18,12 +18,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat</label>
-                            <input type="text" class="form-control" name="nomor_surat" required>
+                            <input type="text" class="form-control" name="nomor_surat" value="AS/R/21/2025" placeholder="Contoh: AS/R/21/2025" required>
                             <small class="text-muted d-block mt-1">Contoh: AS/R/21/2025</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat Regident (Polda)</label>
-                            <input type="text" class="form-control" name="nomor_surat_regident" required>
+                            <input type="text" class="form-control" name="nomor_surat_regident" value="B/4188/IV/YAN.1/2025/Ditlantas" placeholder="Contoh: B/4188/IV/YAN.1/2025/Ditlantas" required>
                             <small class="text-muted d-block mt-1">Contoh: B/4188/IV/YAN.1/2025/Ditlantas</small>
                         </div>
                     </div>
@@ -32,7 +32,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nomor Surat Bapenda</label>
-                            <input type="text" class="form-control" name="nomor_surat_bapenda" required>
+                            <input type="text" class="form-control" name="nomor_surat_bapenda" value="S/900.1.13.1/53/2025" placeholder="Contoh: S/900.1.13.1/53/2025" required>
                             <small class="text-muted d-block mt-1">Contoh: S/900.1.13.1/53/2025</small>
                         </div>
                     </div>
@@ -44,12 +44,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Tempat Surat</label>
-                            <input type="text" class="form-control" name="tempat_surat" value="Semarang" required>
+                            <input type="text" class="form-control" name="tempat_surat" value="Semarang" placeholder="Contoh: Semarang" required>
                             <small class="text-muted d-block mt-1">Contoh: Semarang</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Tanggal Surat</label>
-                            <input type="text" class="form-control" name="tanggal_surat" value="{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" required>
+                            <input type="text" class="form-control" name="tanggal_surat" value="{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" placeholder="Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}" required>
                             <small class="text-muted d-block mt-1">Contoh: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</small>
                         </div>
                     </div>
@@ -58,12 +58,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nama Penandatangan</label>
-                            <input type="text" class="form-control" name="nama_penandatangan" required>
+                            <input type="text" class="form-control" name="nama_penandatangan" value="Triadi" placeholder="Contoh: Triadi" required>
                             <small class="text-muted d-block mt-1">Contoh: Triadi</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Jabatan Penandatangan</label>
-                            <input type="text" class="form-control" name="jabatan_penandatangan" value="Kepala Kantor Wilayah Utama" required>
+                            <input type="text" class="form-control" name="jabatan_penandatangan" value="Kepala Kantor Wilayah Utama" placeholder="Contoh: Kepala Kantor Wilayah Utama" required>
                             <small class="text-muted d-block mt-1">Contoh: Kepala Kantor Wilayah Utama</small>
                         </div>
                     </div>

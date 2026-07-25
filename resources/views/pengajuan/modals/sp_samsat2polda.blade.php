@@ -41,19 +41,19 @@
                                                 {{-- Status Saat Ini --}}
                                                 <td class="text-center">
                                                     @if($kendaraan->status == 'pengajuan')
-                                                        <span class="badge bg-warning text-dark">Diajukan</span>
+                                                        <span class="badge bg-warning text-white" style="background-color: #f59e0b; color: #fff;">Diajukan</span>
                                                     @elseif($kendaraan->status == 'diproses')
-                                                        <span class="badge bg-info text-dark">Diproses</span>
+                                                        <span class="badge bg-primary text-white">Diproses</span>
                                                     @elseif($kendaraan->status == 'selesai')
-                                                        <span class="badge bg-success">Selesai</span>
+                                                        <span class="badge bg-success text-white">Selesai</span>
                                                     @elseif($kendaraan->status == 'ditolak')
-                                                        <span class="badge bg-danger">Ditolak</span>
+                                                        <span class="badge bg-danger text-white">Ditolak</span>
                                                     @endif
                                                 </td>
     
                                                 {{-- Kolom Aksi (Form Input) --}}
                                                 <td class="text-center">
-                                                    <span class="badge bg-info text-dark">Diproses</span>
+                                                    <span class="badge bg-primary text-white">Diproses</span>
                                                 </td>
 
                                                 <input type="hidden" name="status[{{ $kendaraan->id }}]" value="diproses">

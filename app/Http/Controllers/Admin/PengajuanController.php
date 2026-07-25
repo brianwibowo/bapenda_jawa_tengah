@@ -146,7 +146,7 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSP'] = true;
         }
         // 4. Jika semua SP sudah disetujui tapi belum ada SK
-        if ($progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || $progress > 6) && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","Jasa Raharja"])) {
+        if ($progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","JR","Jasa Raharja"])) {
             $permissionSurat['canAjukanSK'] = true;
         }
 
@@ -156,7 +156,7 @@ class PengajuanController extends Controller
             ->where('unit_kerja', $this->normalizeUnitKerja($user->unit_kerja))
             ->first();
 
-            if (!$exisitingSkIds && $progress >= 6 && $progress < 9 && ($user->unit_kerja == "Polda" || $progress > 6) && $pengajuan->isFullyApprovedByAll() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","Jasa Raharja"])) {
+            if (!$exisitingSkIds && $progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","JR","Jasa Raharja"])) {
                 $permissionSurat['canAjukanSK'] = true;
             }
         }
@@ -176,11 +176,9 @@ class PengajuanController extends Controller
                 'admin.pengajuan.sp.tolak', now()->addMinutes(60), ['surat' => $lastSp->id]
             );
         }
-        if (($permissionSurat['canAjukanSK'] ?? null)) {
-            $signedUrls['sk_buat'] = URL::temporarySignedRoute(
-                'admin.pengajuan.buat_sk', now()->addMinutes(60), ['id' => $pengajuan->id]
-            );
-        }
+        $signedUrls['sk_buat'] = URL::temporarySignedRoute(
+            'admin.pengajuan.buat_sk', now()->addMinutes(60), ['id' => $pengajuan->id]
+        );
 
         // Mapping jenis Surat per role untuk modal "Pilih Jenis Surat"
         $sTypeOptions = [];
@@ -205,7 +203,7 @@ class PengajuanController extends Controller
                     $sTypeOptions[] = ['key' => 'sk_bapenda', 'label' => 'SK Kepala Bapenda (Pembebasan)', 'icon' => 'fas fa-building', 'modal' => '#modalSkPembebasan'];
                 }
                 break;
-            case 'Jasa Raharja':
+            case 'JR':
                 if (($permissionSurat['canRespondSP'] ?? null)) {
                     $sTypeOptions[] = ['key' => 'sp_balasan_jr', 'label' => 'SP Balasan Jasa Raharja', 'icon' => 'fas fa-reply', 'modal' => '#modalSpBalasanJR'];
                 } else if (($permissionSurat['canAjukanSK'] ?? null)) {
@@ -626,8 +624,17 @@ class PengajuanController extends Controller
         // Attach file ke media library log
         $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
 
-        // Update sk_status ke terbit
-        $log->update(['sk_status' => 'terbit']);
+        // Update sk_status ke terbit & perbarui teks aksi log
+        $publishedActionText = match ($this->normalizeUnitKerja(Auth::user()->unit_kerja)) {
+            'Polda' => 'SK Penghapusan Regident berhasil diterbitkan',
+            'Bapenda' => 'SK Pembebasan PKB berhasil diterbitkan',
+            'Jasa Raharja' => 'SK Pembebasan SWDKLLJ & Denda Jasa Raharja berhasil diterbitkan',
+            default => str_replace('Draf ', '', str_replace(' berhasil dibuat', ' berhasil diterbitkan', $log->aksi)),
+        };
+        $log->update([
+            'sk_status' => 'terbit',
+            'aksi' => $publishedActionText,
+        ]);
 
         // Dispatch WhatsApp notification
         if ($sk) {
@@ -755,8 +762,12 @@ class PengajuanController extends Controller
             // Attach file ke media library log
             $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
 
-            // Update sp_status ke terbit
-            $log->update(['sp_status' => 'terbit']);
+            // Update sp_status ke terbit & perbarui teks aksi log
+            $publishedSpActionText = str_replace('Draf ', '', str_replace(' berhasil dibuat', ' berhasil diterbitkan', $log->aksi));
+            $log->update([
+                'sp_status' => 'terbit',
+                'aksi' => $publishedSpActionText,
+            ]);
 
             // Jika semua instansi sudah approved dan mempublikasikan (terbit) SP Balasan
             if ($sp && $pengajuan->fresh()->isFullyApprovedByAll()) {
