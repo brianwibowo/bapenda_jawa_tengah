@@ -187,18 +187,22 @@ class PengajuanController extends Controller
             ]);
         }
 
+        // Format & Sanitize input
+        $titleCase = fn($val) => !empty($val) ? ucwords(mb_strtolower(trim($val))) : $val;
+        $upperCase = fn($val) => !empty($val) ? strtoupper(trim($val)) : $val;
+
         // Pisahkan data Pemilik
         $dataPemilik = [
-            'nama_pemilik' => $validatedData['nama_pemilik'],
-            'nik_pemilik' => $validatedData['nik_pemilik'],
-            'alamat_pemilik' => $validatedData['alamat_pemilik'],
-            'telp_pemilik' => $validatedData['telp_pemilik'],
-            'email_pemilik' => $validatedData['email_pemilik'],
+            'nama_pemilik' => $titleCase($validatedData['nama_pemilik']),
+            'nik_pemilik' => $upperCase($validatedData['nik_pemilik']),
+            'alamat_pemilik' => $titleCase($validatedData['alamat_pemilik']),
+            'telp_pemilik' => trim($validatedData['telp_pemilik']),
+            'email_pemilik' => mb_strtolower(trim($validatedData['email_pemilik'])),
         ];
 
         // Cari atau Buat Pemilik baru
         $pemilik = Pemilik::updateOrCreate(
-            ['nik_pemilik' => $validatedData['nik_pemilik']],
+            ['nik_pemilik' => $dataPemilik['nik_pemilik']],
             $dataPemilik
         );
 
@@ -220,6 +224,17 @@ class PengajuanController extends Controller
             'kendaraan_id',
             'pengajuan_id'
         ]);
+
+        // Transform fields with helper mappings
+        $uppercaseKeys = ['nrkb', 'nomor_rangka', 'nomor_mesin', 'nomor_bpkb', 'isi_silinder'];
+        $titleCaseKeys = ['merk_kendaraan', 'tipe_kendaraan', 'jenis_kendaraan', 'model_kendaraan', 'warna_kendaraan', 'jenis_bahan_bakar', 'warna_tnkb'];
+
+        foreach ($uppercaseKeys as $key) {
+            if (isset($dataKendaraan[$key])) $dataKendaraan[$key] = $upperCase($dataKendaraan[$key]);
+        }
+        foreach ($titleCaseKeys as $key) {
+            if (isset($dataKendaraan[$key])) $dataKendaraan[$key] = $titleCase($dataKendaraan[$key]);
+        }
 
         $dataKendaraan['pemilik_id'] = $pemilik->id;
         $dataKendaraan['status'] = 'draft';

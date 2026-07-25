@@ -53,6 +53,50 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     setupGlobalListeners();
+
+    // Auto formatting listeners for real-time capitalization
+    document.addEventListener("input", function (e) {
+        if (!e.target || !e.target.name) return;
+
+        const uppercaseFields = ["nrkb", "nomor_rangka", "nomor_mesin", "nomor_bpkb", "isi_silinder", "nik_pemilik"];
+        if (uppercaseFields.includes(e.target.name)) {
+            const start = e.target.selectionStart;
+            const end = e.target.selectionEnd;
+            e.target.value = e.target.value.toUpperCase();
+            if (start !== null && end !== null) {
+                e.target.setSelectionRange(start, end);
+            }
+        }
+
+        if (e.target.name === "email_pemilik") {
+            const start = e.target.selectionStart;
+            const end = e.target.selectionEnd;
+            e.target.value = e.target.value.toLowerCase();
+            if (start !== null && end !== null) {
+                e.target.setSelectionRange(start, end);
+            }
+        }
+    });
+
+    document.addEventListener("focusout", function (e) {
+        if (!e.target || !e.target.name || !e.target.value) return;
+
+        const titleCaseFields = [
+            "nama_pemilik",
+            "alamat_pemilik",
+            "merk_kendaraan",
+            "tipe_kendaraan",
+            "jenis_kendaraan",
+            "model_kendaraan",
+            "warna_kendaraan",
+            "jenis_bahan_bakar",
+            "warna_tnkb",
+        ];
+
+        if (titleCaseFields.includes(e.target.name)) {
+            e.target.value = e.target.value.replace(/\b\w/g, (l) => l.toUpperCase());
+        }
+    });
 });
 
 /**

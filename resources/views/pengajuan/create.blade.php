@@ -97,16 +97,15 @@
                                     <div class="card-body">
                                         <div class="mb-3">
                                             <label class="form-label">Nama Pemilik <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="nama_pemilik" required>
+                                            <input type="text" class="form-control text-capitalize" name="nama_pemilik" autocapitalize="words" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">NIK/TDP/NIB/Kitas/Kitab <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="nik_pemilik" required>
+                                            <input type="text" class="form-control text-uppercase" name="nik_pemilik" autocapitalize="characters" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Alamat <span class="text-danger">*</span></label>
-                                            <textarea class="form-control" name="alamat_pemilik" rows="3"
-                                                required></textarea>
+                                            <textarea class="form-control text-capitalize" name="alamat_pemilik" rows="3" autocapitalize="words" required></textarea>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">No. TLP/HP <span class="text-danger">*</span></label>
@@ -114,7 +113,7 @@
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Email <span class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="email_pemilik" required>
+                                            <input type="email" class="form-control text-lowercase" name="email_pemilik" required>
                                         </div>
                                     </div>
                                 </div>
@@ -129,26 +128,26 @@
                                     <div class="card-body">
                                         <div class="mb-3">
                                             <label class="form-label">NRKB <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="nrkb" required>
+                                            <input type="text" class="form-control text-uppercase" name="nrkb" autocapitalize="characters" required>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Merk <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="merk_kendaraan" required>
+                                                <input type="text" class="form-control text-capitalize" name="merk_kendaraan" autocapitalize="words" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Tipe <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="tipe_kendaraan" required>
+                                                <input type="text" class="form-control text-capitalize" name="tipe_kendaraan" autocapitalize="words" required>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Jenis <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="jenis_kendaraan" required>
+                                                <input type="text" class="form-control text-capitalize" name="jenis_kendaraan" autocapitalize="words" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Model <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="model_kendaraan" required>
+                                                <input type="text" class="form-control text-capitalize" name="model_kendaraan" autocapitalize="words" required>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -159,33 +158,33 @@
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Isi Silinder / Daya Listrik <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="isi_silinder" required>
+                                                <input type="text" class="form-control text-uppercase" name="isi_silinder" autocapitalize="characters" required>
                                             </div>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Nomor Rangka <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="nomor_rangka" required>
+                                            <input type="text" class="form-control text-uppercase" name="nomor_rangka" autocapitalize="characters" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Nomor Mesin <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="nomor_mesin" required>
+                                            <input type="text" class="form-control text-uppercase" name="nomor_mesin" autocapitalize="characters" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Warna Kendaraan Bermotor <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="warna_kendaraan" required>
+                                            <input type="text" class="form-control text-capitalize" name="warna_kendaraan" autocapitalize="words" required>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Bahan Bakar / Sumber Energi <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="jenis_bahan_bakar" required>
+                                            <input type="text" class="form-control text-capitalize" name="jenis_bahan_bakar" autocapitalize="words" required>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Warna TNKB <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="warna_tnkb" required>
+                                                <input type="text" class="form-control text-capitalize" name="warna_tnkb" autocapitalize="words" required>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="form-label">Nomor BPKB <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="nomor_bpkb" required>
+                                                <input type="text" class="form-control text-uppercase" name="nomor_bpkb" autocapitalize="characters" required>
                                             </div>
                                         </div>
                                     </div>
