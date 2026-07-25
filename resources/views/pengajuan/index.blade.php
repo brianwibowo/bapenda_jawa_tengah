@@ -181,7 +181,7 @@
                                             <i class="fas fa-file-alt me-1"></i> Baru
                                         </span>
                                     @elseif($pengajuan->status == 'diproses')
-                                        <span class="badge bg-info text-dark px-3 py-2">
+                                        <span class="badge bg-primary text-white px-3 py-2">
                                             <i class="fas fa-spinner me-1"></i> Diproses
                                         </span>
                                     @elseif($pengajuan->status == 'selesai')

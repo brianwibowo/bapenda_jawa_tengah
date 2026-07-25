@@ -10,7 +10,6 @@
             </div>
             <form id="formSkDefault" method="POST" action="{{ $signedUrls['sk_buat'] ?? '#' }}">
                 @csrf
-                <input type="hidden" name="kendaraan_id" value="all">
                 <div class="modal-body">
                     <p class="text-muted mb-3">
                         Anda akan menerbitkan Surat Keputusan untuk pengajuan
@@ -20,9 +19,9 @@
                     <div class="mb-3">
                         <label for="skDefaultKendaraan" class="form-label fw-bold">Pilih Kendaraan</label>
                         <select class="form-select" name="kendaraan_id" id="skDefaultKendaraan" required>
-                            <option value="all">Semua Kendaraan</option>
-                            @foreach($pengajuan->kendaraans as $k)
-                                <option value="{{ $k->id }}">{{ $k->nrkb }} - {{ $k->merk_kendaraan }}</option>
+                            <option value="">-- Pilih Kendaraan (NRKB) --</option>
+                            @foreach($pengajuan->kendaraans as $index => $k)
+                                <option value="{{ $k->id }}">Kendaraan {{ $index + 1 }} — {{ $k->nrkb }}{{ !empty($k->merk_kendaraan) ? ' (' . $k->merk_kendaraan . ')' : '' }}</option>
                             @endforeach
                         </select>
                     </div>

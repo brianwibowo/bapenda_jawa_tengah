@@ -444,7 +444,11 @@ class PengajuanController extends Controller
      */
     public function submitRevision(Request $request, Pengajuan $pengajuan)
     {
-        if (Auth::id() !== $pengajuan->user_id) {
+        $user = Auth::user();
+        $isOwner = ($user && $user->id === $pengajuan->user_id);
+        $isAuthorizedStaff = ($user && $user->can('submit_revision'));
+
+        if (!$isOwner && !$isAuthorizedStaff) {
             abort(403, 'Anda tidak diizinkan melakukan tindakan ini.');
         }
 

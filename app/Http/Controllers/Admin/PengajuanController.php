@@ -788,28 +788,6 @@ class PengajuanController extends Controller
                 }
             }
 
-            // Dispatch WhatsApp notification
-            if ($sp) {
-                $kendaraan = $log->kendaraan;
-                $wpUser = $pengajuan->user;
-                if ($wpUser && $wpUser->no_hp) {
-                    try {
-                        SendWhatsAppNotification::dispatch(
-                            pengajuan: $pengajuan,
-                            kendaraan: $kendaraan,
-                            skType: 'sp_publish',
-                            pdfUrl: $pdfUrlAbsolute,
-                            localPdfPath: $localPdfPath,
-                            wpPhone: $wpUser->no_hp,
-                            wpName: $wpUser->name,
-                            nrkb: $kendaraan->nrkb,
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Publish): ' . $e->getMessage());
-                    }
-                }
-            }
-
             return redirect()->route('admin.pengajuan.show', $pengajuan->id)
                 ->with('success', 'Surat Pengajuan berhasil diterbitkan.');
         } catch (\Throwable $e) {
@@ -895,25 +873,6 @@ class PengajuanController extends Controller
                 'Nomor Surat: ' . $request->nomor_surat,
                 storage_path('app/public/' . $storagePath)
             );
-
-            // Dispatch WA notification (non-blocking, non-fatal)
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    $kendaraan,
-                        skType:       'regident',
-                        pdfUrl:       $pdfUrlAbsolute,
-                        localPdfPath: Storage::disk('public')->path($storagePath),
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         $kendaraan->nrkb,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident): ' . $e->getMessage());
-                }
-            }
         }
 
         return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
@@ -1003,24 +962,6 @@ class PengajuanController extends Controller
             $pdfUrlAbsolute = $media ? $media->getFullUrl() : null;
             $localPdfPath = $media ? $media->getPath() : null;
 
-            // Dispatch WA notification (non-blocking, non-fatal)
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp && $pdfUrlAbsolute && $localPdfPath) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    $kendaraan,
-                        skType:       'polda',
-                        pdfUrl:       $pdfUrlAbsolute,
-                        localPdfPath: $localPdfPath,
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         $kendaraan->nrkb,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Polda): ' . $e->getMessage());
-                }
-            }
         }
 
         // Stream the PDF to browser
@@ -1116,25 +1057,6 @@ class PengajuanController extends Controller
             return $pdf->download($filename);
         }
 
-        // Dispatch WA notification (non-blocking, non-fatal)
-        $wpUser = $pengajuan->user;
-        if ($wpUser && $wpUser->no_hp) {
-            try {
-                SendWhatsAppNotification::dispatch(
-                    pengajuan:    $pengajuan,
-                    kendaraan:    $kendaraan,
-                    skType:       'pembebasan',
-                    pdfUrl:       $pdfUrlAbsolute,
-                    localPdfPath: Storage::disk('public')->path($storagePath),
-                    wpPhone:      $wpUser->no_hp,
-                    wpName:       $wpUser->name,
-                    nrkb:         $kendaraan->nrkb,
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
-            }
-        }
-
         return $pdf->stream($filename);
     }
 
@@ -1204,25 +1126,6 @@ class PengajuanController extends Controller
             'Nomor Surat: ' . $request->nomor_surat,
             storage_path('app/public/' . $storagePath)
         );
-
-        // Dispatch WA notification (non-blocking, non-fatal)
-        $wpUser = $pengajuan->user;
-        if ($wpUser && $wpUser->no_hp) {
-            try {
-                SendWhatsAppNotification::dispatch(
-                    pengajuan:    $pengajuan,
-                    kendaraan:    $kendaraan,
-                    skType:       'sk_penghapusan_regident_freysia',
-                    pdfUrl:       $pdfUrlAbsolute,
-                    localPdfPath: Storage::disk('public')->path($storagePath),
-                    wpPhone:      $wpUser->no_hp,
-                    wpName:       $wpUser->name,
-                    nrkb:         $kendaraan->nrkb,
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Penghapusan Regident Freysia): ' . $e->getMessage());
-            }
-        }
 
         return $pdf->stream('SK_PENGHAPUSAN_REGIDENT_' . str_replace(' ', '_', $kendaraan->nrkb) . '.pdf');
     }

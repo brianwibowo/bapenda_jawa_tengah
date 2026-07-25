@@ -36,13 +36,22 @@
                         <div class="small text-muted mb-1">Nomor Pengajuan</div>
                         <div class="h3 mb-0 fw-semibold text-dark">{{ $pengajuan->nomor_pengajuan }}</div>
                     </div>
-                    <div>
+                    <div class="d-flex align-items-center gap-2">
+                        @php
+                            $latestLog = \App\Models\KendaraanLog::whereIn('kendaraan_id', $pengajuan->kendaraans->pluck('id'))
+                                ->latest()
+                                ->first();
+                            $latestStatusText = $latestLog ? $latestLog->aksi : 'Pengajuan Baru';
+                        @endphp
+                        <span class="badge bg-primary px-3 py-2 fs-6 fw-normal shadow-sm" style="background-color: #0d6efd; color: #fff;">
+                            <i class="fas fa-info-circle me-1"></i> {{ $latestStatusText }}
+                        </span>
                         <a href="{{ route('pengajuan.index') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Kembali
                         </a>
                     </div>
                 </div>
-                <div class="progress-label mt-3">Progres ({{ $progressPercent }}% - {{ $progressValue }} / {{ $totalSurat }})</div>
+                <div class="progress-label mt-2">Progres ({{ $progressValue }} / {{ $totalSurat }})</div>
                 <div class="progress slim-progress">
                     <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progressPercent }}%;"></div>
                 </div>
@@ -250,7 +259,7 @@
                                                             @elseif($kendaraan->status == 'pengajuan')
                                                                 <span class="badge bg-warning text-dark">Diajukan</span>
                                                             @elseif($kendaraan->status == 'diproses')
-                                                                <span class="badge bg-info text-dark">Diproses</span>
+                                                                <span class="badge bg-primary text-white">Diproses</span>
                                                             @elseif($kendaraan->status == 'selesai')
                                                                 <span class="badge bg-success">Selesai</span>
                                                             @elseif($kendaraan->status == 'ditolak')

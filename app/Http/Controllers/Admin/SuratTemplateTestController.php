@@ -153,7 +153,7 @@ class SuratTemplateTestController extends Controller
 
         $viewMap = [
             'sp_default' => 'pdf.view_sp',
-            'sp_polda2bapendajr' => 'pdf.sp_polda2bapendaNjrtest',
+            'sp_polda2bapendajr' => 'pdf.sp_polda2bapendaNjr',
             'sp_balasan_bapenda' => 'pdf.sp_balasan_bapenda',
             'sp_balasan_jr' => 'pdf.sp_balasan_jr',
             'sk_default' => 'pdf.view_sk',

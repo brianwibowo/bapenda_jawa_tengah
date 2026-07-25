@@ -44,7 +44,7 @@
                     <select name="domisili_regency_id" class="form-select" required>
                         <option value="">— Pilih Domisili —</option>
                         @foreach($regencies as $regency)
-                            <option value="{{ $regency->id }}" @selected(old('domisili_regency_id', $user->domisili_regency_id) === $regency->id)>
+                            <option value="{{ $regency->id }}" @selected(old('domisili_regency_id', $user->domisili_regency_id) == $regency->id)>
                                 {{ $regency->name }}
                             </option>
                         @endforeach

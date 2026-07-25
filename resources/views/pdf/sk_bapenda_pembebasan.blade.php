@@ -204,19 +204,23 @@
     </table>
 
     {{-- TTD - menyambung di page 1 --}}
-    <table style="width: 100%; margin-top: 12px;">
+    <table style="width: 100%; margin-top: 20px;">
         <tr>
-            <td style="width: 35%;"></td>
-            <!-- Tempat & Tanggal -->
-            <td style="width: 65%; vertical-align: top; text-align: left; padding-left: 1px;">
-                Ditetapkan di Semarang<br>
-                Pada Tanggal: {{ $tanggal_sk ?? '-' }}<br>
-                <div class="b uc" style="margin-top: 4px; text-align: center;">
-                    Kepala Badan Pengelola Pendapatan Daerah<br>Provinsi Jawa Tengah
+            <td style="width: 45%;"></td>
+            <!-- Tempat & Tanggal ditaruh pojok kanan -->
+            <td style="width: 55%; vertical-align: top; text-align: left; padding-left: 25px;">
+                <div>Ditetapkan di {{ $tempat_sk ?? 'Semarang' }}</div>
+                <div>Pada Tanggal: {{ $tanggal_sk ?? '-' }}</div>
+                
+                {{-- Spasi antar baris antara Ditetapkan dan KEPALA BADAN --}}
+                <div class="b uc" style="margin-top: 20px; text-align: center; line-height: 1.4;">
+                    KEPALA BADAN PENGELOLA PENDAPATAN DAERAH<br>PROVINSI JAWA TENGAH
                 </div>
-                <div class="stempel-container" style="height: 45px;">
+                
+                <div class="stempel-container" style="height: 65px;">
                     <!-- <img src="{{ public_path('images/stempel_bapenda.png') }}" alt=""> -->
                 </div>
+                
                 <div class="b" style="text-align: center;">
                     {{ $nama_direktur ?? 'NADI SANTOSO' }}
                 </div>
@@ -224,17 +228,17 @@
         </tr>
     </table>
 
-    {{-- Salinan - langsung menyambung di bawah TTD --}}
-    <table style="width: 100%; margin-top: 15px;">
+    {{-- Salinan - dengan spasi vertikal ekstra (margin-top & line-height) --}}
+    <table style="width: 100%; margin-top: 30px;">
         <tr>
             <td style="vertical-align: top;">
-                <div style="font-size: 8pt; line-height: 1.2;">Salinan : Keputusan ini disampaikan kepada Yth:<br>1. Dirlantas Polda Jawa Tengah;<br>2. Inspektur Provinsi Jawa Tengah;<br>3. Kepala BPKAD Provinsi Jawa Tengah;<br>4. Kepala Biro Hukum SETDA Provinsi Jawa Tengah;<br>5. Kepala PT. Jasa Raharja Kantor Wilayah Jawa Tengah;<br>6. Sekretaris Bapenda Prov. Jateng;<br>7. Kepala Bidang Pajak Kendaraan Bermotor, Bapenda Provinsi Jawa Tengah;<br>8. Kepala Bidang Evaluasi dan Pembinaan, Bapenda Provinsi Jawa Tengah;<br>9. Kepala Bidang Pengolahan Data dan Pengembangan Pendapatan Bapenda Provinsi Jawa Tengah;<br>10. Kepala UPPD Kabupaten {{ $tempat_pembuat_surat_regident ?? '-' }};<br>11. Kepala Desa Ganduwetan, Kecamatan Ngadirejo, Kabupaten Temanggung;<br>12. Pertinggal.</div>
+                <div style="font-size: 8.5pt; line-height: 1.35;">Salinan : Keputusan ini disampaikan kepada Yth:<br>1. Dirlantas Polda Jawa Tengah;<br>2. Inspektur Provinsi Jawa Tengah;<br>3. Kepala BPKAD Provinsi Jawa Tengah;<br>4. Kepala Biro Hukum SETDA Provinsi Jawa Tengah;<br>5. Kepala PT. Jasa Raharja Kantor Wilayah Jawa Tengah;<br>6. Sekretaris Bapenda Prov. Jateng;<br>7. Kepala Bidang Pajak Kendaraan Bermotor, Bapenda Provinsi Jawa Tengah;<br>8. Kepala Bidang Evaluasi dan Pembinaan, Bapenda Provinsi Jawa Tengah;<br>9. Kepala Bidang Pengolahan Data dan Pengembangan Pendapatan Bapenda Provinsi Jawa Tengah;<br>10. Kepala UPPD Kabupaten {{ $tempat_pembuat_surat_regident ?? '-' }};<br>11. Kepala Desa Ganduwetan, Kecamatan Ngadirejo, Kabupaten Temanggung;<br>12. Pertinggal.</div>
             </td>
         </tr>
     </table>
 
     <!-- Garis Paling Akhir -->
-    <hr style="border: 1px solid #000; margin-top: 5px;">
+    <hr style="border: 1px solid #000; margin-top: 10px;">
 
 </body>
 </html>

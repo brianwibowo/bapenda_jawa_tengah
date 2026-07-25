@@ -367,28 +367,6 @@ class SuratPengajuanController extends Controller
             }
         }
 
-        /// Dispatch WA notification
-        $wpUser = $pengajuan->user;
-        if ($wpUser && $wpUser->no_hp) {
-            $nrkbString = $kendaraans->count() === 1 
-                ? $kendaraans->first()->nrkb 
-                : $kendaraans->pluck('nrkb')->implode(', ');
-            try {
-                SendWhatsAppNotification::dispatch(
-                    pengajuan:    $pengajuan,
-                    kendaraan:    $kendaraans->first(),
-                    skType:       'samsat',
-                    pdfUrl:       null,
-                    localPdfPath: null,
-                    wpPhone:      $wpUser->no_hp,
-                    wpName:       $wpUser->name,
-                    nrkb:         $nrkbString,
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Polda): ' . $e->getMessage());
-            }
-        }
-
         return [
             'pdf_url' => null,
             'local_pdf_path' => null,
@@ -421,18 +399,24 @@ class SuratPengajuanController extends Controller
 
         $rawRujukan = $request->input('group-rujukan', []);
         $parsedRujukan = collect($rawRujukan)->pluck('rujukan')->filter()->map(fn($item) => trim($item))->filter()->toArray();
+        if (empty($parsedRujukan)) {
+            $parsedRujukan = ['Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan;'];
+        }
 
         $rawTembusan = $request->input('group-tembusan', []);
         $parsedTembusan = collect($rawTembusan)->pluck('tembusan')->filter()->map(fn($item) => trim($item))->filter()->toArray();
+        if (empty($parsedTembusan)) {
+            $parsedTembusan = ['Kapolda Jateng.'];
+        }
 
         $dataPdf = [
             'kendaraans' => $kendaraans,
-            'nomor_surat' => $request->nomor_surat,
-            'nama_pembuat' => $request->nama_pembuat,
-            'tempat' => $request->tempat,
-            'tanggal_keluar' => $request->tanggal_keluar,
-            'nama_direktur' => $request->nama_direktur,
-            'pangkat_direktur' => $request->pangkat_direktur,
+            'nomor_surat' => $request->nomor_surat ?: 'B/9660-QE/IV/YAN.1./' . date('Y') . '/DITLANTAS',
+            'nama_pembuat' => $request->nama_pembuat ?: 'Dwiyanto Setyo Budi',
+            'tempat' => $request->tempat ?: 'Semarang',
+            'tanggal_keluar' => $request->tanggal_keluar ?: \Carbon\Carbon::now()->translatedFormat('d F Y'),
+            'nama_direktur' => $request->nama_direktur ?: 'M. PRATAMA ADHYASASTRA, S.I.K., S.H., M.H.',
+            'pangkat_direktur' => $request->pangkat_direktur ?: 'KOMBES POL',
             'rujukan' => $parsedRujukan,
             'tembusan' => $parsedTembusan,
         ];
@@ -460,27 +444,6 @@ class SuratPengajuanController extends Controller
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
         $localPdfPath = Storage::disk('public')->path($storagePath);
 
-        if (!$request->has('preview')) {
-            // Dispatch WA notification
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    $kendaraans->first(),
-                        skType:       'polda',
-                        pdfUrl:       $pdfUrlAbsolute,
-                        localPdfPath: $localPdfPath,
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         $nrkbString,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Polda): ' . $e->getMessage());
-                }
-            }
-        }
-
         return [
             'pdf_url' => $pdfUrlAbsolute,
             'local_pdf_path' => $localPdfPath,
@@ -493,14 +456,14 @@ class SuratPengajuanController extends Controller
     public function generateSPPenghapusanRegident(Request $request, Pengajuan $pengajuan)
     {
         $request->validate([
-            'nomor_surat' => 'required',
-            'sifat' => 'required|string',
-            'lampiran' => 'required|string',
-            'hal' => 'required|string',
-            'provinsi' => 'required|string',
-            'nama_penandatangan' => 'required|string',
-            'jabatan' => 'required|string',
-            'nip' => 'required|string',
+            'nomor_surat' => 'nullable|string',
+            'sifat' => 'nullable|string',
+            'lampiran' => 'nullable|string',
+            'hal' => 'nullable|string',
+            'provinsi' => 'nullable|string',
+            'nama_penandatangan' => 'nullable|string',
+            'jabatan' => 'nullable|string',
+            'nip' => 'nullable|string',
         ]);
 
         $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
@@ -515,15 +478,15 @@ class SuratPengajuanController extends Controller
 
         $dataPdf = [
             'kendaraans' => $kendaraans,
-            // Dari Form Input
-            'nomor_surat' => strtoupper($request->nomor_surat),
-            'sifat' => strtoupper($request->sifat),
-            'lampiran' => strtoupper($request->lampiran),
-            'hal' => strtoupper($request->hal),
-            'provinsi' => $request->provinsi,
-            'nama_penandatangan' => $request->nama_penandatangan,
-            'jabatan' => $request->jabatan,
-            'nip' => strtoupper($request->nip),
+            // Dari Form Input dengan fallback
+            'nomor_surat' => strtoupper($request->nomor_surat ?: 'SKET/' . date('m') . '/' . date('m/Y') . '/Ditlantas'),
+            'sifat' => strtoupper($request->sifat ?: 'SEGERA'),
+            'lampiran' => strtoupper($request->lampiran ?: '1 BERKAS'),
+            'hal' => strtoupper($request->hal ?: 'PEMBEBASAN PAJAK KENDARAAN BERMOTOR'),
+            'provinsi' => $request->provinsi ?: 'Jawa Tengah',
+            'nama_penandatangan' => $request->nama_penandatangan ?: 'NADIATUL ANWARAH, S.H., M.H.',
+            'jabatan' => $request->jabatan ?: 'Kepala Bidang Pajak Kendaraan Bermotor',
+            'nip' => strtoupper($request->nip ?: '19780211 200501 2 007'),
             'tanggal_keluar' => \Carbon\Carbon::now()->translatedFormat('d F Y'),
         ];
 
@@ -551,27 +514,6 @@ class SuratPengajuanController extends Controller
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
         $localPdfPath = Storage::disk('public')->path($storagePath);
 
-        if (!$request->has('preview')) {
-            // Dispatch WA notification
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    $kendaraans->first(),
-                        skType:       'sp_penghapusan_regident',
-                        pdfUrl:       $pdfUrlAbsolute,
-                        localPdfPath: $localPdfPath,
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         $nrkbString,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Balasan Bapenda): ' . $e->getMessage());
-                }
-            }
-        }
-
         return [
             'pdf_url' => $pdfUrlAbsolute,
             'local_pdf_path' => $localPdfPath,
@@ -584,13 +526,13 @@ class SuratPengajuanController extends Controller
     public function generateSPBalasanJR(Request $request, Pengajuan $pengajuan)
     {
         $request->validate([
-            'nomor_surat' => 'required',
-            'nomor_surat_regident' => 'required|string',
-            'nomor_surat_bapenda' => 'required|string',
-            'tempat_surat' => 'required|string',
-            'tanggal_surat' => 'required|string',
-            'nama_penandatangan' => 'required|string',
-            'jabatan_penandatangan' => 'required|string',
+            'nomor_surat' => 'nullable|string',
+            'nomor_surat_regident' => 'nullable|string',
+            'nomor_surat_bapenda' => 'nullable|string',
+            'tempat_surat' => 'nullable|string',
+            'tanggal_surat' => 'nullable|string',
+            'nama_penandatangan' => 'nullable|string',
+            'jabatan_penandatangan' => 'nullable|string',
         ]);
 
         $kendaraans = $pengajuan->kendaraans()->with('pemilik')->get();
@@ -606,13 +548,13 @@ class SuratPengajuanController extends Controller
 
         $dataPdf = [
             'kendaraans' => $kendaraans,
-            'nomor_surat' => strtoupper($request->nomor_surat),
-            'nomor_surat_regident' => strtoupper($request->nomor_surat_regident),
-            'nomor_surat_bapenda' => strtoupper($request->nomor_surat_bapenda),
-            'tempat_surat' => $request->tempat_surat,
-            'tanggal_surat' => $request->tanggal_surat,
-            'nama_penandatangan' => $request->nama_penandatangan,
-            'jabatan_penandatangan' => $request->jabatan_penandatangan,
+            'nomor_surat' => strtoupper($request->nomor_surat ?: 'AS/R/21/' . date('Y')),
+            'nomor_surat_regident' => strtoupper($request->nomor_surat_regident ?: 'B/4188/IV/YAN.1/' . date('Y') . '/Ditlantas'),
+            'nomor_surat_bapenda' => strtoupper($request->nomor_surat_bapenda ?: 'S/900.1.13.1/53/' . date('Y')),
+            'tempat_surat' => $request->tempat_surat ?: 'Semarang',
+            'tanggal_surat' => $request->tanggal_surat ?: \Carbon\Carbon::now()->translatedFormat('d F Y'),
+            'nama_penandatangan' => $request->nama_penandatangan ?: 'Triadi',
+            'jabatan_penandatangan' => $request->jabatan_penandatangan ?: 'Kepala Kantor Wilayah Utama',
             'data' => (object)[
                 'nrkb' => $firstKendaraan->nrkb ?? '-',
                 'nama' => optional($firstKendaraan->pemilik)->nama_pemilik ?? '-',
@@ -647,27 +589,6 @@ class SuratPengajuanController extends Controller
         Storage::disk('public')->put($storagePath, $pdf->output());
         $pdfUrlAbsolute = asset('storage/' . $storagePath);
         $localPdfPath = Storage::disk('public')->path($storagePath);
-
-        if (!$request->has('preview')) {
-            // Dispatch WA notification
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan:    $pengajuan,
-                        kendaraan:    $kendaraans->first(),
-                        skType:       'sp_balasan_jr',
-                        pdfUrl:       $pdfUrlAbsolute,
-                        localPdfPath: $localPdfPath,
-                        wpPhone:      $wpUser->no_hp,
-                        wpName:       $wpUser->name,
-                        nrkb:         $nrkbString,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Balasan JR): ' . $e->getMessage());
-                }
-            }
-        }
 
         return [
             'pdf_url' => $pdfUrlAbsolute,
@@ -870,123 +791,89 @@ class SuratPengajuanController extends Controller
 
         $instansiUser = $this->normalizeUnitKerja(Auth::user()->unit_kerja); // Misal: Bapenda / Jasa Raharja
         $default = false;
-        // ── KELOMPOK AJAX / PREVIEW FLOW (Untuk submit dari dynamic modal) ──
-        if ($request->ajax() || $request->expectsJson() || $request->has('preview') || $request->hasHeader('X-CSRF-TOKEN') || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-            if ($instansiUser == "Bapenda") {
-                $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
-            } else if ($instansiUser == "Jasa Raharja") {
-                $data = $this->generateSPBalasanJR($request, $pengajuan);
-            } else {
-                $data = $this->generateSPDefault($request, $pengajuan);
-                $default = true;
-            }
-
-            if ($request->has('preview')) {
-                return response()->json([
-                    'message' => 'Preview Surat Pengajuan',
-                    'data' => [
-                        'pdf_url' => $data['pdf_url'] ?? null,
-                    ]
-                ]);
-            }
-
-            // Ambil data array saat ini
-            $persetujuan = $surat->persetujuan_unit_kerja ?? [];
-            $baseLogTime = now();
-
-            // Cari instansi yang sesuai dan ubah statusnya
-            foreach ($persetujuan as &$item) {
-                if (strcasecmp($item['instansi'] ?? '', $instansiUser) === 0 && ($item['status'] ?? null) == 'pending') {
-                    $item['status'] = 'approved';
-                    $item['user_id'] = Auth::id();
-                    $item['updated_at'] = $baseLogTime;
-                    $item['pdf_url'] = $data['pdf_url'] ?? null;
-                    $item['local_pdf_path'] = $data['local_pdf_path'] ?? null;
-                }
-            }
-
-            // Update persetujuan status pada SP yang aktif (SP Polda/asal)
-            // JANGAN timpa pdf_url — itu milik SP pengajuan asli (dari Polda)
-            // Simpan PDF balasan di kolom terpisah pdf_balasan_url
-            $surat->pdf_balasan_url        = $data['pdf_url'] ?? null;
-            $surat->local_pdf_balasan_path = $data['local_pdf_path'] ?? null;
-            $surat->persetujuan_unit_kerja = $persetujuan;
-            $surat->save();
-
-            foreach ($pengajuan->kendaraans as $k) {
-                $log = $this->logSuratActionByKendaraanId(
-                    $pengajuan,
-                    $k->id,
-                    $instansiUser == "Bapenda" ? 'SP Balasan Penghapusan Regident berhasil diterbitkan' : ($instansiUser == "Jasa Raharja" ? 'SP Balasan Jasa Raharja berhasil diterbitkan' : 'SP Balasan berhasil diterbitkan'),
-                    'Nomor Surat: ' . $request->nomor_surat,
-                    $data['local_pdf_path'] ?? null,
-                    $surat->id
-                );
-                // Non-default SP respond: always draft
-                $log->update(['sp_status' => $default ? 'terbit' : 'draft']);
-            }
-
-            // Jika semua instansi sudah approved, ubah status kendaraan ke diproses
-            if ($surat->fresh()->isFullyApprovedByAll()) {
-                foreach ($pengajuan->kendaraans as $k) {
-                    $k->update(['status' => 'diproses']);
-                    $logDiterima = $this->logSuratActionByKendaraanId(
-                        $pengajuan,
-                        $k->id,
-                        'Surat Pengajuan Diterima oleh Semua Instansi',
-                        'Status kendaraan diperbarui ke Diproses.',
-                        null,
-                        $surat->id
-                    );
-                    $logDiterima->created_at = $baseLogTime->copy()->addSecond();
-                    $logDiterima->updated_at = $baseLogTime->copy()->addSecond();
-                    $logDiterima->save();
-                }
-            }
-
-            $successMsg = 'Surat Pengajuan berhasil disimpan sebagai draft.';
-            session()->flash('success', $successMsg);
-
-            if ($request->ajax() || $request->expectsJson() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'success' => true,
-                    'message' => $successMsg,
-                    'redirect_url' => route('admin.pengajuan.show', $pengajuan->id)
-                ]);
-            }
-
-            return redirect()->route('admin.pengajuan.show', $pengajuan->id)
-                ->with('success', $successMsg);
+        
+        if ($instansiUser == "Bapenda") {
+            $data = $this->generateSPPenghapusanRegident($request, $pengajuan);
+        } else if ($instansiUser == "Jasa Raharja") {
+            $data = $this->generateSPBalasanJR($request, $pengajuan);
+        } else {
+            $data = $this->generateSPDefault($request, $pengajuan);
+            $default = true;
         }
 
-        // ── KELOMPOK REDIRECT FLOW (NON-AJAX / FALLBACK) ──
+        if ($request->has('preview')) {
+            return response()->json([
+                'message' => 'Preview Surat Pengajuan',
+                'data' => [
+                    'pdf_url' => $data['pdf_url'] ?? null,
+                ]
+            ]);
+        }
+
+        // Ambil data array saat ini
         $persetujuan = $surat->persetujuan_unit_kerja ?? [];
+        $baseLogTime = now();
 
         // Cari instansi yang sesuai dan ubah statusnya
         foreach ($persetujuan as &$item) {
             if (strcasecmp($item['instansi'] ?? '', $instansiUser) === 0 && ($item['status'] ?? null) == 'pending') {
                 $item['status'] = 'approved';
                 $item['user_id'] = Auth::id();
-                $item['updated_at'] = now();
+                $item['updated_at'] = $baseLogTime;
+                $item['pdf_url'] = $data['pdf_url'] ?? null;
+                $item['local_pdf_path'] = $data['local_pdf_path'] ?? null;
             }
         }
 
-        // Simpan kembali
+        // Update persetujuan status pada SP yang aktif
+        $surat->pdf_balasan_url        = $data['pdf_url'] ?? null;
+        $surat->local_pdf_balasan_path = $data['local_pdf_path'] ?? null;
         $surat->persetujuan_unit_kerja = $persetujuan;
         $surat->save();
 
-        $this->logSuratAction(
-            $pengajuan,
-            'Surat Pengajuan disetujui oleh ' . Auth::user()->unit_kerja,
-            'Nomor SP: ' . $surat->nomor_sp,
-            $surat->id
-        );
-
-        if ($surat->fresh()->isFullyApprovedByAll() && $surat->pengajuan->kendaraans()->where('status', 'pengajuan')->count()) {
-            $surat->pengajuan->kendaraans()->update(['status' => 'diproses']);
+        foreach ($pengajuan->kendaraans as $k) {
+            $log = $this->logSuratActionByKendaraanId(
+                $pengajuan,
+                $k->id,
+                $instansiUser == "Bapenda" ? 'SP Balasan Penghapusan Regident berhasil diterbitkan' : ($instansiUser == "Jasa Raharja" ? 'SP Balasan Jasa Raharja berhasil diterbitkan' : 'SP Balasan berhasil diterbitkan'),
+                'Nomor Surat: ' . ($request->nomor_surat ?: $surat->nomor_sp),
+                $data['local_pdf_path'] ?? null,
+                $surat->id
+            );
+            $log->update(['sp_status' => $default ? 'terbit' : 'draft']);
         }
 
-        return redirect()->route('admin.pengajuan.show', $surat->pengajuan_id)->with('success', 'Status berhasil diperbarui');
+        // Jika semua instansi sudah approved, ubah status kendaraan ke diproses
+        if ($surat->fresh()->isFullyApprovedByAll()) {
+            foreach ($pengajuan->kendaraans as $k) {
+                $k->update(['status' => 'diproses']);
+                $logDiterima = $this->logSuratActionByKendaraanId(
+                    $pengajuan,
+                    $k->id,
+                    'Surat Pengajuan Diterima oleh Semua Instansi',
+                    'Status kendaraan diperbarui ke Diproses.',
+                    null,
+                    $surat->id
+                );
+                $logDiterima->created_at = $baseLogTime->copy()->addSecond();
+                $logDiterima->updated_at = $baseLogTime->copy()->addSecond();
+                $logDiterima->save();
+            }
+        }
+
+        $successMsg = 'Surat Pengajuan berhasil disimpan sebagai draft.';
+        session()->flash('success', $successMsg);
+
+        if ($request->ajax() || $request->expectsJson() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'redirect_url' => route('admin.pengajuan.show', $pengajuan->id)
+            ]);
+        }
+
+        return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+            ->with('success', $successMsg);
     }
 
     public function hasPersetujuan(Request $request, $id)

@@ -99,7 +99,7 @@
                             @if($kendaraan->status == 'pengajuan')
                                 <span class="badge bg-warning text-dark">Diajukan</span>
                             @elseif($kendaraan->status == 'diproses')
-                                <span class="badge bg-info text-dark">Diproses</span>
+                                <span class="badge bg-primary text-white">Diproses</span>
                             @elseif($kendaraan->status == 'selesai')
                                 <span class="badge bg-success">Selesai</span>
                             @elseif($kendaraan->status == 'ditolak')

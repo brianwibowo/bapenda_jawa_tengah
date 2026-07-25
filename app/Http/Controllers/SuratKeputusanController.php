@@ -290,7 +290,7 @@ class SuratKeputusanController extends Controller
             'tempat_sk' => 'required|string',
             'tanggal_sk' => 'required|string',
             'nama_penandatangan' => 'required|string',
-            'metode_penanda_tangan' => 'required|string',
+            'metode_penanda_tangan' => 'nullable|string',
         ]);
 
         // Ambil data kendaraan berdasarkan pilihan dari form modal
@@ -380,49 +380,6 @@ class SuratKeputusanController extends Controller
 
             $arrayResult[$k->id]['pdf_url']        = $pdfUrlAbsolute;
             $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
-        }
-
-        if (!isset($request->preview)) {
-            // Dispatch WA notification (non-blocking, non-fatal)
-            $wpUser = $pengajuan->user;
-            if ($request->kendaraan_id === 'all') {
-                if ($wpUser && $wpUser->no_hp) {
-                    try {
-                        SendWhatsAppNotification::dispatch(
-                            pengajuan:    $pengajuan,
-                            kendaraan:    null,
-                            skType:       'pembebasan',
-                            pdfUrl:       null,
-                            localPdfPath: null,
-                            wpPhone:      $wpUser->no_hp,
-                            wpName:       $wpUser->name,
-                            nrkb:         null,
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK JR): ' . $e->getMessage());
-                    }
-                }
-            } else {
-                $k = $kendaraan->first();
-                if ($wpUser && $wpUser->no_hp) {
-                    try {
-                        $pdfUrlAbsolute = $arrayResult[$k->id]['pdf_url'];
-                        $localPdfPath = $arrayResult[$k->id]['local_pdf_path'];
-                        SendWhatsAppNotification::dispatch(
-                            pengajuan:    $pengajuan,
-                            kendaraan:    $k,
-                            skType:       'pembebasan',
-                            pdfUrl:       $pdfUrlAbsolute ?? '',
-                            localPdfPath: $localPdfPath ?? '',
-                            wpPhone:      $wpUser->no_hp,
-                            wpName:       $wpUser->name,
-                            nrkb:         $k->nrkb,
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK JR): ' . $e->getMessage());
-                    }
-                }
-            }
         }
 
         return $arrayResult;
@@ -537,7 +494,7 @@ class SuratKeputusanController extends Controller
                 $log = $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
-                    'SK Penghapusan Regident berhasil diterbitkan',
+                    'Draf SK Penghapusan Regident berhasil dibuat',
                     'Nomor Surat: ' . $request->nomor_surat,
                     storage_path('app/public/' . $storagePath)
                 );
@@ -546,49 +503,6 @@ class SuratKeputusanController extends Controller
 
             $arrayResult[$k->id]['pdf_url'] = $pdfUrlAbsolute;
             $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
-        }
-
-        if (!isset($request->preview)) {
-            if ($request->kendaraan_id === 'all') {
-                // Dispatch WA notification untuk semua kendaraan (non-blocking, non-fatal)
-                $wpUser = $pengajuan->user;
-                if ($wpUser && $wpUser->no_hp) {
-                    try {
-                        SendWhatsAppNotification::dispatch(
-                            pengajuan:    $pengajuan,
-                            kendaraan:    null, // Karena ini untuk semua kendaraan, kita bisa kirim null atau array kendaraan
-                            skType:       'regident',
-                            pdfUrl:       null, // Bisa dikirim null atau array URL PDF jika ingin mengirim per kendaraan
-                            localPdfPath: null, // Bisa dikirim null atau array path PDF jika ingin mengirim per kendaraan
-                            wpPhone:      $wpUser->no_hp,
-                            wpName:       $wpUser->name,
-                            nrkb:         null, // Karena ini untuk semua kendaraan, kita bisa kirim null atau array NRKB jika ingin mengirim per kendaraan
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident - All): ' . $e->getMessage());
-                    }
-                }
-            } else {
-                // Dispatch WA notification untuk single kendaraan (non-blocking, non-fatal)
-                $k = $kendaraan->first(); // Karena ini hanya untuk satu kendaraan
-                $wpUser = $pengajuan->user;
-                if ($wpUser && $wpUser->no_hp) {
-                    try {
-                        SendWhatsAppNotification::dispatch(
-                            pengajuan:    $pengajuan,
-                            kendaraan:    $k,
-                            skType:       'regident',
-                            pdfUrl:       $arrayResult[$k->id]['pdf_url'] ?? null,
-                            localPdfPath: $arrayResult[$k->id]['local_pdf_path'] ?? null,
-                            wpPhone:      $wpUser->no_hp,
-                            wpName:       $wpUser->name,
-                            nrkb:         $k->nrkb,
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Regident - Single): ' . $e->getMessage());
-                    }
-                }
-            }
         }
 
         return $arrayResult;
@@ -728,48 +642,6 @@ class SuratKeputusanController extends Controller
             $arrayResult[$k->id]['local_pdf_path'] = $localPdfPath;
         }
         
-        if (!isset($request->preview)) {
-            // Dispatch WA notification (non-blocking, non-fatal)
-            $wpUser = $pengajuan->user;
-            if ($request->kendaraan_id === 'all') {
-                if ($wpUser && $wpUser->no_hp) {
-                        // Dispatch WA notification untuk semua kendaraan (non-blocking, non-fatal)
-                    try {
-                        SendWhatsAppNotification::dispatch(
-                            pengajuan:    $pengajuan,
-                            kendaraan:    null,
-                            skType:       'pembebasan',
-                            pdfUrl:       null,
-                            localPdfPath: null,
-                            wpPhone:      $wpUser->no_hp,
-                            wpName:       $wpUser->name,
-                            nrkb:         null,
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
-                    }
-                }
-            }else {
-                $k = $kendaraan->first();
-                if ($wpUser && $wpUser->no_hp) {
-                    try {
-                        SendWhatsAppNotification::dispatch(
-                            pengajuan:    $pengajuan,
-                            kendaraan:    $k,
-                            skType:       'pembebasan',
-                            pdfUrl:       $arrayResult[$k->id]['pdf_url'],
-                            localPdfPath: $arrayResult[$k->id]['local_pdf_path'],
-                            wpPhone:      $wpUser->no_hp,
-                            wpName:       $wpUser->name,
-                            nrkb:         $k->nrkb,
-                        );
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SK Pembebasan): ' . $e->getMessage());
-                    }
-                }
-            }
-        }
-
         return $arrayResult;
     }
     
@@ -853,13 +725,11 @@ class SuratKeputusanController extends Controller
             case 'Samsat':
                 return ['Samsat', $this->generateSkDefault($request, $pengajuan), false];
             case 'Polda':
-                return ['Polda', $this->generateSkRegident($request, $pengajuan), false];
+                return ['Polda', $this->generateSkRegident($request, $pengajuan), true];
             case 'Bapenda':
-                $isDraft = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah';
-                return ['Bapenda', $this->generateSkBapenda($request, $pengajuan), $isDraft];
+                return ['Bapenda', $this->generateSkBapenda($request, $pengajuan), true];
             case 'JR':
-                $isDraft = ($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah';
-                return ['Jasa Raharja', $this->generateSkJR($request, $pengajuan), $isDraft];
+                return ['Jasa Raharja', $this->generateSkJR($request, $pengajuan), true];
             default:
                 return ['Unit Kerja Lain', [], false];
         }
@@ -885,7 +755,7 @@ class SuratKeputusanController extends Controller
 
             if (isset($data[$k->id]['log_id'])) {
                 $updateData = ['sk_id' => $sk->id];
-                $updateData['sk_status'] = (($request->metode_penanda_tangan ?? 'ttd_basah') === 'ttd_basah' && $isDraft) ? 'draft' : 'terbit';
+                $updateData['sk_status'] = $isDraft ? 'draft' : 'terbit';
                 KendaraanLog::where('id', $data[$k->id]['log_id'])->update($updateData);
             }
 

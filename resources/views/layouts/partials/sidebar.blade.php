@@ -188,7 +188,7 @@
                     @endcan
 
                     @canany(['view_menu_pengguna', 'view_menu_pengguna_wp'])
-                        <li class="nav-item {{ request()->routeIs('admin.users.wp.*') ? 'active' : '' }}">
+                        <li class="nav-item {{ request()->routeIs('admin.users.wp.*') || request()->routeIs('admin.users.editWp') || request()->routeIs('admin.users.updateWp') ? 'active' : '' }}">
                             <a href="{{ route('admin.users.wp.index') }}">
                                 <i class="fas fa-users"></i>
                                 <p>Manajemen Pengguna</p>

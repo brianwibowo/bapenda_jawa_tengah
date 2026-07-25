@@ -60,32 +60,31 @@
                             <tr>
                                 <td class="text-muted">Tipe Aksi</td>
                                 <td>
-                                    @if($log->isSkDraft() || $log->isSpDraft())
-                                        <span class="badge px-3 py-2" style="background-color: #6c757d; color: #fff;">
-                                            <i class="fas fa-pen-ruler me-1"></i>Draft {{ $log->isSkDraft() ? 'SK' : 'SP' }}
-                                        </span>
-                                    @elseif($log->isSkPublished() || $log->isSpPublished())
-                                        <span class="badge px-3 py-2" style="background-color: #198754; color: #fff;">
-                                            <i class="fas fa-stamp me-1"></i>Terbit
-                                        </span>
-                                    @elseif(in_array($log->tipe, ['komentar', 'catatan_admin']))
-                                        <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
-                                    @elseif($log->tipe === 'revisi')
-                                        <span class="badge bg-warning text-dark px-3 py-2">Revisi / Penolakan Berkas</span>
-                                    @elseif($log->status_baru === 'pengajuan')
-                                        <span class="badge bg-warning text-dark px-3 py-2">Baru (Pengajuan)</span>
-                                    @elseif($log->status_baru === 'diproses')
-                                        <span class="badge bg-info text-dark px-3 py-2">Diproses</span>
-                                    @elseif($log->status_baru === 'selesai' || $log->tipe === 'system')
-                                        @php
-                                            $status_pascal = str($log->status_baru === 'selesai' ? $log->status_baru : $log->tipe)->studly();
-                                        @endphp
-                                        <span class="badge bg-success px-3 py-2">{{ $status_pascal }}</span>
-                                    @elseif($log->status_baru === 'ditolak')
-                                        <span class="badge bg-danger px-3 py-2">Ditolak / Dikembalikan</span>
-                                    @else
-                                        <span class="badge bg-light text-dark px-3 py-2">{{ ucfirst($log->tipe) }}</span>
-                                    @endif
+                                     @if($log->isSkDraft() || $log->isSpDraft())
+                                         <span class="badge px-3 py-2" style="background-color: #6c757d; color: #fff;">
+                                             <i class="fas fa-pen-ruler me-1"></i>Draft {{ $log->isSkDraft() ? 'SK' : 'SP' }}
+                                         </span>
+                                     @elseif($log->isSkPublished() || $log->isSpPublished())
+                                         <span class="badge px-3 py-2" style="background-color: #198754; color: #fff;">
+                                             <i class="fas fa-stamp me-1"></i>Terbit
+                                         </span>
+                                     @elseif($log->status_baru === 'selesai')
+                                         <span class="badge bg-success px-3 py-2">Selesai</span>
+                                     @elseif($log->status_baru === 'diproses')
+                                         <span class="badge bg-primary text-white px-3 py-2">Diproses</span>
+                                     @elseif($log->status_baru === 'pengajuan')
+                                         <span class="badge bg-warning text-dark px-3 py-2">Baru (Pengajuan)</span>
+                                     @elseif($log->status_baru === 'ditolak')
+                                         <span class="badge bg-danger text-white px-3 py-2">Ditolak / Dikembalikan</span>
+                                     @elseif($log->tipe === 'revisi')
+                                         <span class="badge bg-danger text-white px-3 py-2">Revisi / Penolakan Berkas</span>
+                                     @elseif(in_array($log->tipe, ['komentar', 'catatan_admin']))
+                                         <span class="badge bg-secondary px-3 py-2">Catatan / Komentar</span>
+                                     @elseif($log->tipe === 'system')
+                                         <span class="badge bg-secondary px-3 py-2"><i class="fas fa-cogs me-1"></i>Sistem</span>
+                                     @else
+                                         <span class="badge bg-light text-dark px-3 py-2">{{ ucfirst($log->tipe) }}</span>
+                                     @endif
                                 </td>
                             </tr>
                             @if($kendNum)

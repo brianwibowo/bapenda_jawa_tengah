@@ -33,9 +33,24 @@
     <x-slot name="header">
        <div class="card border-0 shadow-sm mb-3 top-summary-card">
         <div class="card-body py-3 px-4">
-            <div class="small text-muted mb-1">Nomor Pengajuan</div>
-            <div class="h3 mb-3 fw-semibold text-dark">{{ $pengajuan->nomor_pengajuan }}</div>
-            <div class="progress-label">Progres ({{ $progressValue }} / {{ $totalSurat }})</div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <div class="small text-muted mb-1">Nomor Pengajuan</div>
+                    <div class="h3 mb-0 fw-semibold text-dark">{{ $pengajuan->nomor_pengajuan }}</div>
+                </div>
+                <div>
+                    @php
+                        $latestLog = \App\Models\KendaraanLog::whereIn('kendaraan_id', $pengajuan->kendaraans->pluck('id'))
+                            ->latest()
+                            ->first();
+                        $latestStatusText = $latestLog ? $latestLog->aksi : 'Pengajuan Baru';
+                    @endphp
+                    <span class="badge bg-primary px-3 py-2 fs-6 fw-normal shadow-sm" style="background-color: #0d6efd; color: #fff;">
+                        <i class="fas fa-info-circle me-1"></i> {{ $latestStatusText }}
+                    </span>
+                </div>
+            </div>
+            <div class="progress-label mt-2">Progres ({{ $progressValue }} / {{ $totalSurat }})</div>
             <div class="progress slim-progress">
                 <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progressPercent }}%;"></div>
             </div>
@@ -210,12 +225,8 @@
                             <div class="card-body p-4">
                                 <h6 class="text-muted mb-3">Pilih Kendaraan</h6>
                                 <div class="d-flex flex-wrap gap-2 vehicle-chip-group" id="vehicleFilterGroup">
-                                    <button type="button" class="btn btn-kendaraan-tab active" data-kendaraan-id="">
-                                        <i class="fas fa-car-side me-2"></i>
-                                        <span>Semua Kendaraan</span>
-                                    </button>
                                     @foreach ($pengajuan->kendaraans as $index => $kend)
-                                        <button type="button" class="btn btn-kendaraan-tab" data-kendaraan-id="{{ $kend->id }}">
+                                        <button type="button" class="btn btn-kendaraan-tab {{ $index === 0 ? 'active' : '' }}" data-kendaraan-id="{{ $kend->id }}">
                                             <i class="fas fa-car me-2"></i>
                                             <span class="d-flex flex-column align-items-start lh-sm">
                                                 <span class="fw-semibold">Kendaraan {{ $index + 1 }}</span>
@@ -233,7 +244,7 @@
                                 @php
                                     $kendaraan->load(['pemilik', 'media']);
                                 @endphp
-                                <div class="kendaraan-detail" data-kendaraan-id="{{ $kendaraan->id }}">
+                                <div class="kendaraan-detail" data-kendaraan-id="{{ $kendaraan->id }}" @if($index !== 0) style="display: none;" @endif>
                                     @include('admin.pengajuan._kendaraan_detail', ['kendaraan' => $kendaraan])
                                 </div>
                             @endforeach
