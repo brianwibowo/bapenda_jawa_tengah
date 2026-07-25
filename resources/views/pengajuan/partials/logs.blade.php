@@ -1279,9 +1279,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const formPublishSp = document.getElementById('formPublishSp');
-    if (formPublishSp) {
-        formPublishSp.addEventListener('submit', function(e) {
+    const formPublishSP = document.getElementById('formPublishSP');
+    if (formPublishSP) {
+        formPublishSP.addEventListener('submit', function(e) {
             if (!confirm('Apakah Anda yakin ingin menerbitkan Surat Pengajuan ini? Setelah diajukan, dokumen tidak dapat diubah.')) {
                 e.preventDefault();
             }

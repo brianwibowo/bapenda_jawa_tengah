@@ -702,114 +702,120 @@ class PengajuanController extends Controller
 
         // Pastikan log ini memang SP draft
         if ($log->sp_status !== 'draft' || !$log->sp_id) {
-            return redirect()->back()->with('error', 'Log ini bukan draft SP yang valid.');
+            \Illuminate\Support\Facades\Log::warning('[PublishSP] Gagal: Log #' . $log->id . ' sp_status=' . ($log->sp_status ?? 'null') . ', sp_id=' . ($log->sp_id ?? 'null'));
+            return redirect()->back()->with('error', 'Log ini bukan draft SP yang valid. (sp_status: ' . ($log->sp_status ?? 'null') . ', sp_id: ' . ($log->sp_id ?? 'null') . ')');
         }
 
-        $pengajuan = $log->kendaraan->pengajuan;
-        $this->authorizeBranch($pengajuan);
+        try {
+            $pengajuan = $log->kendaraan->pengajuan;
+            $this->authorizeBranch($pengajuan);
 
-        // Upload file ke storage
-        $filename = $request->file->getClientOriginalName();
-        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
-        $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'pdf';
-        $storagePath = 'sp/' . $nameWithoutExt . '_' . Str::uuid() . '.' . $extension;
-        Storage::disk('public')->put($storagePath, $request->file('file')->get());
-        $localPdfPath = Storage::disk('public')->path($storagePath);
-        $pdfUrlAbsolute = asset('storage/' . $storagePath);
+            // Upload file ke storage
+            $filename = $request->file->getClientOriginalName();
+            $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+            $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'pdf';
+            $storagePath = 'sp/' . $nameWithoutExt . '_' . Str::uuid() . '.' . $extension;
+            Storage::disk('public')->put($storagePath, $request->file('file')->get());
+            $localPdfPath = Storage::disk('public')->path($storagePath);
+            $pdfUrlAbsolute = asset('storage/' . $storagePath);
 
-        // Update SuratPengajuan record
-        $sp = SuratPengajuan::find($log->sp_id);
-        if ($sp) {
-            $unitKerja = $this->normalizeUnitKerja(Auth::user()->unit_kerja);
-            if ($unitKerja === 'Bapenda' || $unitKerja === 'Jasa Raharja') {
-                $persetujuan = $sp->persetujuan_unit_kerja ?? [];
-                foreach ($persetujuan as &$item) {
-                    if (strcasecmp($item['instansi'] ?? '', $unitKerja) === 0) {
-                        $oldPath = $item['local_pdf_path'] ?? null;
-                        $this->deletePhysicalPdf($oldPath);
-                        $item['pdf_url'] = $pdfUrlAbsolute;
-                        $item['local_pdf_path'] = $pdfUrlAbsolute;
-                        $item['updated_at'] = now();
+            // Update SuratPengajuan record
+            $sp = SuratPengajuan::find($log->sp_id);
+            if ($sp) {
+                $unitKerja = $this->normalizeUnitKerja(Auth::user()->unit_kerja);
+                if ($unitKerja === 'Bapenda' || $unitKerja === 'Jasa Raharja') {
+                    $persetujuan = $sp->persetujuan_unit_kerja ?? [];
+                    foreach ($persetujuan as &$item) {
+                        if (strcasecmp($item['instansi'] ?? '', $unitKerja) === 0) {
+                            $oldPath = $item['local_pdf_path'] ?? null;
+                            $this->deletePhysicalPdf($oldPath);
+                            $item['pdf_url'] = $pdfUrlAbsolute;
+                            $item['local_pdf_path'] = $pdfUrlAbsolute;
+                            $item['updated_at'] = now();
+                        }
+                    }
+                    $this->deletePhysicalPdf($sp->local_pdf_balasan_path);
+                    $sp->update([
+                        'persetujuan_unit_kerja' => $persetujuan,
+                        'local_pdf_balasan_path' => $pdfUrlAbsolute,
+                        'pdf_balasan_url' => $pdfUrlAbsolute,
+                    ]);
+                } else {
+                    $this->deletePhysicalPdf($sp->local_pdf_path);
+                    $sp->update([
+                        'local_pdf_path' => $pdfUrlAbsolute,
+                        'pdf_url' => $pdfUrlAbsolute,
+                    ]);
+                }
+            }
+
+            // Clear old draft media first to avoid double media in the log
+            $log->clearMediaCollection('lampiran_log');
+
+            // Attach file ke media library log
+            $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
+
+            // Update sp_status ke terbit
+            $log->update(['sp_status' => 'terbit']);
+
+            // Jika semua instansi sudah approved dan mempublikasikan (terbit) SP Balasan
+            if ($sp && $pengajuan->fresh()->isFullyApprovedByAll()) {
+                foreach ($pengajuan->kendaraans as $k) {
+                    if ($k->status !== 'diproses') {
+                        $k->update(['status' => 'diproses']);
                     }
                 }
-                $this->deletePhysicalPdf($sp->local_pdf_balasan_path);
-                $sp->update([
-                    'persetujuan_unit_kerja' => $persetujuan,
-                    'local_pdf_balasan_path' => $pdfUrlAbsolute,
-                    'pdf_balasan_url' => $pdfUrlAbsolute,
-                ]);
-            } else {
-                $this->deletePhysicalPdf($sp->local_pdf_path);
-                $sp->update([
-                    'local_pdf_path' => $pdfUrlAbsolute,
-                    'pdf_url' => $pdfUrlAbsolute,
-                ]);
-            }
-        }
 
-        // Clear old draft media first to avoid double media in the log
-        $log->clearMediaCollection('lampiran_log');
+                $alreadyLogged = KendaraanLog::where('sp_id', $sp->id)
+                    ->where('aksi', 'Surat Pengajuan Diterima oleh Semua Instansi')
+                    ->exists();
 
-        // Attach file ke media library log
-        $log->addMedia($localPdfPath)->preservingOriginal()->toMediaCollection('lampiran_log');
-
-        // Update sp_status ke terbit
-        $log->update(['sp_status' => 'terbit']);
-
-        // Jika semua instansi sudah approved dan mempublikasikan (terbit) SP Balasan
-        if ($sp && $pengajuan->fresh()->isFullyApprovedByAll()) {
-            foreach ($pengajuan->kendaraans as $k) {
-                if ($k->status !== 'diproses') {
-                    $k->update(['status' => 'diproses']);
+                if (!$alreadyLogged) {
+                    foreach ($pengajuan->kendaraans as $k) {
+                        $logDiterima = KendaraanLog::create([
+                            'kendaraan_id' => $k->id,
+                            'user_id' => Auth::id(),
+                            'aksi' => 'Surat Pengajuan Diterima oleh Semua Instansi',
+                            'status_baru' => 'diproses',
+                            'tipe' => 'system',
+                            'catatan' => 'Status kendaraan diperbarui ke Diproses.',
+                            'sp_id' => $sp->id,
+                        ]);
+                        $logDiterima->created_at = now();
+                        $logDiterima->updated_at = now();
+                        $logDiterima->save();
+                    }
                 }
             }
 
-            $alreadyLogged = KendaraanLog::where('sp_id', $sp->id)
-                ->where('aksi', 'Surat Pengajuan Diterima oleh Semua Instansi')
-                ->exists();
-
-            if (!$alreadyLogged) {
-                foreach ($pengajuan->kendaraans as $k) {
-                    $logDiterima = KendaraanLog::create([
-                        'kendaraan_id' => $k->id,
-                        'user_id' => Auth::id(),
-                        'aksi' => 'Surat Pengajuan Diterima oleh Semua Instansi',
-                        'status_baru' => 'diproses',
-                        'tipe' => 'system',
-                        'catatan' => 'Status kendaraan diperbarui ke Diproses.',
-                        'sp_id' => $sp->id,
-                    ]);
-                    $logDiterima->created_at = now();
-                    $logDiterima->updated_at = now();
-                    $logDiterima->save();
+            // Dispatch WhatsApp notification
+            if ($sp) {
+                $kendaraan = $log->kendaraan;
+                $wpUser = $pengajuan->user;
+                if ($wpUser && $wpUser->no_hp) {
+                    try {
+                        SendWhatsAppNotification::dispatch(
+                            pengajuan: $pengajuan,
+                            kendaraan: $kendaraan,
+                            skType: 'sp_publish',
+                            pdfUrl: $pdfUrlAbsolute,
+                            localPdfPath: $localPdfPath,
+                            wpPhone: $wpUser->no_hp,
+                            wpName: $wpUser->name,
+                            nrkb: $kendaraan->nrkb,
+                        );
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Publish): ' . $e->getMessage());
+                    }
                 }
             }
-        }
 
-        // Dispatch WhatsApp notification
-        if ($sp) {
-            $kendaraan = $log->kendaraan;
-            $wpUser = $pengajuan->user;
-            if ($wpUser && $wpUser->no_hp) {
-                try {
-                    SendWhatsAppNotification::dispatch(
-                        pengajuan: $pengajuan,
-                        kendaraan: $kendaraan,
-                        skType: 'sp_publish',
-                        pdfUrl: $pdfUrlAbsolute,
-                        localPdfPath: $localPdfPath,
-                        wpPhone: $wpUser->no_hp,
-                        wpName: $wpUser->name,
-                        nrkb: $kendaraan->nrkb,
-                    );
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('[Fonnte] Dispatch error (SP Publish): ' . $e->getMessage());
-                }
-            }
+            return redirect()->route('admin.pengajuan.show', $pengajuan->id)
+                ->with('success', 'Surat Pengajuan berhasil diterbitkan.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('[PublishSP] Exception: ' . $e->getMessage() . ' | File: ' . $e->getFile() . ':' . $e->getLine());
+            return redirect()->back()->with('error', 'Gagal menerbitkan SP: ' . $e->getMessage());
         }
-
-        return redirect()->route('admin.pengajuan.show', $pengajuan->id)
-            ->with('success', 'Surat Pengajuan berhasil diterbitkan.');
     }
 
     /**

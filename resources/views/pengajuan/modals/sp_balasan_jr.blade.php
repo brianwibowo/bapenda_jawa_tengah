@@ -78,9 +78,9 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Batal
                 </button>
-                <button type="button" class="btn btn-danger" id="btnTolakSpBalasanJR">
+                {{-- <button type="button" class="btn btn-danger" id="btnTolakSpBalasanJR">
                     <i class="fas fa-ban me-1"></i>Tolak
-                </button>
+                </button> --}}
                 <button type="button" class="btn btn-outline-primary" id="btnPreviewSpBalasanJR" data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat pratinjau Surat Balasan Jasa Raharja">
                     <i class="fas fa-eye me-1"></i>Lihat Preview
                 </button>
@@ -159,41 +159,46 @@ document.addEventListener('DOMContentLoaded', function() {
         footerForm.style.display = 'flex';
     });
 
+    /*
     // Tolak SP
-    document.getElementById('btnTolakSpBalasanJR').addEventListener('click', function() {
-        const btn = this;
-        if (!confirm('Apakah Anda yakin ingin menolak Surat Pengajuan ini?')) return;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menolak...';
-        
-        const formData = new FormData(form);
-        fetch(tolakUrl, {
-            method: 'POST', body: formData,
-            headers: { 
-                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(async r => {
-            const res = await r.json().catch(() => ({}));
-            if (r.ok || res.success) {
-                const msg = res.message || 'Status berhasil diperbarui.';
-                sessionStorage.setItem('toast_success', msg);
-                window.location.href = res.redirect_url || window.location.href;
-            } else {
-                alert(res.error || res.message || 'Gagal menolak.');
+    const btnTolakJR = document.getElementById('btnTolakSpBalasanJR');
+    if (btnTolakJR) {
+        btnTolakJR.addEventListener('click', function() {
+            const btn = this;
+            if (!confirm('Apakah Anda yakin ingin menolak Surat Pengajuan ini?')) return;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menolak...';
+            
+            const formData = new FormData(form);
+            fetch(tolakUrl, {
+                method: 'POST', body: formData,
+                headers: { 
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(async r => {
+                const res = await r.json().catch(() => ({}));
+                if (r.ok || res.success) {
+                    const msg = res.message || 'Status berhasil diperbarui.';
+                    sessionStorage.setItem('toast_success', msg);
+                    window.location.href = res.redirect_url || window.location.href;
+                } else {
+                    alert(res.error || res.message || 'Gagal menolak.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-ban me-1"></i>Tolak';
+                }
+            })
+            .catch(err => {
+                console.error('Tolak error:', err);
+                alert('Gagal menolak.');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-ban me-1"></i>Tolak';
-            }
-        })
-        .catch(err => {
-            console.error('Tolak error:', err);
-            alert('Gagal menolak.');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-ban me-1"></i>Tolak';
+            });
         });
-    });
+    }
+    */
 
     // Submit
     const submitForm = function (btn) {
