@@ -9,22 +9,22 @@
 /* --- Background sidebar utama & logo header --- */
 .sidebar[data-background-color="blue"],
 .logo-header[data-background-color="blue"] {
-    background: #1a2c4e !important;
+    background: #142952 !important;
 }
 
 .sidebar[data-background-color="blue2"],
 .logo-header[data-background-color="blue2"] {
-    background: #0c2b42 !important;
+    background: #2e2a10 !important;
 }
 
 .sidebar[data-background-color="purple"],
 .logo-header[data-background-color="purple"] {
-    background: #26173d !important;
+    background: #2d1540 !important;
 }
 
 .sidebar[data-background-color="darkwp"],
 .logo-header[data-background-color="darkwp"] {
-    background: #1b2029 !important;
+    background: #1f1f1f !important;
 }
 
 /* --- Teks & ikon nav item default (semua sidebar gelap) --- */

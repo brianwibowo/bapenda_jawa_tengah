@@ -42,9 +42,14 @@
                                 ->latest()
                                 ->first();
                             $latestStatusText = $latestLog ? $latestLog->aksi : 'Pengajuan Baru';
+                            $isCompleted = ($progressValue >= $totalSurat);
+                            $badgeClass = $isCompleted ? 'bg-success' : 'bg-primary';
+                            $progressBarClass = $isCompleted ? 'bg-success' : 'bg-primary';
+                            $statusIcon = $isCompleted ? asset('kaiadmin/img/buletan2.png') : asset('kaiadmin/img/buletan1.png');
                         @endphp
-                        <span class="badge bg-primary px-3 py-2 fs-6 fw-normal shadow-sm" style="background-color: #0d6efd; color: #fff;">
-                            <i class="fas fa-info-circle me-1"></i> {{ $latestStatusText }}
+                        <span class="badge {{ $badgeClass }} px-3 py-2 fs-6 fw-normal shadow-sm text-white d-inline-flex align-items-center">
+                            <img src="{{ $statusIcon }}" alt="Status Icon" class="me-2" style="height: 18px; width: 18px; object-fit: contain;">
+                            {{ $latestStatusText }}
                         </span>
                         <a href="{{ route('pengajuan.index') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Kembali
@@ -53,7 +58,7 @@
                 </div>
                 <div class="progress-label mt-2">Progres ({{ $progressValue }} / {{ $totalSurat }})</div>
                 <div class="progress slim-progress">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progressPercent }}%;"></div>
+                    <div class="progress-bar {{ $progressBarClass }}" role="progressbar" style="width: {{ $progressPercent }}%;"></div>
                 </div>
             </div>
         </div>

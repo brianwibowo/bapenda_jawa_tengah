@@ -1251,13 +1251,13 @@ body[data-background-color="dark"] .border-top {
   background: #1a2035 !important; }
 
 .logo-header[data-background-color="dark2"] {
-  background: #151a2b !important; }
+  background: #0d2b2b !important; }
 
 .navbar-header[data-background-color="dark"] {
   background: #1a2035 !important; }
 
 .navbar-header[data-background-color="dark2"] {
-  background: #151a2b !important; }
+  background: #0d2b2b !important; }
 
 .logo-header[data-background-color="blue"] {
   background: #1572E8 !important; }
@@ -1375,7 +1375,7 @@ body[data-background-color="dark"] .border-top {
     background-color: #dcdbdb; }
 
 .sidebar[data-background-color="dark2"] {
-  background: #151a2b !important; }
+  background: #0d2b2b !important; }
   .sidebar[data-background-color="dark2"] .user {
     border-color: rgba(181, 181, 181, 0.1) !important; }
     .sidebar[data-background-color="dark2"] .user .info a > span {

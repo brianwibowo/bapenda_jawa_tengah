@@ -71,14 +71,13 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <button type="button" class="btn" style="background-color: #fff; color: #f0ad4e; border: 1px solid #f0ad4e;" data-bs-dismiss="modal">
                                 <i class="fas fa-arrow-left me-1"></i>Kembali
                             </button>
-                            <button type="submit" class="btn btn-primary" id="btnKirimSpSamsat">
+                            <button type="submit" class="btn btn-success" id="btnKirimSpSamsat">
                                 <i class="fas fa-save me-1"></i> Kirim
                             </button>
                         </div>
-                    {{-- Form 'batchUpdate' SEKARANG BERAKHIR DI SINI --}}
                     </form>
                 </div>
             </div>
