@@ -778,7 +778,7 @@ class PengajuanController extends Controller
                 }
 
                 $alreadyLogged = KendaraanLog::where('sp_id', $sp->id)
-                    ->where('aksi', 'Surat Pengajuan sedang dibuat oleh Ditlantas Polda')
+                    ->where('aksi', 'Surat Pengajuan Diterima oleh Semua Instansi')
                     ->exists();
 
                 if (!$alreadyLogged) {
@@ -786,7 +786,7 @@ class PengajuanController extends Controller
                         $logDiterima = KendaraanLog::create([
                             'kendaraan_id' => $k->id,
                             'user_id' => Auth::id(),
-                            'aksi' => 'Surat Pengajuan sedang dibuat oleh Ditlantas Polda',
+                            'aksi' => 'Surat Pengajuan Diterima oleh Semua Instansi',
                             'status_baru' => 'diproses',
                             'tipe' => 'system',
                             'catatan' => 'Status kendaraan diperbarui ke Diproses.',
