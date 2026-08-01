@@ -850,7 +850,7 @@ class SuratPengajuanController extends Controller
                 $logDiterima = $this->logSuratActionByKendaraanId(
                     $pengajuan,
                     $k->id,
-                    'Surat Pengajuan Diterima oleh Semua Instansi',
+                    'Surat Pengajuan sedang dibuat oleh Ditlantas Polda',
                     'Status kendaraan diperbarui ke Diproses.',
                     null,
                     $surat->id
