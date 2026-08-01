@@ -835,7 +835,7 @@ class SuratPengajuanController extends Controller
             $log = $this->logSuratActionByKendaraanId(
                 $pengajuan,
                 $k->id,
-                $instansiUser == "Bapenda" ? 'Surat Balasan Penghapusan Regident berhasil diterbitkan' : ($instansiUser == "Jasa Raharja" ? 'Surat Balasan Jasa Raharja berhasil diterbitkan' : 'Surat Pengajuan dari Samsat ke Polda telah diterima'),
+                $instansiUser == "Bapenda" ? 'Surat Balasan Penghapusan Regident dari Bapenda berhasil diterbitkan' : ($instansiUser == "Jasa Raharja" ? 'Surat Balasan Jasa Raharja berhasil diterbitkan' : 'Surat Pengajuan dari Samsat ke Polda telah diterima'),
                 'Nomor Surat: ' . ($request->nomor_surat ?: $surat->nomor_sp),
                 $data['local_pdf_path'] ?? null,
                 $surat->id
