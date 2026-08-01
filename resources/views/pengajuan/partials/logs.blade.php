@@ -68,7 +68,7 @@
                         <button class="btn btn-outline-success fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSpDefault" title="Klik untuk meninjau dan merespon Surat Pengajuan dari Samsat">
                             <i class="fas fa-reply me-1"></i> Review & Balas SP Samsat
                         </button>
-                    @elseif($lastSp && $lastSp->isApprovedBy('Polda'))
+                    @elseif($suratpengajuan->contains(fn($sp) => $sp->isApprovedBy('Polda')))
                         <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Pengajuan dari Samsat telah disetujui oleh Ditlantas Polda" style="cursor: not-allowed;">
                             <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                 <i class="fas fa-check-circle me-1 text-success"></i> SP Samsat Telah Disetujui
