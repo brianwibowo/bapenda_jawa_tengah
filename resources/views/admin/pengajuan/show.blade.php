@@ -40,16 +40,14 @@
                 </div>
                 <div>
                     @php
-                        $latestLog = \App\Models\KendaraanLog::whereIn('kendaraan_id', $pengajuan->kendaraans->pluck('id'))
-                            ->latest()
-                            ->first();
-                        $latestStatusText = $latestLog ? $latestLog->aksi : 'Pengajuan Baru';
+                        $latestStatusText = \App\Models\KendaraanLog::latestStatusTextForKendaraans($pengajuan->kendaraans->pluck('id'));
                         $isCompleted = ($progressValue >= $totalSurat);
                         $badgeClass = $isCompleted ? 'bg-success' : 'bg-primary';
                         $progressBarClass = $isCompleted ? 'bg-success' : 'bg-primary';
                         $statusIcon = $isCompleted ? asset('kaiadmin/img/buletan2.png') : asset('kaiadmin/img/buletan1.png');
                     @endphp
                     <span class="badge {{ $badgeClass }} px-3 py-2 fs-6 fw-normal shadow-sm text-white d-inline-flex align-items-center">
+                        Status:
                         <img src="{{ $statusIcon }}" alt="Status Icon" class="me-2" style="height: 18px; width: 18px; object-fit: contain;">
                         {{ $latestStatusText }}
                     </span>

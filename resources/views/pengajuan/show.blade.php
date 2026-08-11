@@ -38,10 +38,7 @@
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         @php
-                            $latestLog = \App\Models\KendaraanLog::whereIn('kendaraan_id', $pengajuan->kendaraans->pluck('id'))
-                                ->latest()
-                                ->first();
-                            $latestStatusText = $latestLog ? $latestLog->aksi : 'Pengajuan Baru';
+                            $latestStatusText = \App\Models\KendaraanLog::latestStatusTextForKendaraans($pengajuan->kendaraans->pluck('id'));
                             $isCompleted = ($progressValue >= $totalSurat);
                             $badgeClass = $isCompleted ? 'bg-success' : 'bg-primary';
                             $progressBarClass = $isCompleted ? 'bg-success' : 'bg-primary';

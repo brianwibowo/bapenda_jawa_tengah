@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -110,6 +111,45 @@ class KendaraanLog extends Model implements HasMedia
         $creator = $this->user;
         if (!$creator || !$user) return false;
         return $creator->unit_kerja === $user->unit_kerja;
+    }
+
+    /**
+     * Scope: hanya log yang SK/SP-nya bukan draft (sudah terbit atau tanpa dokumen).
+     */
+    public function scopeWithoutDraft($query)
+    {
+        return $query
+            ->where(fn ($q) => $q->whereNull('sk_status')->orWhere('sk_status', '!=', 'draft'))
+            ->where(fn ($q) => $q->whereNull('sp_status')->orWhere('sp_status', '!=', 'draft'));
+    }
+
+    /**
+     * Scope: hanya log yang SK/SP-nya masih draft.
+     */
+    public function scopeOnlyDraft($query)
+    {
+        return $query
+            ->where(fn ($q) => $q->where('sk_status', 'draft')->orWhere('sp_status', 'draft'));
+    }
+
+    /**
+     * Ambil teks status terakhir untuk sekumpulan kendaraan.
+     * Log draft tidak dihitung sebagai status terakhir; jika ada draft pending
+     * yang lebih baru dari log terbit, tampilkan "Menunggu Penerbitan {Jenis} {Unit}".
+     */
+    public static function latestStatusTextForKendaraans(Collection $kendaraanIds): string
+    {
+        $ids = $kendaraanIds->all();
+        $latestDraft = static::whereIn('kendaraan_id', $ids)->onlyDraft()->latest()->first();
+        $latestLog   = static::whereIn('kendaraan_id', $ids)->withoutDraft()->latest()->first();
+
+        if ($latestDraft && (!$latestLog || $latestDraft->created_at->gt($latestLog->created_at))) {
+            $jenis = $latestDraft->isSkDraft() ? 'SK' : 'SP';
+            $unit  = $latestDraft->user->unit_kerja ?? 'Instansi';
+            return "Menunggu Penerbitan {$jenis} {$unit}";
+        }
+
+        return $latestLog?->aksi ?? 'Pengajuan Baru';
     }
 
     /**
