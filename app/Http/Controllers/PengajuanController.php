@@ -310,7 +310,7 @@ class PengajuanController extends Controller
 
         // Generate nomor_pengajuan hanya saat finalisasi (bukan di draft)
         if (empty($pengajuan->nomor_pengajuan)) {
-            $pengajuan->nomor_pengajuan = Pengajuan::generateNomorPengajuan();
+            $pengajuan->nomor_pengajuan = Pengajuan::generateNomorPengajuan($pengajuan->cabang_id);
             $pengajuan->save();
         }
 

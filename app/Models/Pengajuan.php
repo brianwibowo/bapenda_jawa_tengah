@@ -104,23 +104,14 @@ class Pengajuan extends Model implements HasMedia
     }
 
     /**
-     * Generate nomor_pengajuan hanya saat finalisasi
+     * Generate nomor_pengajuan dengan format PJN-{id_cabang}-{timestamp_ms}
      */
-    public static function generateNomorPengajuan()
+    public static function generateNomorPengajuan($cabangId = null): string
     {
-        $prefix = 'PJN-' . now()->format('ym') . '-';
-        $lastPengajuan = self::where('nomor_pengajuan', 'LIKE', $prefix . '%')
-                             ->where('nomor_pengajuan', '!=', NULL)
-                             ->orderBy('nomor_pengajuan', 'desc')
-                             ->first();
-        
-        $nextNumber = 1;
-        if ($lastPengajuan) {
-            $lastNumber = (int) substr($lastPengajuan->nomor_pengajuan, -4);
-            $nextNumber = $lastNumber + 1;
-        }
-        
-        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        $cabangId = $cabangId ?? (Auth::check() ? Auth::user()?->cabang_id : null) ?? 1;
+        $timestampMs = now()->valueOf();
+
+        return "PJN-{$cabangId}-{$timestampMs}";
     }
 
     public function getSliceSuratPengajuanLastRejected(): \Illuminate\Support\Collection
