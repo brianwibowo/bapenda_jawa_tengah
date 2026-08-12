@@ -164,8 +164,12 @@
                         if (!$isBapendaSkTerbit && !$suratkeputusan->where('unit_kerja', 'Bapenda')->isEmpty() && !$isBapendaSkDraft) {
                             $isBapendaSkTerbit = true;
                         }
+                        // SK Polda harus terbit dahulu sebelum Bapenda bisa membuat SK
+                        $isPoldaSkTerbit = $suratkeputusan
+                            ->where('unit_kerja', 'Polda')
+                            ->contains(fn ($sk) => !$sk->log || $sk->log->sk_status !== 'draft');
                     @endphp
-                    @if(!empty($permissionSurat['canAjukanSK']) && !$isBapendaSkDraft && !$isBapendaSkTerbit)
+                    @if(!empty($permissionSurat['canAjukanSK']) && !$isBapendaSkDraft && !$isBapendaSkTerbit && $isPoldaSkTerbit)
                         <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalSkPembebasan" title="Klik untuk membuat Surat Keputusan Pembebasan Pokok & Sanksi PKB">
                             <i class="fas fa-file-contract me-1"></i> Buat SK Bapenda
                         </button>
@@ -179,6 +183,12 @@
                         <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan Pembebasan PKB Bapenda telah diterbitkan" style="cursor: not-allowed;">
                             <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                 <i class="fas fa-check-circle me-1 text-success"></i> SK Bapenda Telah Diterbitkan
+                            </button>
+                        </span>
+                    @elseif(!$isPoldaSkTerbit)
+                        <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu SK Ditlantas Polda diterbitkan terlebih dahulu" style="cursor: not-allowed;">
+                            <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                <i class="fas fa-clock me-1 text-warning"></i> Buat SK Bapenda
                             </button>
                         </span>
                     @else
@@ -219,8 +229,12 @@
                         if (!$isJrSkTerbit && !$suratkeputusan->where('unit_kerja', 'Jasa Raharja')->isEmpty() && !$isJrSkDraft) {
                             $isJrSkTerbit = true;
                         }
+                        // SK Polda harus terbit dahulu sebelum Jasa Raharja bisa membuat SK
+                        $isPoldaSkTerbit = $suratkeputusan
+                            ->where('unit_kerja', 'Polda')
+                            ->contains(fn ($sk) => !$sk->log || $sk->log->sk_status !== 'draft');
                     @endphp
-                    @if(!empty($permissionSurat['canAjukanSK']) && !$isJrSkDraft && !$isJrSkTerbit)
+                    @if(!empty($permissionSurat['canAjukanSK']) && !$isJrSkDraft && !$isJrSkTerbit && $isPoldaSkTerbit)
                         <button class="btn text-dark fw-bold" style="background-color: #FEC014; border: 1px solid #FEC014;" data-bs-toggle="modal" data-bs-target="#modalSkJR" title="Klik untuk membuat Surat Keputusan Pembebasan SWDKLLJ & Denda Jasa Raharja">
                             <i class="fas fa-file-contract me-1"></i> Buat SK Jasa Raharja
                         </button>
@@ -234,6 +248,12 @@
                         <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="✅ Surat Keputusan Pembebasan SWDKLLJ Jasa Raharja telah diterbitkan" style="cursor: not-allowed;">
                             <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
                                 <i class="fas fa-check-circle me-1 text-success"></i> SK Jasa Raharja Diterbitkan
+                            </button>
+                        </span>
+                    @elseif(!$isPoldaSkTerbit)
+                        <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="⏳ Menunggu SK Ditlantas Polda diterbitkan terlebih dahulu" style="cursor: not-allowed;">
+                            <button class="btn btn-outline-secondary fw-semibold" disabled style="pointer-events: none;">
+                                <i class="fas fa-clock me-1 text-warning"></i> Buat SK Jasa Raharja
                             </button>
                         </span>
                     @else

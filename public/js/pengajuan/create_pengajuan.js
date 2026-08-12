@@ -240,6 +240,9 @@ function hasFormContent(form) {
 }
 
 function tambahKendaraan() {
+    // SEMENTARA: fitur multi-kendaraan dinonaktifkan (1 pengajuan = 1 kendaraan)
+    if (document.querySelectorAll(".kendaraan-form").length >= 1) return;
+
     // Cari index terbesar yang ada
     const existingForms = document.querySelectorAll(".kendaraan-form");
     let maxIndex = 0;

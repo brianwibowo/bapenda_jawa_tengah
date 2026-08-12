@@ -146,17 +146,19 @@ class PengajuanController extends Controller
             $permissionSurat['canAjukanSP'] = true;
         }
         // 4. Jika semua SP sudah disetujui tapi belum ada SK
-        if ($progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","JR","Jasa Raharja"])) {
+        //    Bapenda/JR hanya boleh jika SK Polda sudah terbit terlebih dahulu.
+        $normUk = $this->normalizeUnitKerja($user->unit_kerja);
+        if ($progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && $suratkeputusan->where('unit_kerja', $user->unit_kerja)->isEmpty() && in_array($normUk, ["Polda", "Bapenda", "Jasa Raharja"]) && ($normUk === 'Polda' || $pengajuan->hasTerbitSkForAllKendaraan('Polda'))) {
             $permissionSurat['canAjukanSK'] = true;
         }
 
         foreach($pengajuan->kendaraans as $kendaraan){
             // Existing current Unit Kerja, untuk permissionSurat
             $exisitingSkIds = $kendaraan->suratKeputusans()
-            ->where('unit_kerja', $this->normalizeUnitKerja($user->unit_kerja))
+            ->where('unit_kerja', $normUk)
             ->first();
 
-            if (!$exisitingSkIds && $progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && in_array($this->normalizeUnitKerja($user->unit_kerja),["Polda","Bapenda","JR","Jasa Raharja"])) {
+            if (!$exisitingSkIds && $progress >= 6 && $progress < 9 && $pengajuan->isFullyApprovedByAll() && in_array($normUk, ["Polda", "Bapenda", "Jasa Raharja"]) && ($normUk === 'Polda' || $kendaraan->hasTerbitSk('Polda'))) {
                 $permissionSurat['canAjukanSK'] = true;
             }
         }

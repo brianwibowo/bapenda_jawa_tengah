@@ -148,6 +148,23 @@ class Kendaraan extends Model implements HasMedia
         return $this->hasMany(KendaraanLog::class)->latest();
     }
 
+    /**
+     * Cek apakah kendaraan ini sudah punya SK dari unit kerja tertentu yang terbit.
+     * Lenient untuk data lama: log null atau tanpa log dianggap terbit (bukan draft),
+     * agar tidak memblokir pengajuan yang sudah berjalan. Alur baru selalu mencatat
+     * sk_status='draft' terlebih dahulu, sehingga tetap ketat untuk pengajuan baru.
+     */
+    public function hasTerbitSk(string $unitKerja): bool
+    {
+        return $this->suratKeputusans()
+            ->where('unit_kerja', $unitKerja)
+            ->where(function ($q) {
+                $q->whereHas('log', fn ($lq) => $lq->whereNull('sk_status')->orWhere('sk_status', '!=', 'draft'))
+                  ->orWhereDoesntHave('log');
+            })
+            ->exists();
+    }
+
     /***
      * Cek apakah dokumen {nama} sudah ada di media library lampiran, sesuaikan koleksi media dengan jenisnya
      * contoh: lampiran sk dari polda sudah ada atau tidak. Case seperti untuk metode ttd pada sk mempengaruhi lampiran yang ada, jika ttd basah maka user perlu upload dan pengajuan harus mengecek tiap lampiran yang ada agar sesuai dengan total surat keputusan yang diizinkan untuk diunggah

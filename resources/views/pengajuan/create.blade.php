@@ -38,7 +38,7 @@
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2 align-items-center mb-3" id="kendaraanTabs">
                 {{-- Tab kendaraan akan ditambahkan secara dinamis --}}
-                <button type="button" class="btn btn-outline-primary" id="btnTambahKendaraan">
+                <button type="button" class="btn btn-outline-primary" id="btnTambahKendaraan" disabled title="Fitur multi-kendaraan dinonaktifkan sementara (1 pengajuan = 1 kendaraan)">
                     <i class="fas fa-plus me-1"></i> Tambah kendaraan
                 </button>
             </div>

@@ -225,6 +225,15 @@ class Pengajuan extends Model implements HasMedia
         return $suratTerpenuhi;
     }
 
+    /**
+     * Cek apakah semua kendaraan pada pengajuan ini sudah punya SK terbit dari unit kerja tertentu.
+     */
+    public function hasTerbitSkForAllKendaraan(string $unitKerja): bool
+    {
+        if ($this->kendaraans->isEmpty()) return false;
+        return $this->kendaraans->every(fn ($k) => $k->hasTerbitSk($unitKerja));
+    }
+
     public function getProgress(): float
     {
 

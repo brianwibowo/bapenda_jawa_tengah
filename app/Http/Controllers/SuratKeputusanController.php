@@ -670,6 +670,16 @@ class SuratKeputusanController extends Controller
                 ->with('error', 'Data kendaraan tidak ditemukan pada pengajuan ini.');
         }
 
+        // Bapenda/JR hanya boleh membuat SK jika SK Polda sudah terbit terlebih dahulu.
+        $unit = $this->normalizeUnitKerja(Auth::user()?->unit_kerja);
+        if (in_array($unit, ['Bapenda', 'JR'])) {
+            $tanpaSkPolda = $kendaraan->filter(fn ($k) => !$k->hasTerbitSk('Polda'));
+            if ($tanpaSkPolda->isNotEmpty()) {
+                return redirect()->route('admin.pengajuan.show', $pengajuan)
+                    ->with('error', 'SK Ditlantas Polda harus terbit dahulu sebelum membuat SK. Kendaraan yang belum memenuhi: ' . $tanpaSkPolda->pluck('nrkb')->implode(', '));
+            }
+        }
+
         if (!$pengajuan->kendaraans->where('status', 'diproses')->count()) {
             return redirect()->route('admin.pengajuan.show', $pengajuan)
                 ->with('error', 'Pengajuan tidak memiliki kendaraan dengan status "Diproses".');
