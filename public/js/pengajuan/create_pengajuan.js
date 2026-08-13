@@ -42,7 +42,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const navigationEntry = performance.getEntriesByType("navigation")[0];
     const isReload = navigationEntry && navigationEntry.type === "reload";
 
-    if (!isReload) {
+    const serverDraft = window.PengajuanConfig && window.PengajuanConfig.draftPengajuan;
+
+    if (serverDraft) {
+        clearDraftStorage();
+        loadDraftFromServer(serverDraft);
+    } else if (!isReload) {
         clearDraftStorage();
     } else {
         loadFromStorage();
@@ -1141,9 +1146,106 @@ function getMissingRequiredFile(formDiv) {
 
 function hasRequiredFile(formDiv, field) {
     const inputs = formDiv.querySelectorAll(`input[name*="${field}"]`);
-    return Array.from(inputs).some(
+    const hasNewFile = Array.from(inputs).some(
         (input) => input.files && input.files.length > 0,
     );
+    if (hasNewFile) return true;
+
+    const previewContainer = formDiv.querySelector(`.file-container[data-field="${field}"]`);
+    if (previewContainer) {
+        const preview = previewContainer.querySelector(".file-preview");
+        if (preview && preview.textContent && preview.textContent.includes("Tersimpan")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function loadDraftFromServer(draft) {
+    if (!draft || !draft.id) return false;
+
+    currentPengajuanId = draft.id;
+
+    if (draft.cabang_id) {
+        const cabangSelect = document.getElementById("pengajuanCabangSelect");
+        if (cabangSelect) {
+            cabangSelect.value = draft.cabang_id;
+            if (window.jQuery && typeof jQuery.fn.select2 !== "undefined") {
+                jQuery(cabangSelect).trigger("change");
+            }
+        }
+    }
+
+    if (draft.kendaraans && draft.kendaraans.length > 0) {
+        draft.kendaraans.forEach((k, idx) => {
+            const index = idx + 1;
+            if (document.querySelectorAll(".kendaraan-form").length < index) {
+                tambahKendaraan();
+            }
+
+            const formDiv = document.querySelector(`[data-kendaraan-index="${index}"]`);
+            if (!formDiv) return;
+
+            const form = formDiv.querySelector(".kendaraan-form-data");
+            if (!form) return;
+
+            formDiv.querySelector(".kendaraan-id-input").value = k.id;
+            formDiv.querySelector(".pengajuan-id-input").value = draft.id;
+
+            savedKendaraans[index] = {
+                kendaraan_id: k.id,
+                pengajuan_id: draft.id,
+            };
+
+            if (k.pemilik) {
+                const p = k.pemilik;
+                setInputValue(form, `kendaraan_${index}_nama_pemilik`, p.nama_pemilik);
+                setInputValue(form, `kendaraan_${index}_nik_pemilik`, p.nik_pemilik);
+                setInputValue(form, `kendaraan_${index}_alamat_pemilik`, p.alamat_pemilik);
+                setInputValue(form, `kendaraan_${index}_telp_pemilik`, p.telp_pemilik);
+                setInputValue(form, `kendaraan_${index}_email_pemilik`, p.email_pemilik);
+            }
+
+            const vehicleFields = [
+                "nrkb", "merk_kendaraan", "tipe_kendaraan", "jenis_kendaraan",
+                "model_kendaraan", "tahun_pembuatan", "isi_silinder", "nomor_rangka",
+                "nomor_mesin", "warna_kendaraan", "jenis_bahan_bakar", "warna_tnkb", "nomor_bpkb"
+            ];
+            vehicleFields.forEach(f => {
+                setInputValue(form, `kendaraan_${index}_${f}`, k[f]);
+            });
+
+            if (k.media && k.media.length > 0) {
+                k.media.forEach(m => {
+                    const collection = m.collection_name;
+                    const previewContainer = formDiv.querySelector(`.file-container[data-field="${collection}"]`);
+                    if (previewContainer) {
+                        const hint = previewContainer.querySelector(".file-preview");
+                        if (hint) {
+                            hint.textContent = `✓ ${m.file_name} (Tersimpan)`;
+                            hint.className = "text-success file-preview d-block mt-1";
+                        }
+                    }
+                });
+            }
+
+            formDirtyState[index] = false;
+        });
+
+        updateTabStyles();
+        updateFinalizeButton();
+        return true;
+    }
+
+    return false;
+}
+
+function setInputValue(form, name, value) {
+    if (value === null || value === undefined) return;
+    const input = form.querySelector(`[name="${name}"]`);
+    if (input) {
+        input.value = value;
+    }
 }
 
 function debounce(func, wait) {

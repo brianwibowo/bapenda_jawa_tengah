@@ -41,6 +41,12 @@
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
+                            <a class="nav-link {{ request('status') == 'draft' ? 'active' : '' }}"
+                                href="{{ route('pengajuan.index', array_merge(request()->except('page', 'status'), ['status' => 'draft'])) }}">
+                                <i class="fas fa-pencil-alt me-1"></i> Draft
+                            </a>
+                        </li>
+                        <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'pengajuan' ? 'active' : '' }}"
                                 href="{{ route('pengajuan.index', array_merge(request()->except('page', 'status'), ['status' => 'pengajuan'])) }}">
                                 <i class="fas fa-file-alt me-1"></i> Baru
@@ -152,7 +158,11 @@
                         @forelse ($pengajuans as $pengajuan)
                             <tr>
                                 <td class="px-4 py-3">
-                                    <strong class="text-primary">{{ $pengajuan->nomor_pengajuan }}</strong>
+                                    @if($pengajuan->nomor_pengajuan)
+                                        <strong class="text-primary">{{ $pengajuan->nomor_pengajuan }}</strong>
+                                    @else
+                                        <span class="text-muted fst-italic">Draft (Belum ada nomor)</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3">
                                     {{ $pengajuan->cabang?->nama ?? '-' }}
@@ -198,14 +208,33 @@
                                     {{ $progress[$pengajuan->id] ?? 0 }} / 9
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <a href="{{ route('pengajuan.show', $pengajuan) }}" class="btn btn-primary btn-sm position-relative">
-                                        <i class="fas fa-eye me-1"></i> Lihat Detail
-                                        @if(isset($unreadPengajuanIds) && in_array($pengajuan->id, $unreadPengajuanIds))
-                                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 10px; height: 10px;" title="Ada aktivitas baru">
-                                                <span class="visually-hidden">New Alert</span>
-                                            </span>
-                                        @endif
-                                    </a>
+                                    @if($pengajuan->status == 'draft')
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <a href="{{ route('pengajuan.create', ['pengajuan_id' => $pengajuan->id]) }}"
+                                               class="btn btn-warning text-dark btn-sm"
+                                               title="Lanjutkan Pengisian Draft">
+                                                <i class="fas fa-edit me-1"></i> Lanjutkan
+                                            </a>
+                                            <form action="{{ route('pengajuan.destroy', $pengajuan) }}" method="POST"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus draft pengajuan ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus Draft">
+                                                    <i class="fas fa-trash me-1"></i> Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <a href="{{ route('pengajuan.show', $pengajuan) }}" class="btn btn-primary btn-sm position-relative">
+                                            <i class="fas fa-eye me-1"></i> Lihat Detail
+                                            @if(isset($unreadPengajuanIds) && in_array($pengajuan->id, $unreadPengajuanIds))
+                                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 10px; height: 10px;" title="Ada aktivitas baru">
+                                                    <span class="visually-hidden">New Alert</span>
+                                                </span>
+                                            @endif
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

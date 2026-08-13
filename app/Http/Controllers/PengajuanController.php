@@ -16,10 +16,24 @@ class PengajuanController extends Controller
     /**
      * Halaman Buat Pengajuan Baru (dengan multiple kendaraan)
      */
-    public function create()
+    public function create(Request $request)
     {
         $branches = Cabang::orderBy('wilayah')->get();
-        return view('pengajuan.create', compact('branches'));
+        $draftPengajuan = null;
+
+        if ($request->filled('pengajuan_id')) {
+            $draftPengajuan = Pengajuan::where('id', $request->pengajuan_id)
+                ->where('user_id', Auth::id())
+                ->with(['kendaraans.pemilik', 'kendaraans.media'])
+                ->first();
+
+            if ($draftPengajuan && $draftPengajuan->status !== 'draft') {
+                return redirect()->route('pengajuan.show', $draftPengajuan)
+                    ->with('info', 'Pengajuan ini sudah tidak berstatus draft.');
+            }
+        }
+
+        return view('pengajuan.create', compact('branches', 'draftPengajuan'));
     }
 
     /**
@@ -618,10 +632,11 @@ class PengajuanController extends Controller
         }
 
         // Hapus (Soft Delete)
+        $label = $pengajuan->nomor_pengajuan ? 'Pengajuan ' . $pengajuan->nomor_pengajuan : 'Draft pengajuan';
         $pengajuan->delete();
 
         return redirect()->route('pengajuan.index')
-            ->with('success', 'Pengajuan ' . $pengajuan->nomor_pengajuan . ' berhasil dihapus.');
+            ->with('success', $label . ' berhasil dihapus.');
     }
 
     /**

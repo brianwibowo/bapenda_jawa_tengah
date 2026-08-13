@@ -420,7 +420,8 @@
             urlKendaraan: "{{ url('kendaraan') }}",
             csrfToken: "{{ csrf_token() }}",
             routeKendaraanStore: "{{ route('kendaraan.store') }}",
-            routePengajuanStore: "{{ route('pengajuan.store') }}"
+            routePengajuanStore: "{{ route('pengajuan.store') }}",
+            draftPengajuan: @json($draftPengajuan ?? null)
         };
     </script>
     <script src="{{ asset('js/pengajuan/create_pengajuan.js') }}"></script>
