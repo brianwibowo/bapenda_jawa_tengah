@@ -51,6 +51,9 @@ class Permission extends SpatiePermission
             'request_revision' => 'Minta Revisi Berkas',
             'submit_revision' => 'Kirim Revisi Berkas',
             'view_daftar_kendaraan' => 'Lihat Panel Daftar Kendaraan',
+            'delete_draft_pengajuan' => 'Hapus Draft Pengajuan Sendiri',
+            'publish_surat_keputusan' => 'Terbitkan / Unggah SK Bertandatangan',
+            'publish_surat_pengajuan' => 'Terbitkan / Unggah SP Bertandatangan',
         ];
 
         return $aliases[$this->name] ?? ucwords(str_replace('_', ' ', $this->name));

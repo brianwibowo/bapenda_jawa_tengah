@@ -80,18 +80,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('pengajuan.show')
         ->middleware('permission:view_menu_daftar_pengajuan');
 
-    Route::delete('/pengajuan/{pengajuan}', [PengajuanController::class, 'destroy'])->name('pengajuan.destroy');
-    Route::get('/pengajuan/{pengajuan}/log/{logId}', [PengajuanController::class, 'showLog'])->name('pengajuan.log.show');
-    Route::post('/pengajuan/{pengajuan}/log', [PengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
+    Route::delete('/pengajuan/{pengajuan}', [PengajuanController::class, 'destroy'])
+        ->name('pengajuan.destroy')
+        ->middleware('permission:delete_draft_pengajuan');
+
+    Route::get('/pengajuan/{pengajuan}/log/{logId}', [PengajuanController::class, 'showLog'])
+        ->name('pengajuan.log.show')
+        ->middleware('permission:view_menu_daftar_pengajuan');
+
+    Route::post('/pengajuan/{pengajuan}/log', [PengajuanController::class, 'storeLog'])
+        ->name('pengajuan.log.store')
+        ->middleware('permission:view_menu_daftar_pengajuan');
+
     Route::post('/pengajuan/{pengajuan}/revisi', [PengajuanController::class, 'submitRevision'])
         ->name('pengajuan.revision.submit')
         ->middleware('permission:submit_revision');
 
 
     Route::prefix('kendaraans')->group(function () {
-        Route::post('/', [PengajuanController::class, 'storeKendaraan'])->name('kendaraan.store');
-        Route::get('/{pengajuan}/tambah-kendaraan', [KendaraanController::class, 'create'])->name('kendaraan.create');
-        Route::post('/{pengajuan}/simpan-kendaraan-lama', [KendaraanController::class, 'store'])->name('kendaraan.store.old'); // Route lama untuk backward compatibility
+        Route::post('/', [PengajuanController::class, 'storeKendaraan'])
+            ->name('kendaraan.store')
+            ->middleware('permission:create_pengajuan_baru');
+        Route::get('/{pengajuan}/tambah-kendaraan', [KendaraanController::class, 'create'])
+            ->name('kendaraan.create')
+            ->middleware('permission:create_pengajuan_baru');
+        Route::post('/{pengajuan}/simpan-kendaraan-lama', [KendaraanController::class, 'store'])
+            ->name('kendaraan.store.old')
+            ->middleware('permission:create_pengajuan_baru');
     });
 
     // ===========================================================
@@ -122,9 +137,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/pengajuan/{pengajuan}', [AdminPengajuanController::class, 'destroy'])->name('pengajuan.destroy')->middleware('permission:delete_pengajuan_publik');
             Route::patch('/pengajuan/{pengajuan}/batch-update', [AdminPengajuanController::class, 'batchUpdateKendaraanStatus'])->name('pengajuan.batchUpdate')->middleware('permission:approve_status_pengajuan');
             Route::post('/pengajuan/{pengajuan}/log', [AdminPengajuanController::class, 'storeLog'])->name('pengajuan.log.store');
-            Route::post('/pengajuan/{pengajuan}/draft-sk', [AdminPengajuanController::class, 'storeDraftSk'])->name('pengajuan.draft_sk');
-            Route::post('/pengajuan/publish-sk/{log}', [AdminPengajuanController::class, 'publishSk'])->name('pengajuan.publish_sk');
-            Route::post('/pengajuan/publish-sp/{log}', [AdminPengajuanController::class, 'publishSp'])->name('pengajuan.publish_sp');
+            Route::post('/pengajuan/{pengajuan}/draft-sk', [AdminPengajuanController::class, 'storeDraftSk'])
+                ->name('pengajuan.draft_sk')
+                ->middleware('permission:create_sk');
+            Route::post('/pengajuan/publish-sk/{log}', [AdminPengajuanController::class, 'publishSk'])
+                ->name('pengajuan.publish_sk')
+                ->middleware('permission:publish_surat_keputusan');
+            Route::post('/pengajuan/publish-sp/{log}', [AdminPengajuanController::class, 'publishSp'])
+                ->name('pengajuan.publish_sp')
+                ->middleware('permission:publish_surat_pengajuan');
         });
 
         Route::post('/pengajuan/ajukan/{id}', [SPController::class, 'ajukan'])
@@ -163,10 +184,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::prefix('kendaraan')->name('kendaraan.')->group(function () {
-        Route::get('/{kendaraan}', [KendaraanController::class, 'show'])->name('show');
-        Route::get('/{kendaraan}/edit', [KendaraanController::class, 'edit'])->name('edit');
-        Route::patch('/{kendaraan}', [KendaraanController::class, 'update'])->name('update');
-        Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])->name('destroy');
+        Route::get('/{kendaraan}', [KendaraanController::class, 'show'])
+            ->name('show')
+            ->middleware('permission:view_menu_daftar_pengajuan|view_menu_manajemen_pengajuan');
+        Route::get('/{kendaraan}/edit', [KendaraanController::class, 'edit'])
+            ->name('edit')
+            ->middleware('permission:edit_kendaraan_pengajuan_sendiri');
+        Route::patch('/{kendaraan}', [KendaraanController::class, 'update'])
+            ->name('update')
+            ->middleware('permission:edit_kendaraan_pengajuan_sendiri');
+        Route::delete('/{kendaraan}', [KendaraanController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('permission:delete_kendaraan_pengajuan_sendiri');
     });
 
     // API untuk mendapatkan tiket akses (UUID/Signature di URL)

@@ -26,6 +26,7 @@ class RbacSeeder extends Seeder
             ['name' => 'view_menu_daftar_pengajuan', 'group_name' => 'Daftar Pengajuan'],
             ['name' => 'edit_kendaraan_pengajuan_sendiri', 'group_name' => 'Daftar Pengajuan'],
             ['name' => 'delete_kendaraan_pengajuan_sendiri', 'group_name' => 'Daftar Pengajuan'],
+            ['name' => 'delete_draft_pengajuan', 'group_name' => 'Daftar Pengajuan'],
 
             // Manajemen Pengajuan (Verifikator)
             ['name' => 'view_menu_manajemen_pengajuan', 'group_name' => 'Manajemen Pengajuan'],
@@ -36,8 +37,10 @@ class RbacSeeder extends Seeder
             // Surat Keputusan & Dokumen Khusus PDF
             ['name' => 'view_own_sk', 'group_name' => 'Surat Keputusan PDF'],
             ['name' => 'create_sk', 'group_name' => 'Surat Keputusan PDF'],
+            ['name' => 'publish_surat_keputusan', 'group_name' => 'Surat Keputusan PDF'],
             ['name' => 'create_pdf_pengajuan', 'group_name' => 'Surat Pengajuan PDF'],
             ['name' => 'create_pdf_pengajuan_bapenda_jr', 'group_name' => 'Surat Pengajuan PDF'],
+            ['name' => 'publish_surat_pengajuan', 'group_name' => 'Surat Pengajuan PDF'],
             ['name' => 'create_pdf_balasan_polda', 'group_name' => 'Surat Balasan PDF'],
             ['name' => 'create_pdf_balasan_samsat', 'group_name' => 'Surat Balasan PDF'],
             ['name' => 'view_dokumen_surat_pengajuan', 'group_name' => 'Akses Lihat File PDF'],
@@ -107,7 +110,7 @@ class RbacSeeder extends Seeder
         $roleWp->syncPermissions([
             'view_dashboard', 'view_menu_buat_pengajuan', 'create_pengajuan_baru',
             'view_menu_daftar_pengajuan', 'edit_kendaraan_pengajuan_sendiri', 
-            'delete_kendaraan_pengajuan_sendiri', 'view_log_histori', 'view_own_sk',
+            'delete_kendaraan_pengajuan_sendiri', 'delete_draft_pengajuan', 'view_log_histori', 'view_own_sk',
             'submit_revision'
         ]);
 
@@ -122,13 +125,15 @@ class RbacSeeder extends Seeder
             'create_pengajuan_baru',
             'view_menu_daftar_pengajuan',
             'edit_kendaraan_pengajuan_sendiri',
-            'delete_kendaraan_pengajuan_sendiri'
+            'delete_kendaraan_pengajuan_sendiri',
+            'delete_draft_pengajuan'
         ]);
 
         // Polda
         $rolePolda->syncPermissions([
             'view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori',
             'create_pdf_pengajuan_bapenda_jr', 'create_pdf_balasan_samsat', 'create_pdf_pengajuan', 'create_sk', 'view_own_sk', 
+            'publish_surat_keputusan', 'publish_surat_pengajuan',
             'view_dokumen_surat_balasan'
         ]);
 
@@ -136,6 +141,7 @@ class RbacSeeder extends Seeder
         $roleBapenda->syncPermissions([
             'view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori',
             'create_pdf_balasan_polda', 'create_sk', 'view_dokumen_surat_pengajuan',
+            'publish_surat_keputusan', 'publish_surat_pengajuan',
             'view_dokumen_surat_balasan', 'view_own_sk'
         ]);
 
@@ -143,6 +149,7 @@ class RbacSeeder extends Seeder
         $roleJr->syncPermissions([
             'view_dashboard', 'view_menu_manajemen_pengajuan', 'view_log_histori',
             'create_pdf_balasan_polda', 'create_sk', 'view_dokumen_surat_pengajuan',
+            'publish_surat_keputusan', 'publish_surat_pengajuan',
             'view_dokumen_surat_balasan', 'view_own_sk'
         ]);
 
