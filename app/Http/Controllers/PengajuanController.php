@@ -43,10 +43,18 @@ class PengajuanController extends Controller
     public function index(Request $request)
     {
         $query = Pengajuan::where('user_id', Auth::id())
-            ->with('kendaraans:id,pengajuan_id,status')
+            ->with('kendaraans:id,pengajuan_id,pemilik_id,status')
+            ->with('kendaraans.pemilik:id,kepemilikan')
             ->with('cabang:id,nama,wilayah')
             ->withCount('kendaraans')
             ->latest();
+
+        // Filter: by kepemilikan pemilik (any kendaraan in bundle matches)
+        if ($request->filled('kepemilikan') && in_array($request->kepemilikan, ['instansi', 'perorangan'])) {
+            $query->whereHas('kendaraans.pemilik', function ($q) use ($request) {
+                $q->where('kepemilikan', $request->kepemilikan);
+            });
+        }
 
         // Filter: search by nomor_pengajuan
         if ($request->filled('q')) {
@@ -113,6 +121,7 @@ class PengajuanController extends Controller
                 }
             }
         }
+        
 
         $perPage = (int) $request->input('per_page', 10);
         $pengajuans = $query->paginate($perPage)->appends($request->except('page'));
@@ -140,6 +149,7 @@ class PengajuanController extends Controller
         // Validasi semua input (Pemilik + Kendaraan + Dokumen)
         $validatedData = $request->validate([
             // Validasi Pemilik
+            'kepemilikan' => 'required|in:instansi,perorangan',
             'nama_pemilik' => 'required|string|max:255',
             'nik_pemilik' => 'required|string|max:100',
             'alamat_pemilik' => 'required|string',
@@ -207,6 +217,7 @@ class PengajuanController extends Controller
 
         // Pisahkan data Pemilik
         $dataPemilik = [
+            'kepemilikan' => $validatedData['kepemilikan'],
             'nama_pemilik' => $titleCase($validatedData['nama_pemilik']),
             'nik_pemilik' => $upperCase($validatedData['nik_pemilik']),
             'alamat_pemilik' => $titleCase($validatedData['alamat_pemilik']),

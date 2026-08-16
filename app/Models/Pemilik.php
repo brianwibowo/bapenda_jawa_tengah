@@ -19,6 +19,7 @@ class Pemilik extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'kepemilikan',
         'nama_pemilik',
         'nik_pemilik',
         'alamat_pemilik',

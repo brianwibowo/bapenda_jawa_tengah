@@ -29,31 +29,31 @@
                     <ul class="nav nav-pills nav-fill flex-wrap gap-2" role="tablist">
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ !request('status') ? 'active' : '' }}"
-                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['search' => request('search')]) }}">
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['search' => request('search'), 'cabang_id' => request('cabang_id'), 'kepemilikan' => request('kepemilikan')]) }}">
                                 <i class="fas fa-list me-1"></i> Semua
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'pengajuan' ? 'active' : '' }}"
-                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'pengajuan', 'search' => request('search')]) }}">
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'pengajuan', 'search' => request('search'), 'cabang_id' => request('cabang_id'), 'kepemilikan' => request('kepemilikan')]) }}">
                                 <i class="fas fa-file-alt me-1"></i> Baru
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'diproses' ? 'active' : '' }}"
-                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'diproses', 'search' => request('search')]) }}">
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'diproses', 'search' => request('search'), 'cabang_id' => request('cabang_id'), 'kepemilikan' => request('kepemilikan')]) }}">
                                 <i class="fas fa-spinner me-1"></i> Diproses
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'selesai' ? 'active' : '' }}"
-                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'selesai', 'search' => request('search')]) }}">
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'selesai', 'search' => request('search'), 'cabang_id' => request('cabang_id'), 'kepemilikan' => request('kepemilikan')]) }}">
                                 <i class="fas fa-check-circle me-1"></i> Selesai
                             </a>
                         </li>
                         <li class="nav-item flex-fill">
                             <a class="nav-link {{ request('status') == 'ditolak' ? 'active' : '' }}"
-                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'ditolak', 'search' => request('search')]) }}">
+                                href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => 'ditolak', 'search' => request('search'), 'cabang_id' => request('cabang_id'), 'kepemilikan' => request('kepemilikan')]) }}">
                                 <i class="fas fa-times-circle me-1"></i> Ditolak
                             </a>
                         </li>
@@ -65,7 +65,7 @@
                     <form method="GET" action="{{ route($pengajuanRoutePrefix . '.pengajuan.index') }}">
                         <input type="hidden" name="status" value="{{ request('status') }}">
                         <div class="row gy-2 gx-2 align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-search"></i>
@@ -77,8 +77,15 @@
                                            value="{{ request('search') }}">
                                 </div>
                             </div>
+                            <div class="col-md-2">
+                                <select name="kepemilikan" class="form-select searchable-select">
+                                    <option value="">-- Semua Kepemilikan --</option>
+                                    <option value="instansi" {{ request('kepemilikan') === 'instansi' ? 'selected' : '' }}>Instansi</option>
+                                    <option value="perorangan" {{ request('kepemilikan') === 'perorangan' ? 'selected' : '' }}>Perorangan</option>
+                                </select>
+                            </div>
                             @unless($isSamsatUser)
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select name="cabang_id" class="form-select searchable-select">
                                         <option value="">-- Filter Cabang / Wilayah --</option>
                                         @foreach($branches as $branch)
@@ -93,7 +100,7 @@
                                 <button class="btn btn-primary flex-grow-1" type="submit">
                                     <i class="fas fa-search me-1"></i> Cari
                                 </button>
-                                @if(request('search') || (!$isSamsatUser && request('cabang_id')))
+                                @if(request('search') || request('kepemilikan') || (!$isSamsatUser && request('cabang_id')))
                                     <a href="{{ route($pengajuanRoutePrefix . '.pengajuan.index', ['status' => request('status')]) }}"
                                        class="btn btn-outline-secondary">
                                         <i class="fas fa-times"></i>
@@ -199,6 +206,7 @@
                             <th class="px-4 py-3">Nomor Pengajuan</th>
                             <th class="px-4 py-3">Pengusul</th>
                             <th class="px-4 py-3">Cabang / Wilayah</th>
+                            <th class="px-4 py-3">Kepemilikan</th>
                             <th class="px-4 py-3">Tanggal Masuk</th>
                             <th class="px-4 py-3">Update Terakhir</th>
                             <th class="px-4 py-3 text-center">Status</th>
@@ -219,6 +227,24 @@
                                     {{ $pengajuan->cabang?->nama ?? '-' }}
                                     <br>
                                     <small class="text-muted">{{ $pengajuan->cabang?->wilayah ?? '-' }}</small>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $kepemilikans = $pengajuan->kendaraans
+                                            ->pluck('pemilik.kepemilikan')
+                                            ->filter()
+                                            ->unique()
+                                            ->values();
+                                    @endphp
+                                    @if($kepemilikans->isEmpty())
+                                        <span class="text-muted">-</span>
+                                    @else
+                                        @foreach($kepemilikans as $kepemilikan)
+                                            <span class="badge bg-light text-dark border me-1">
+                                                {{ ucfirst($kepemilikan) }}
+                                            </span>
+                                        @endforeach
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3">
                                     <i class="fas fa-calendar-alt text-muted me-2"></i>
@@ -276,7 +302,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="9" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                         <h5>Tidak ada data pengajuan</h5>
