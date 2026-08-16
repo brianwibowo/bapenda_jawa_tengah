@@ -96,6 +96,18 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
+                                            <label class="form-label fw-bold">Kepemilikan <span class="text-danger">*</span></label>
+                                            <select id="pengajuanKepemilikanSelect" name="kepemilikan" class="form-select searchable-select" required>
+                                                <option value="">-- Pilih Kepemilikan --</option>
+                                                <option value="instansi">
+                                                    Instansi
+                                                </option>
+                                                <option value="perorangan">
+                                                    Perorangan
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
                                             <label class="form-label">Nama Pemilik <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control text-capitalize" name="nama_pemilik" autocapitalize="words" required>
                                         </div>

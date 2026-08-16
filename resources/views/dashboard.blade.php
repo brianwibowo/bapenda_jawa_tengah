@@ -139,4 +139,13 @@
             </div>
         </div>
     </div>
+
+    {{-- Statistik Kepemilikan Secara KomulKumulatifatif --}}
+    <div class="d-flex align-items-center mb-3 mt-3">
+        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center"
+            style="width: 32px; height: 32px;">
+            <i class="fas fa-calendar-alt text-white small"></i>
+        </div>
+        <h4 class="mb-0 fw-bold">Kepemilikan Kumulatif</h4>
+    </div>
 </x-app-layout>

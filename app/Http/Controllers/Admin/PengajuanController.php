@@ -39,6 +39,7 @@ class PengajuanController extends Controller
         $status = $request->query('status');
         $search = $request->query('search');
         $selectedCabang = $request->query('cabang_id');
+        $kepemilikan = $request->query('kepemilikan');
         $user = Auth::user();
         $isBranchScoped = $user->can('scoped_to_own_branch') && !$user->hasRole('superadmin');
         $isSamsat = $isBranchScoped;
@@ -46,7 +47,7 @@ class PengajuanController extends Controller
         $query = Pengajuan::whereHas('kendaraans', function ($q) {
                 $q->where('status', '<>', 'draft');
             })
-            ->with(['user', 'kendaraans:id,pengajuan_id,status', 'cabang'])
+            ->with(['user', 'kendaraans:id,pengajuan_id,pemilik_id,status', 'kendaraans.pemilik:id,kepemilikan', 'cabang'])
             ->withCount('kendaraans')
             ->latest('updated_at');
 
@@ -64,6 +65,12 @@ class PengajuanController extends Controller
         if ($status) {
             $query->whereHas('kendaraans', function ($q) use ($status) {
                 $q->where('status', $status);
+            });
+        }
+
+        if ($kepemilikan && in_array($kepemilikan, ['instansi', 'perorangan'])) {
+            $query->whereHas('kendaraans.pemilik', function ($q) use ($kepemilikan) {
+                $q->where('kepemilikan', $kepemilikan);
             });
         }
 

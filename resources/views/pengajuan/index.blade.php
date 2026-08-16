@@ -73,12 +73,12 @@
                     </ul>
                 </div>
 
-                <!-- Search and Per Page -->
+                <!-- Search, Per Page, Filter Kepemilikan -->
                 <div class="col-12">
                     <form id="filterForm" method="GET" action="{{ route('pengajuan.index') }}">
                         <input type="hidden" name="status" value="{{ request('status') }}">
                         <div class="row g-2">
-                            <div class="col-md-9 col-lg-10">
+                            <div class="col-md-7 col-lg-8">
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-search"></i>
@@ -92,6 +92,17 @@
                                 </div>
                             </div>
                             <div class="col-md-3 col-lg-2">
+                                <select name="kepemilikan" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Semua Kepemilikan</option>
+                                    <option value="instansi" {{ request('kepemilikan') === 'instansi' ? 'selected' : '' }}>
+                                        Instansi
+                                    </option>
+                                    <option value="perorangan" {{ request('kepemilikan') === 'perorangan' ? 'selected' : '' }}>
+                                        Perorangan
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 col-lg-2">
                                 <select name="per_page" class="form-select" onchange="this.form.submit()">
                                     @foreach ([10, 25, 50, 100] as $n)
                                         <option value="{{ $n }}" {{ request('per_page', 10) == $n ? 'selected' : '' }}>
@@ -147,6 +158,7 @@
                         <tr>
                             <th class="px-4 py-3">Nomor Pengajuan</th>
                             <th class="px-4 py-3">Cabang / Wilayah</th>
+                            <th class="px-4 py-3">Kepemilikan</th>
                             <th class="px-4 py-3">Tanggal Masuk</th>
                             <th class="px-4 py-3">Update Terakhir</th>
                             <th class="px-4 py-3 text-center">Status</th>
@@ -168,6 +180,24 @@
                                     {{ $pengajuan->cabang?->nama ?? '-' }}
                                     <br>
                                     <small class="text-muted">{{ $pengajuan->cabang?->wilayah ?? '-' }}</small>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $kepemilikans = $pengajuan->kendaraans
+                                            ->pluck('pemilik.kepemilikan')
+                                            ->filter()
+                                            ->unique()
+                                            ->values();
+                                    @endphp
+                                    @if($kepemilikans->isEmpty())
+                                        <span class="text-muted">-</span>
+                                    @else
+                                        @foreach($kepemilikans as $kepemilikan)
+                                            <span class="badge bg-light text-dark border me-1">
+                                                {{ ucfirst($kepemilikan) }}
+                                            </span>
+                                        @endforeach
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3">
                                     <i class="fas fa-calendar-alt text-muted me-2"></i>
@@ -239,7 +269,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-5">
+                                <td colspan="8" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                                         <h5>Tidak ada data pengajuan</h5>
