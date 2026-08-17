@@ -54,12 +54,31 @@ class DashboardController extends Controller
             ->orderByDesc('total_pengajuan')
             ->get();
 
+        // Statistik pengajuan berdasarkan jenis kendaraan
+        $statsJenisKendaraan = DB::table('kendaraans')
+            ->select('jenis_kendaraan as nama', DB::raw('count(id) as total_pengajuan'))
+            ->groupBy('jenis_kendaraan')
+            ->orderByDesc('total_pengajuan')
+            ->get();
+
+        // Statistik kendaraan berdasarkan tahun pembuatan (untuk chart)
+        $statsTahunPembuatan = DB::table('kendaraans')
+            ->select('tahun_pembuatan', DB::raw('count(id) as total'))
+            ->groupBy('tahun_pembuatan')
+            ->orderBy('tahun_pembuatan')
+            ->get();
+
+        $chartYears = $statsTahunPembuatan->pluck('tahun_pembuatan')->toArray();
+        $chartTotals = $statsTahunPembuatan->pluck('total')->toArray();
+
         return view('dashboard', compact(
             'statsTerkini',
             'statsBulanIni',
             'statsTahunIni',
             'statsKepemilikan',
             'statsWilayah'
+            , 'statsJenisKendaraan'
+            , 'chartYears', 'chartTotals'
         ));
     }
 }
