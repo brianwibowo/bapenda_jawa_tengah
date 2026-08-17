@@ -38,6 +38,28 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('status');
             
-        return view('dashboard', compact('statsTerkini', 'statsBulanIni', 'statsTahunIni'));
+        // Statistik Kepemilikan (semua waktu)
+        $statsKepemilikan = DB::table('kendaraans')
+            ->join('pemiliks', 'kendaraans.pemilik_id', '=', 'pemiliks.id')
+            ->select('pemiliks.kepemilikan', DB::raw('count(*) as total'))
+            ->groupBy('pemiliks.kepemilikan')
+            ->get()
+            ->keyBy('kepemilikan');
+
+        $statsWilayah = DB::table('cabangs')
+            ->leftJoin('pengajuans', 'cabangs.id', '=', 'pengajuans.cabang_id')
+            ->leftJoin('kendaraans', 'pengajuans.id', '=', 'kendaraans.pengajuan_id')
+            ->select('cabangs.nama', DB::raw('count(kendaraans.id) as total_pengajuan'))
+            ->groupBy('cabangs.id', 'cabangs.nama')
+            ->orderByDesc('total_pengajuan')
+            ->get();
+
+        return view('dashboard', compact(
+            'statsTerkini',
+            'statsBulanIni',
+            'statsTahunIni',
+            'statsKepemilikan',
+            'statsWilayah'
+        ));
     }
 }

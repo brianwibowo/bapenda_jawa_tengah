@@ -140,12 +140,95 @@
         </div>
     </div>
 
-    {{-- Statistik Kepemilikan Secara KomulKumulatifatif --}}
+    {{-- Kepemilikan Kumulatif --}}
     <div class="d-flex align-items-center mb-3 mt-3">
-        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center"
-            style="width: 32px; height: 32px;">
-            <i class="fas fa-calendar-alt text-white small"></i>
+        <div class="bg-info rounded-circle me-2 d-flex align-items-center justify-content-center"
+            style="width:32px;height:32px;">
+            <i class="fas fa-users text-white small"></i>
         </div>
         <h4 class="mb-0 fw-bold">Kepemilikan Kumulatif</h4>
     </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:20px;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="card-text mb-1 text-muted fw-semibold text-uppercase">Perseorangan</p>
+                        <h1 class="display-4 fw-bold text-dark mb-0">{{ $statsKepemilikan['perorangan']->total ?? 0 }}</h1>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                        style="width:60px;height:60px;">
+                        <i class="fas fa-users text-white fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:20px;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="card-text mb-1 text-muted fw-semibold text-uppercase">Instansi</p>
+                        <h1 class="display-4 fw-bold text-dark mb-0">{{ $statsKepemilikan['instansi']->total ?? 0 }}</h1>
+                    </div>
+                    <div class="bg-purple bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                        style="width:60px;height:60px;background-color:#f3e8ff!important;">
+                        <i class="fas fa-building fa-2x" style="color:#7c3aed;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Wilayah Samsat Table --}}
+    <div class="d-flex align-items-center mb-3 mt-3">
+        <div class="bg-success rounded-circle me-2 d-flex align-items-center justify-content-center"
+            style="width:32px;height:32px;">
+            <i class="fas fa-map-marker-alt text-white small"></i>
+        </div>
+        <h4 class="mb-0 fw-bold">Pengajuan per Wilayah Samsat</h4>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-5" style="border-radius:20px;">
+        <div class="card-body p-4">
+            <table id="wilayah-table" class="table table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>Wilayah Samsat</th>
+                        <th>Total Pengajuan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($statsWilayah as $row)
+                    <tr>
+                        <td>{{ $row->nama }}</td>
+                        <td>{{ $row->total_pengajuan }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+@push('scripts')
+<script>
+$(document).ready(function () {
+    $('#wilayah-table').DataTable({
+        pageLength: 10,
+        order: [[1, 'desc']],
+        language: {
+            search: 'Cari:',
+            lengthMenu: 'Tampilkan _MENU_ data',
+            info: 'Menampilkan _START_ - _END_ dari _TOTAL_ wilayah',
+            paginate: {
+                next: 'Berikutnya',
+                previous: 'Sebelumnya'
+            },
+            emptyTable: 'Tidak ada data tersedia'
+        }
+    });
+});
+</script>
+@endpush
+
 </x-app-layout>
