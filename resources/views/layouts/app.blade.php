@@ -59,6 +59,12 @@
     <script src="{{ asset('kaiadmin/js/kaiadmin.min.js') }}"></script>
     <script src="{{ asset('kaiadmin/js/plugin/sweetalert/sweetalert.min.js')}}"></script>
     <script src="{{ asset('js/jquery.repeater.min.js')}}"></script>
+
+    {{-- DataTables --}}
+    <link rel="stylesheet" href="{{ asset('kaiadmin/css/datatables/dataTables.bootstrap5.min.css') }}" />
+    <script src="{{ asset('kaiadmin/js/plugin/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('kaiadmin/js/plugin/datatables/dataTables.bootstrap5.min.js') }}"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.jQuery && typeof jQuery.fn.select2 !== 'undefined') {
