@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kendaraan; // <-- GANTI: Gunakan model Kendaraan
+use App\Models\Kendaraan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // <-- TAMBAHKAN: Kita butuh DB facade
-use Carbon\Carbon; // <-- TAMBAHKAN: Kita butuh Carbon untuk tanggal
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // GANTI SEMUA QUERY UNTUK MENGAMBIL DARI 'kendaraans' BUKAN 'pengajuans'
+        $user = auth()->user();
+        $isSamsat = $user->hasRole('samsat');
+        $isWp = $user->hasRole('wajib_pajak');
 
         // Statistik Terkini (Hari ini)
         $statsTerkini = Kendaraan::query() // <-- PERBAIKAN DI SINI
@@ -37,33 +39,41 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->get()
             ->keyBy('status');
-            
+
         // Statistik Kepemilikan (semua waktu)
         $statsKepemilikan = DB::table('kendaraans')
             ->join('pemiliks', 'kendaraans.pemilik_id', '=', 'pemiliks.id')
-            ->select('pemiliks.kepemilikan', DB::raw('count(*) as total'))
+            ->join('pengajuans', 'kendaraans.pengajuan_id', '=', 'pengajuans.id')
+            ->when($isSamsat, fn($q) => $q->where('pengajuans.cabang_id', $user->cabang_id))
+            ->select('pemiliks.kepemilikan', DB::raw('count(kendaraans.id) as total'))
             ->groupBy('pemiliks.kepemilikan')
             ->get()
             ->keyBy('kepemilikan');
 
+        // Statistik Wilayah
         $statsWilayah = DB::table('cabangs')
             ->leftJoin('pengajuans', 'cabangs.id', '=', 'pengajuans.cabang_id')
             ->leftJoin('kendaraans', 'pengajuans.id', '=', 'kendaraans.pengajuan_id')
+            ->when($isSamsat, fn($q) => $q->where('cabangs.id', $user->cabang_id))
             ->select('cabangs.nama', DB::raw('count(kendaraans.id) as total_pengajuan'))
             ->groupBy('cabangs.id', 'cabangs.nama')
             ->orderByDesc('total_pengajuan')
             ->get();
 
-        // Statistik pengajuan berdasarkan jenis kendaraan
+        // Statistik Jenis Kendaraan
         $statsJenisKendaraan = DB::table('kendaraans')
-            ->select('jenis_kendaraan as nama', DB::raw('count(id) as total_pengajuan'))
+            ->join('pengajuans', 'kendaraans.pengajuan_id', '=', 'pengajuans.id')
+            ->when($isSamsat, fn($q) => $q->where('pengajuans.cabang_id', $user->cabang_id))
+            ->select('jenis_kendaraan as nama', DB::raw('count(kendaraans.id) as total_pengajuan'))
             ->groupBy('jenis_kendaraan')
             ->orderByDesc('total_pengajuan')
             ->get();
 
-        // Statistik kendaraan berdasarkan tahun pembuatan (untuk chart)
+        // Statistik Tahun Pembuatan
         $statsTahunPembuatan = DB::table('kendaraans')
-            ->select('tahun_pembuatan', DB::raw('count(id) as total'))
+            ->join('pengajuans', 'kendaraans.pengajuan_id', '=', 'pengajuans.id')
+            ->when($isSamsat, fn($q) => $q->where('pengajuans.cabang_id', $user->cabang_id))
+            ->select('tahun_pembuatan', DB::raw('count(kendaraans.id) as total'))
             ->groupBy('tahun_pembuatan')
             ->orderBy('tahun_pembuatan')
             ->get();
@@ -76,9 +86,12 @@ class DashboardController extends Controller
             'statsBulanIni',
             'statsTahunIni',
             'statsKepemilikan',
-            'statsWilayah'
-            , 'statsJenisKendaraan'
-            , 'chartYears', 'chartTotals'
+            'statsWilayah',
+            'statsJenisKendaraan',
+            'chartYears',
+            'chartTotals',
+            'isSamsat',
+            'isWp'
         ));
     }
 }
